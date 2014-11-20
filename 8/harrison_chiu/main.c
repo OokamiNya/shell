@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "ex/execute.h"
+#include "par/parse.h"
 
 #define IN_LEN 256
 
