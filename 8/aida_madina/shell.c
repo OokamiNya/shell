@@ -6,16 +6,16 @@
 
 int main() {
   
-  char command[200];
-  char *args = command;
+  char command[256];
   char *args_array[10];
   int num_args = 0;
   int pid;
   int *status;
   siginfo_t *infop;
+  char cwd[256];
   
   while(1) {
-    printf("seashell$ ");
+    printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(command, sizeof(command), stdin);
     command[strlen(command)-1]='\0';
     
@@ -27,13 +27,21 @@ int main() {
       }
       p++;
     }
-    char *comm = strtok(args, " ");
+
+    char *comm = strtok(command, " ");
     //if comm == exit or cd, we take care of their respective processes
     //else, we do what we currently have
+    if (!strcmp(comm,"exit")) {
+      //printf(":%s:", comm);
+      exit(0);
+    }
+    
     args_array[0] = comm;
+    
     if (num_args== 0) {
       args_array[1]=NULL;
     }
+    
     else {
       int i = 1;
       while (i <= num_args) {
@@ -42,14 +50,23 @@ int main() {
       }
       args_array[i]=NULL;
     }
-    pid = fork();
-    if(!pid) {
-      execvp(args_array[0], args_array);	
-      return WEXITSTATUS(105);
-      exit(0);
+
+    if (!strcmp(comm,"cd")) {
+      if (!args_array[1]) {
+	chdir(getenv("HOME"));
+      }
+      chdir(args_array[1]);
+      //execvp(args_array[0], args_array);
     }
-    waitid(P_PID, pid, infop, WEXITED);
-      
+    else {
+      pid = fork();
+      if(!pid) {
+	execvp(args_array[0], args_array);	
+	return WEXITSTATUS(105);
+	exit(0);
+      }
+      waitid(P_PID, pid, infop, WEXITED);
+    }
   }
   
   return 0;

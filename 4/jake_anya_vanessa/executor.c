@@ -17,6 +17,10 @@ int execute(char s[256]) {
   }
   arg[i+1] = 0;
   
+  
+  printf("%s\n",arg[0]);
+  printf("%d\n",strcmp(arg[0],"cd"));
+
   if(!strcmp(arg[0],"cd")){
     if (sizeof(arg) / sizeof(char *) > 1)
       chdir(arg[1]);

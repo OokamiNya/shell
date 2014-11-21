@@ -1,3 +1,3 @@
 all:
-	gcc shell.c
+	gcc shell_temp.c
 	./a.out

@@ -22,7 +22,7 @@ int main(){
     if(f){
       wait(&f);
     }else{
-      run();
+      run_command(0);
     }
   }
 }

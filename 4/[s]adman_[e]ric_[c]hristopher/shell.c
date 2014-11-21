@@ -15,8 +15,9 @@ int main(){
   
   char* cwd=calloc(256,sizeof(char));  
   getcwd(cwd,256);
+  int status;
   while (1){
-    printf("%s :^) -",cwd);
+    printf("(ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
     fgets(args,256,stdin);
     args = strsep(&args,"\n");
 
@@ -42,9 +43,14 @@ int main(){
 	}while(args[++i]);
 	execvp(args,addresses);
       }else
-	sleep(1);
+	wait(&status);
+      //pipe -> redirect
+      //ls | grep poop > swag.txt
+
     }
-      
+
+    
+    
     
     
   }
