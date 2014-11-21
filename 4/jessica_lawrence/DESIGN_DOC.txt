@@ -2,7 +2,9 @@
 by Jessica Ng and Lawrence Lim
 
 Features:
+    Friendly encouraging :^) face!
     Forks and executes commands!
+    Exits too!
     That's it!
 
 Attempted:
@@ -22,6 +24,18 @@ shell.c
      * :^)
      ***************/
 
-    /***** void docmd(char* s) *****
+    /***** int countargs(char* s) *****
+     * :^)
+     ***************/
+
+    /***** void splitcmd(char* s, char** args) *****
+     * :^)
+     ***************/
+
+    /***** void docmd(char** args) *****
+     * :^)
+     ***************/
+
+    /***** void gtfo() *****
      * :^)
      ***************/
