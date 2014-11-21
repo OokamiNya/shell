@@ -4,8 +4,7 @@
 void process(char * start){
   //site of user input processing
   while (start){
-    execute(strsep(&start, ";"));
-      
+    execute(strsep(&start, ";"));      
   }
 }
 
@@ -24,14 +23,15 @@ void execute(char * start){
     if(*y != 0){
       if (! strcmp(">",y))
 	redir = 1;
-    
+      if( ! strcmp("<",y))
+	redir = 2;
       args[x] = y;
       x++;
     }
     
   }
   if (redir)
-    redirect(args);
+    redirect(args, redir);
   else{
     args[x -1] = strsep(&args[x-1], "\n");
     args[x]=0;
@@ -65,8 +65,20 @@ void child_process(char * args[]){
     wait(&f);
   }
 }
-void redireCt(char * args[]){
-  printf("IMPLEMENT ME PLS");
+void redirect(char * args[], int redir){
+  int c;
+  if(redir-1){
+     c = open(args[2], O_CREAT | O_RDONLY, 0644);
+     dup2(c, STDIN_FILENO);
+     execlp(args[0], args[0], NULL);
+     close(c);
+  }else{
+    c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
+    printf("%s", args[2]);
+    dup2(c, STDOUT_FILENO);
+    execlp(args[0], args[0], NULL);
+    close(c);
+  }
 }
 
 int main(int argc, char *argv[]){

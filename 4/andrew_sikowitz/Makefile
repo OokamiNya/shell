@@ -1,2 +1,5 @@
 all: shell.c
-	gcc shell.c -o shell
+	gcc -o shell shell.c
+
+run: all
+	./shell

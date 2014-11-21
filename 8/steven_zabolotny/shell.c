@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 char *pre() {
   char cwd[256];
@@ -45,7 +46,7 @@ void *run(char *input) { // Runs any non-cd command
     }
 }
 
-void multi(char *input) {
+void *multi(char *input) {
     int a = strlen(input);
     input[a] = ';';
     //input[a + 1] = ' ';
@@ -54,7 +55,7 @@ void multi(char *input) {
     char *tok = input;
     char *end = input;
     //printf("<%s>\n",input);
-    while (tok != NULL) { // The space added earlier is necessary here to make strsep work on the last arg properly.
+    while (tok != NULL) {
       strsep(&end, ";");
       /*int b = strlen(tok);
       if (tok[b - 1] != ' ') {
@@ -75,6 +76,75 @@ void multi(char *input) {
       i++;
       tok = end;
     }
+}
+
+void *redirect(char *input, char *r) {
+    char *args[256];
+    int i = 0;
+    char *tok = input;
+    char *end = input;
+    while (tok != NULL) {
+      strsep(&end, r);
+      int b;
+      if (tok[0] == ' ') { // Get rid of those pesky spaces
+	for (b = 0;b < strlen(tok);b++) {
+	  tok[b] = tok[b + 1];
+	}
+      }
+      args[i] = tok;
+      i++;
+      tok = end;
+    }
+    args[1][strlen(args[1]) -1] = '\0'; // Get rid of space at end
+    int status;
+    int f = fork ();
+    if (f) {
+    wait(&status);
+    } else {
+      int fd = open(args[1], O_RDWR | O_CREAT | O_APPEND, 0644); // Opens the file being redirected to
+      if (r == ">") {
+	int saved_stdout = dup(1);
+	dup2(fd, 1); // Redirects stdout to the file
+	close(fd);
+	run(args[0]);
+	dup2(saved_stdout, 1);
+	close(saved_stdout);
+      } else if (r == "<") {
+	int saved_stdin = dup(0);
+	dup2(fd, 0); // Redirects stdin to the file
+	close(fd);
+	run(args[0]);
+	dup2(saved_stdin, 0);
+	close(saved_stdin);
+      }
+    } 
+}
+
+void *piper(char *input) { // Doesn't work yet
+    char *args[256];
+    int i = 0;
+    char *tok = input;
+    char *end = input;
+    while (tok != NULL) {
+      strsep(&end, "|");
+      int b;
+      if (tok[0] == ' ') { // Get rid of those pesky spaces
+	for (b = 0;b < strlen(tok);b++) {
+	  tok[b] = tok[b + 1];
+	}
+      }
+      args[i] = tok;
+      i++;
+      tok = end;
+    }
+    int a;
+    for (a = 0; a < i; a++) {
+      args[a][strlen(args[1]) -1] = '\0'; // Get rid of space at end
+    }
+    
+    redirect(strcat(args[0], " > temp.txt"), ">");
+    redirect(strcat(args[1], " < temp.txt"), "<");
+    run("rm temp.txt");
 }
 
 int main() {
@@ -99,10 +169,16 @@ int main() {
       cd(input);
       pre();
     } else {
-      if (strchr(input, ';') == NULL) {
-	run(input);
-      } else {
+      if (strchr(input, ';') != NULL) {
 	multi(input);
+      } else if (strchr(input, '>') != NULL) {
+	redirect(input, ">");
+      } else if (strchr(input, '<') != NULL) {
+	redirect(input, "<");
+      } else if (strchr(input, '|') != NULL) {
+	piper(input);
+      } else {
+	run(input);
       }
       pre();
     }

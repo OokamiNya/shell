@@ -1,4 +1,4 @@
-FILES = main.c shell.c
+FILES = main.c newshell.c
 
 all: clean build run
 
@@ -6,7 +6,7 @@ clean:
 	@rm -f shell
 
 build:
-	@gcc -Wall -o shell $(FILES)
+	@gcc -Wall -o shell -lcurses $(FILES)
 
 run:
 	@./shell
