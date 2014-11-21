@@ -12,16 +12,16 @@ static void sighandler(int signo);
 void sigusr(char *);
 void sigint();
 
-int main()
-{
-  printf("\nSIGUSR1: %d\nSIGUSR2: %d\nSIGINT: %d\n", SIGUSR1, SIGUSR2, SIGINT);
-  while (1)
-    {
-      signal(SIGUSR1, sighandler);
-      signal(SIGUSR2, sighandler);
-      signal(SIGINT, sighandler);
-    }
-}
+/* /\* int main() */
+/* { */
+/*   printf("\nSIGUSR1: %d\nSIGUSR2: %d\nSIGINT: %d\n", SIGUSR1, SIGUSR2, SIGINT); */
+/*   while (1) */
+/*     { */
+/*       signal(SIGUSR1, sighandler); */
+/*       signal(SIGUSR2, sighandler); */
+/*       signal(SIGINT, sighandler); */
+/*     } */
+/* } */
 
 static void sighandler(int signo)
 {

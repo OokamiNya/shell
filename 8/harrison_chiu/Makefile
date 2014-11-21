@@ -2,17 +2,14 @@ EXEC_NAME=mess
 
 all: clean build run
 
-clean:
-	rm -f *~ *.o ${EXEC_NAME}
+clean: 
+	for dir in src/*/; do make -C $$dir clean; done;
+	rm -f ${EXEC_NAME}
 
-build: execute.o main.o
-	gcc execute.o main.o -o ${EXEC_NAME}
-
-execute.o: execute.c execute.h
-	gcc -c execute.c
-
-main.o: main.c
-	gcc -c main.c
+build:
+	for dir in src/*/; do make -C $$dir build; done;
+	gcc -c "src/main.c" -o "obj/main.o"
+	gcc obj/* -o ${EXEC_NAME}
 
 run:
 	./${EXEC_NAME}
