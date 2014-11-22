@@ -54,7 +54,7 @@ char** parse(){
       i++;
       }*/
     
-    printf("inside parse: %d\n",&args);
+    //printf("inside parse: %d\n",&args);
 
     return args;
 
@@ -62,7 +62,7 @@ char** parse(){
 
 int contains(char** args){
 
-  printf("IN CONTAINS\n");
+  //xprintf("IN CONTAINS\n");
 
   //  testing that parsing works
   int i=0;
@@ -132,12 +132,21 @@ int main(){
 
     int i=0;
     while(temp){
-      args[i] = temp;    
+      if(strcmp(temp,"") != 0){ // deals with aditional spaces issue
+	args[i] = temp;  
+	i ++;   
+      } 
       temp = strsep(&s, " ");
-      i ++;   
     }
     args[i] = 0;
     
+    /* i=0;
+    while(args[i]){
+      if(
+      printf("args[%d]:  %s\t",i,args[i]);
+      i++;
+      }*/
+
     //execute(args);
 
     if(contains(args) == 0){//regular input no ; < > |
