@@ -1,33 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include "shell.h"
 
-#define TRUE 1
-#define FALSE 0
+/*
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+*/
+
 #define BUFFER_LEN 256
+#define ARGV_LEN sizeof(char *) * 16
 
 /* TODO:
-   `exit` + konami easter eggs??
+   konami easter eggs??
    fish ascii art on `exit`: http://www.ascii-art.de/ascii/def/fish.txt
-   optimize memory usage: malloc arrays with variable size
    
    REAL TODO:
-   write cd + print dir with fish: pwd, dup2?
+   whitespace
+   write cd + print dir with fish: pwd, dup2?; check piazza
      accept ~ . .. - 
-   handle ; parsing
+   memory usage; malloc those arrays more carefully
+   ERRNOs
+   // free argv after done with it
 
    NOTES/ISSUES:
-   1)
-   
+   1) 
  */
 
-char ** parseInput(char *input, char *tok){
-  int argc = 0;
-  char **argv = (char **)malloc(BUFFER_LEN);
-  char *arg;
+char ** parseInput(char *input, char *delim){
+  int count = 0;
+  char **argv = (char **)malloc(ARGV_LEN);
+  char *arg = strsep(&input,delim);
+  
 
-  for (arg = strsep(&input,tok); *arg; arg = strsep(&input, tok), argc++){
-      argv[argc] = arg;
+  for (; arg; arg = strsep(&input, delim), count++){
+    argv[count] = arg;
   }
-  argv[argc] = NULL;
+  argv[count] = NULL;
   return argv;
 }
 
@@ -36,19 +50,20 @@ void changeDir(){
 }
 
 void execute(char **argv){
-  //"exit" command
   if (!strcmp(argv[0],"exit")){
-    execlp("echo","echo","Sea ya next time",NULL);
+    printf("Sea ya next time\n");
+    exit(EXIT_SUCCESS);
   }
-  //"cd" command
   else if (!strcmp(argv[0],"cd")){
     changeDir();
   }
   else{
     int f, status;
     f = fork();
-    if (!f)
+    if (!f){ //child
       execvp(argv[0], argv);
+      //error stuff
+    }
     else
       wait(&status);
   }
@@ -56,13 +71,21 @@ void execute(char **argv){
 
 void shell(){
   char *input;
-  while (TRUE){
+  char **argv = (char **)malloc(ARGV_LEN);
+  while (1){
     printf("><((((º> ");
     fgets(input, BUFFER_LEN, stdin);
-    // finish later; for (int i = 0; i < parseInput(input,";")
-    execute(parseInput(input," \n"));
+    
+    argv = parseInput(input,";\n");
+    while (*argv && strcmp(*argv,"")){ // empty string at end
+      printf("-%s-\n",*argv);
+      execute(parseInput(*argv," "));
+      *argv++;
+    }
   }
 }
+
+  //  int count, arrLen = 1;//sizeof(argv)/sizeof(char *);
 
 int main(){
   printf("\n=======Welcome to Shellfish, Home of the Selfish=======\n");
