@@ -5,6 +5,14 @@ int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
 int args;
 char **argv;
+char *tok;
+int cmd_status = 1;
+int valid_input = 0;
+
+static void signalhandler(int signal) {
+    switch(signal) {
+    }
+}
 
 /* Writes directory path given a buffer */
 char * get_path(char *path_buf, int path_size) {
@@ -25,7 +33,12 @@ char * get_path(char *path_buf, int path_size) {
 char * create_prompt(char *prompt_buf, int prompt_size) {
     char path[PATH_SIZE];
     get_path(path, PATH_SIZE);
-    snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%sᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+    if (cmd_status) { // Previous command was successful
+        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+    }
+    else {
+        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_red, reset);
+    }
     return prompt_buf;
 }
 
@@ -35,12 +48,15 @@ void cleanup() {
         free(argv[args]);
     }
     free(argv);
+    free(tok);
 }
 
 int main() {
+    signal(SIGINT, signalhandler);
     prompt = (char *) malloc(PROMPT_SIZE);
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
+        cmd_status = valid_input = 1;
         char *line = readline(prompt);
         if (line == NULL) {
             printf("\n`EOF Sent`\n");
@@ -48,9 +64,11 @@ int main() {
             free(prompt);
             exit(0);
         }
-        printf("$: `%s`\n", line);
-        add_history(line);
+        printf("$input: `%s`\n", line);
         parse_input(line);
+        if (cmd_status && valid_input) {
+            add_history(line);
+        }
         free(line);
     }
     free(prompt);
@@ -62,7 +80,8 @@ void parse_input(char *input) {
     argv = (char **) malloc(sizeof(char *));
     args = 0;
     int index = 0;
-    char tok[TOK_SIZE];
+    int tokSize = TOK_INIT_SIZE;
+    char *tok = (char *) malloc(TOK_INIT_SIZE);
     int tokIndex = 0;
     tok[0] = '\0';
     while (input[index]) {
@@ -72,6 +91,10 @@ void parse_input(char *input) {
             else {
                 tok[tokIndex] = input[index];
                 ++tokIndex;
+                if (tokIndex >= tokSize) { // Expand buffer for tok
+                    tokSize += TOK_INIT_SIZE;
+                    tok = realloc(tok, tokSize);
+                }
             }
         }
         else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
@@ -96,6 +119,10 @@ void parse_input(char *input) {
         argv[args] = NULL;
         execute(argv);
     }
+    else {
+        valid_input = 0;
+    }
+    printf("%d\n", tokSize);
     cleanup();
 }
 
@@ -108,7 +135,7 @@ void execute(char **argv) {
 
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
-        printf("I'm sad to see you go... :(");
+        printf("I'm sad to see you go... :(\n");
         cleanup();
         free(prompt);
         exit(0);
@@ -121,13 +148,18 @@ void execute(char **argv) {
         if (pid) { // Parent process to wait for child to finish
             int status;
             wait(&status);
+            if (WIFEXITED(status)) {
+                if (WEXITSTATUS(status)) {
+                    cmd_status = 0; // Notes that there was an error
+                }
+            }
         }
         else { // Child process to execute commands
             errno_result = execvp(cmd, argv);
             if (errno_result == -1) {
                 printf("%s: command not found: %s\n", shell_name, cmd);
             }
-            exit(0);
+            exit(127); // Exit with an error, only reached if execvp fails
         }
     }
 }
@@ -144,7 +176,8 @@ void change_directory(char *path) {
     }
     errno_result = chdir(path_cpy);
     if (errno_result == -1) {
-        printf("%s: %s\n", "cd", strerror(errno));
+        printf("cd: %s: %s\n", path, strerror(errno));
+        cmd_status = 0;
     }
     free(home_cpy);
 }
