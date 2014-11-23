@@ -16,7 +16,7 @@ static void sighandler(int signo){
 int main(){
   signal(SIGUSR1,sighandler);
   printf("-- _ SHELL --\n\n"); //fill _ with name or change]
-  command();
+  shell();
   return 0;
 }
 
@@ -37,49 +37,70 @@ int cd (char* s) {
 }
 
 
-int command(){
+int shell(){
   printf("_$ "); //fill _ with something (maybe cwd)
   char s[1024];
   fgets(s,sizeof(s),stdin);
+  int n = 1;
+  char *p = s;
+  while (*p){ //now splits on ';' and runs commands in succession
+	if (*p == ';'){
+	  n++;
+	}
+	p++;
+  }
+  char **commands = malloc(sizeof(char *) * n);
+  p = s;
+  *strchr(p,'\n') = '\0';
+  n = 0;
+  char *k;
+  while (k = strsep(&p,";")){
+	commands[n] = k;
+	n++;
+  }
+  int i = 0;
+  for (; i < n; i++){
+	execute(commands[i]);
+  }
+  free(commands);
+  shell();
+}
+
+int execute(char *s){
   int n = 2;
   char *p = s;
   while (*p){
-    if (*p == ' '){
-      n++;
+	if (*p == ' '){
+	  n++;
     }
     p++;
   }
   char **params = malloc(sizeof(char *) * n);
   p = s;
-  *strchr(p,'\n') = '\0';
   n = 0;
   char *k;
   while (k = strsep(&p," ")){
-	params[n] = k;
-	n++;
+	if (strcmp(k,"")){ //removes blanks from multiple spaces
+	  params[n] = k;
+	  n++;
+	}  
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
-    int i = 1;
-    while (!strcmp(params[i],"")){//gets rid of extra "" made by extra spaces, make i start from 0 later
-      i ++;
-    }
-    cd (params [i]); // note to self ~ and / don't work, make ; work for other commands
-  }
-  int f = fork();
-  if (!f){
-    if (!strcmp(params[0],"exit")){
-      printf("Bye!\n\n");
-      dup2(STDIN_FILENO,STDOUT_FILENO);
-      char parent[10];
-      sprintf(parent,"%d",getppid());
-      execlp("kill","kill","-10",parent,NULL);
-    }
-    execvp(params[0],params);    
+	int i = 1;
+	cd (params [i]); // note to self ~ and / don't work
+	//inputting just 'cd' causes a seg fault
+  }else if (!strcmp(params[0],"exit")){
+	printf("Bye!\n\n");
+	exit(0);
   }else{
-    int status;
-    wait(&status);
-    command();
+	int f = fork();
+	if (!f){
+	  execvp(params[0],params);    
+	}else{
+	  int status;
+	  wait(&status);
+	  free(params);
+	}
   }
-  return 1;
 }
