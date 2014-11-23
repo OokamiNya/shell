@@ -6,6 +6,7 @@ char *prompt;
 int args;
 char **argv;
 int cmd_status = 1;
+int valid_input = 0;
 
 static void signalhandler(int signal) {
     switch(signal) {
@@ -53,7 +54,7 @@ int main() {
     prompt = (char *) malloc(PROMPT_SIZE);
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
-        cmd_status = 1;
+        cmd_status = valid_input = 1;
         char *line = readline(prompt);
         if (line == NULL) {
             printf("\n`EOF Sent`\n");
@@ -63,7 +64,7 @@ int main() {
         }
         printf("$input: `%s`\n", line);
         parse_input(line);
-        if (cmd_status) {
+        if (cmd_status && valid_input) {
             add_history(line);
         }
         free(line);
@@ -111,6 +112,9 @@ void parse_input(char *input) {
         argv[args] = NULL;
         execute(argv);
     }
+    else {
+        valid_input = 0;
+    }
     cleanup();
 }
 
@@ -136,8 +140,10 @@ void execute(char **argv) {
         if (pid) { // Parent process to wait for child to finish
             int status;
             wait(&status);
-            if (WEXITSTATUS(status)) {
-                cmd_status = 0; // Notes that there was an error
+            if (WIFEXITED(status)) {
+                if (WEXITSTATUS(status)) {
+                    cmd_status = 0; // Notes that there was an error
+                }
             }
         }
         else { // Child process to execute commands
