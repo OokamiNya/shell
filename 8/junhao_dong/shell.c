@@ -10,8 +10,8 @@
 #define HOME getenv("HOME")
 
 /* TODO:
-   konami easter eggs??
-   fish ascii art on `exit`: http://www.ascii-art.de/ascii/def/fish.txt
+   konami easter eggs?? scrolling fish idk..
+   ^ on exit maybe:  http://www.ascii-art.de/ascii/def/fish.txt
    
    REAL TODO:
    bug: prompt ~ replacing $HOME when at $HOME or a path with fewer chars
@@ -26,27 +26,32 @@
    tab completion
    better errors?
        syntax errors (cmd:";;;;")
-   final check to optimize code efficiency
+   final checks to optimize code + memory usage
        perhaps ignore white space rather than trim?
-   final check for memory leak
+       excessive looping (strlen, other str fxns)
+       unnecessarily large buffer allocations
+       memory leaks
    design.txt, edit header file, readme
 
-   NOTES/FEATURES: (to be moved to README)
-   trim white space (leading, inbetween, trailing)
+   NOTES: (to be moved to README)
+   trim excess white space and ';'
    ignores multiple ;'s rather than give syntax error (as in bash)
    does not print all errors (ex: error from getcwd, syntax error)
  */
 
 
 void printPrompt(){
-  char *cwd = getcwd(cwd,0);
+  char *cwd = getcwd(cwd,0); // Dynamically allocated
+
   // If path includes $HOME
   if (strstr(cwd,HOME)){
-    int absPathLen = strlen(cwd);
     int homeLen = strlen(HOME);
+    int absPathLen = strlen(cwd);
+    int relPathLen = absPathLen-homeLen+1;
     // Replace $HOME with '~'
-    strncpy(cwd, &cwd[homeLen] - 1, absPathLen - homeLen + 1);
-    *cwd = '~';
+    strncpy(cwd, &cwd[homeLen-1], relPathLen);
+    cwd[0] = '~';
+    cwd[relPathLen] = '\0';
   }
   printf("%s$\n", cwd);
   printf("><((((º> ");
@@ -58,15 +63,20 @@ void changeDir(char *arg){
   // If `cd` is given an argument
   if (arg){
     // Replace '~' with $HOME
-    if (arg[0]=='~')
-      arg = strncat(HOME,arg+1,BUFFER_LEN);
+    if (arg[0]=='~'){
+      char *tmp = (char *)malloc(BUFFER_LEN);
+      strcpy(tmp,HOME);
+      strcat(tmp,arg+1);
+      strcpy(arg,tmp);
+      free(tmp);
+    }
 
     // If error
     if (chdir(arg) < 0)
       printf("cd: %s: %s\n", arg, strerror(errno));
   }
   else
-    chdir("/home/junhao");
+    chdir(HOME);
 }
 
 void execute(char **argv){
