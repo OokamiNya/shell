@@ -57,9 +57,9 @@ void printprompt() {
 }
 
 void execute(char * a){ //error here with * vs {}
-  printf("\na:%s\n", a); //returns empty string???
+  //printf("\na:%s\n", a); //returns empty string??? --> NO
   char* s1 = a;
-  printf("\ns1:%s\n", s1);
+  //printf("\ns1:%s\n", s1); --> a = s1 confirmed
   char *sep;
   char** arg = NULL;
   int i = 0;
