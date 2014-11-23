@@ -1,100 +1,148 @@
 #include "shell.h"
+#include "colors.h"
 
 int errno_result; // Used in collaboration with errno if function fails
+char *prompt;
+int args;
+char **argv;
 
-void shell() {
-    char *path_buf = (char *) malloc(BUFFER_SIZE);
-    char *input = (char *) malloc(BUFFER_SIZE);
-    int done = 0;
-    //Getting the Home Directory
-    /* Old SMART way
-    uid_t user = getuid();
-    struct passwd * pwd;
-    pwd = getpwuid(user);
-    char* home = pwd->pw_dir;
-    */
-    //Fast efficient way
-    char *home = getenv("HOME"); // Required because somehow the environment variable changes when you chdir ~/Desktop
-    while (!done) {
-      getcwd(path_buf, BUFFER_SIZE);
-      char *home_index = strstr(path_buf, home);
-      //printf("%s -- %s\n", path_buf, home);
-      if (home_index == NULL) {
-	printf("\e[37;1mStD: \e[36;1m%s\e[32;1m ᐅ \e[033;0m", path_buf);
-      }
-      else {
-	printf("\e[37;1mStD: \e[36;1m~%s\e[32;1m ᐅ \e[033;0m", path_buf + strlen(home)); // Removes the home directory from path
-      }
-      fflush(stdout);
-      done = parse_input(input);
+/* Writes directory path given a buffer */
+char * get_path(char *path_buf, int path_size) {
+    char *home = getenv("HOME");
+    char cwd_buf[path_size];
+    getcwd(cwd_buf, path_size);
+    char *cwd = cwd_buf;
+    char *home_in_cwd = strstr(cwd, home);
+    if (home_in_cwd) {
+        cwd = cwd + strlen(home) - 1; // Move pointer of path_buf to point to the character right before $HOME ends
+        cwd[0] = '~'; // Replace character with ~
     }
-    free(path_buf);
-    free(input);
+    snprintf(path_buf, path_size, "%s", cwd);
+    return path_buf;
 }
 
-int parse_input(char *input) {
-    char *argv = input;
-    fgets(argv, BUFFER_SIZE, stdin);
-    if (feof(stdin)) { // To handle EOF
-        return 1;
+/* Writes prompt given a buffer */
+char * create_prompt(char *prompt_buf, int prompt_size) {
+    char path[PATH_SIZE];
+    get_path(path, PATH_SIZE);
+    snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%sᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+    return prompt_buf;
+}
+
+void cleanup() {
+    --args; // Initially subtract 1 from args to make it zero-based
+    for (; args >= 0; --args) {
+        free(argv[args]);
     }
-    while (argv[0] == ' ') { // To clean up spaces before commands
-        argv++;
-    }
-    char *cmd = strsep(&argv, " \n");
-    if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
-        return 1;
-    }
-    else if (cmd) {
-        if (strstr(cmd, "cd") != NULL) {
-            change_directory(argv);
+    free(argv);
+}
+
+int main() {
+    prompt = (char *) malloc(PROMPT_SIZE);
+    while (!feof(stdin)) {
+        create_prompt(prompt, PROMPT_SIZE);
+        char *line = readline(prompt);
+        if (line == NULL) {
+            printf("\n`EOF Sent`\n");
+            free(line);
+            free(prompt);
+            exit(0);
         }
-        else if (strcmp(cmd, "")) { // Makes sure that the command is not empty
-            printf("Running: %s %s\n", cmd, argv);
-            call_cmd(cmd, argv);
-        }
+        printf("$: `%s`\n", line);
+        add_history(line);
+        parse_input(line);
+        free(line);
     }
+    free(prompt);
+    printf("Thanks for using %s!\n", shell_name);
     return 0;
 }
 
-void call_cmd(char *cmd, char *argv) {
-    pid_t pid = fork();
-    if (pid) { // Parent process to wait for child to finish
-        int status;
-        wait(&status);
+void parse_input(char *input) {
+    argv = (char **) malloc(sizeof(char *));
+    args = 0;
+    int index = 0;
+    char tok[TOK_SIZE];
+    int tokIndex = 0;
+    tok[0] = '\0';
+    while (input[index]) {
+        if (input[index] != ' ' && input[index] != '\n') {
+            if (0) { // Handler for other cases
+            }
+            else {
+                tok[tokIndex] = input[index];
+                ++tokIndex;
+            }
+        }
+        else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
+            tok[tokIndex] = '\0';
+            ++args;
+            argv = (char **) realloc(argv, args * sizeof(char *)); // Expands argv to fit another arg
+            argv[args-1] = strdup(tok);
+            tok[0] = '\0'; // Resets tok
+            tokIndex = 0;
+        }
+        ++index;
     }
-    else { // Child process to execute commands
-        char *argv_buf[BUFFER_SIZE];
-        char *arg;
-        argv_buf[0] = cmd;
-        int i = 1;
-        for (arg = strsep(&argv, " \n"); *arg; arg = strsep(&argv, " \n")) {
-            argv_buf[i] = arg;
-            ++i;
+    if (index != 0 && (args != 0 || tokIndex != 0)) { // To account for tokens right before \n <-- which is \0 because of readline(), also makes sure there is something to execute
+        if (tok[0] != '\0') { // Prevents empty space after input
+            tok[tokIndex] = '\0';
+            ++args;
+            argv = (char **) realloc(argv, args * sizeof(char *));
+            argv[args-1] = strdup(tok);
         }
-        argv_buf[i] = NULL;
-        errno_result = execvp(cmd, argv_buf);
-        if (errno_result == -1) {
-            printf("%s: %s\n", cmd, strerror(errno));
-        }
+
+        argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+        argv[args] = NULL;
+        execute(argv);
+    }
+    cleanup();
+}
+
+void execute(char **argv) {
+    /* DEBUG */
+    int i = 0;
+    for (; i <= args; ++i) {
+        printf("$argv[%d]: `%s`\n", i, argv[i]);
+    }
+
+    char *cmd = argv[0];
+    if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
+        printf("I'm sad to see you go... :(");
+        cleanup();
+        free(prompt);
         exit(0);
+    }
+    else if (!strcmp(cmd, "cd")) {
+        change_directory(argv[1]); // Only parse the first argument in cd
+    }
+    else {
+        pid_t pid = fork();
+        if (pid) { // Parent process to wait for child to finish
+            int status;
+            wait(&status);
+        }
+        else { // Child process to execute commands
+            errno_result = execvp(cmd, argv);
+            if (errno_result == -1) {
+                printf("%s: command not found: %s\n", shell_name, cmd);
+            }
+            exit(0);
+        }
     }
 }
 
-void change_directory(char *argv) {
-    while (argv[0] == ' ') {
-        argv++; // Remove empty spaces in front of path
-    }
-    char *path = strsep(&argv, " \n");
+void change_directory(char *path) {
+    char *path_cpy = path;
     char *home_cpy = strdup(getenv("HOME"));
-    if (path[0] == '~') {
-        path++; // Goes beyond ~
-        path = strcat(home_cpy, path);
+    if (path_cpy[0] == '~') {
+        path_cpy++; // Goes beyond ~
+        path_cpy = strcat(home_cpy, path_cpy);
     }
-    else if (path[0] == '\0') { // When no path specified, use home
-        path = home_cpy;
+    else if (path_cpy[0] == '\0') { // When no path specified, use home
+        path_cpy = home_cpy;
     }
-    errno_result = chdir(path);
+    errno_result = chdir(path_cpy);
     if (errno_result == -1) {
         printf("%s: %s\n", "cd", strerror(errno));
     }
