@@ -14,22 +14,27 @@
    fish ascii art on `exit`: http://www.ascii-art.de/ascii/def/fish.txt
    
    REAL TODO:
-   bug: multiple spaces between command name and arguments are not ignored
-   print prompt with ~
-   'cd' accepts ~ as part of the path
-   pipes and redirecting
-   sighandler - catch sigint, ctrl d for eof
-   method abstraction, utils.c file maybe (for parsing, trim, etc)
-   better errors
-   add color to prompt
-   command history, up arrow for previous command
-   'cd -' goes to previous directory
-   tab completion
-   design.txt thing
+   bug: prompt ~ replacing $HOME when at $HOME or a path with fewer chars
+   redirecting
+   pipes
 
-   NOTES/FEATURES: (will be moved to README later)
-   does not handle all errors (ex: error from getcwd)
+   add color to prompt, customize, bold
+   sighandler - catch sigint, ctrl d for eof
+   command history, up arrow (or ctrl p) for previous command
+   'cd -' goes to previous directory
+   method abstraction, utils.c file maybe (for parsing, trim, etc)
+   tab completion
+   better errors?
+       syntax errors (cmd:";;;;")
+   final check to optimize code efficiency
+       perhaps ignore white space rather than trim?
+   final check for memory leak
+   design.txt, edit header file, readme
+
+   NOTES/FEATURES: (to be moved to README)
+   trim white space (leading, inbetween, trailing)
    ignores multiple ;'s rather than give syntax error (as in bash)
+   does not print all errors (ex: error from getcwd, syntax error)
  */
 
 
@@ -75,21 +80,24 @@ void execute(char **argv){
   else if (!strcmp(argv[0], "cd")){
     changeDir(argv[1]);
   }
+  // Handle non-null or non-whitespace commands
   else{
     int f, status;
     f = fork();
     // If child process
-    if (!f)
+    if (!f){
       if (execvp(argv[0], argv) < 0){
 	// If error
 	printf("%s: command not found\n", argv[0]);
 	exit(EXIT_FAILURE);
       }
+    }
     else
       wait(&status);
   }
 }
 
+// Free dynamically allocated memory after use
 char ** parseInput(char *input, char *delim){
   int maxSize = 4; // Limit of the number of tokens in argv
   int size = 0; // Index counter
@@ -97,25 +105,29 @@ char ** parseInput(char *input, char *delim){
   char *arg = strsep(&input, delim);
   char *tmp; // Used to trim whitespace
 
-  for (; arg; arg = strsep(&input, delim), size++){
+  // Separate input by `delim` into arg tokens
+  for (; arg; arg = strsep(&input, delim)){
     // Reallocate when out of memory
     if (size == maxSize-2){
       maxSize *= 2;
       argv = (char **)realloc(argv, sizeof(char *)*maxSize);
     }
 
-    // Trim leading and trailing white space from arg
-    while (isspace(*arg))
+    // Trim leading white space and ';' from arg
+    while (isspace(*arg) || *arg==';')
       arg++;
-    if (*arg){ // If *arg isn't all white space
+    // If arg isn't all white space or ';'
+    if (*arg){
+      // Trim trailing white space and ';'
       tmp = arg + strlen(arg) - 1;
-      while (tmp > arg && isspace(*tmp))
+      while (tmp > arg && (isspace(*tmp) || *arg==';'))
 	tmp--;
-    }
-    *(tmp+1) = 0;
+      *(tmp+1) = 0;
 
-    // Instantiate the array with tokens separated by `delim`
-    argv[size] = arg;
+      // Instantiate the array
+      argv[size] = arg;
+      size++;
+    }
   }
   // Append NULL to follow execvp() syntax
   argv[size] = NULL;
@@ -133,11 +145,11 @@ void shell(){
     fgets(input, BUFFER_LEN, stdin);
 
     // Separate commands (with ;) from input
-    argv = parseInput(input, ";\n");
+    argv = parseInput(input, ";");
 
     // Execute each command
     count = 0;
-    while (argv[count] && strcmp(argv[count], "")){
+    while (argv[count]){
       execute(parseInput(argv[count], " "));
       count++;
     }
