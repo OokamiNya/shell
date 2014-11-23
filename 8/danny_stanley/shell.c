@@ -5,6 +5,12 @@ int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
 int args;
 char **argv;
+int cmd_status = 1;
+
+static void signalhandler(int signal) {
+    switch(signal) {
+    }
+}
 
 /* Writes directory path given a buffer */
 char * get_path(char *path_buf, int path_size) {
@@ -25,7 +31,12 @@ char * get_path(char *path_buf, int path_size) {
 char * create_prompt(char *prompt_buf, int prompt_size) {
     char path[PATH_SIZE];
     get_path(path, PATH_SIZE);
-    snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%sᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+    if (cmd_status) { // Previous command was successful
+        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+    }
+    else {
+        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_red, reset);
+    }
     return prompt_buf;
 }
 
@@ -38,9 +49,11 @@ void cleanup() {
 }
 
 int main() {
+    signal(SIGINT, signalhandler);
     prompt = (char *) malloc(PROMPT_SIZE);
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
+        cmd_status = 1;
         char *line = readline(prompt);
         if (line == NULL) {
             printf("\n`EOF Sent`\n");
@@ -48,9 +61,11 @@ int main() {
             free(prompt);
             exit(0);
         }
-        printf("$: `%s`\n", line);
-        add_history(line);
+        printf("$input: `%s`\n", line);
         parse_input(line);
+        if (cmd_status) {
+            add_history(line);
+        }
         free(line);
     }
     free(prompt);
@@ -121,13 +136,16 @@ void execute(char **argv) {
         if (pid) { // Parent process to wait for child to finish
             int status;
             wait(&status);
+            if (WEXITSTATUS(status)) {
+                cmd_status = 0; // Notes that there was an error
+            }
         }
         else { // Child process to execute commands
             errno_result = execvp(cmd, argv);
             if (errno_result == -1) {
                 printf("%s: command not found: %s\n", shell_name, cmd);
             }
-            exit(0);
+            exit(127); // Exit with an error, only reached if execvp fails
         }
     }
 }
@@ -144,7 +162,8 @@ void change_directory(char *path) {
     }
     errno_result = chdir(path_cpy);
     if (errno_result == -1) {
-        printf("%s: %s\n", "cd", strerror(errno));
+        printf("cd: %s: %s\n", path, strerror(errno));
+        cmd_status = 0;
     }
     free(home_cpy);
 }
