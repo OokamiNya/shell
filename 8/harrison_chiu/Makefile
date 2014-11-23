@@ -4,7 +4,7 @@ all: clean build run
 
 clean: 
 	for dir in src/*/; do make -C $$dir clean; done;
-	rm -f ${EXEC_NAME}
+	rm -f *~ obj/main.o ${EXEC_NAME}
 
 build:
 	for dir in src/*/; do make -C $$dir build; done;

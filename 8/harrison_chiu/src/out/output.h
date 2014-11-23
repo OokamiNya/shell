@@ -1,1 +1,1 @@
-char *prompt();
+char *create_prompt();
