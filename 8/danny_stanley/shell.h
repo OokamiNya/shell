@@ -5,14 +5,20 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
-#include <ncurses.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <sys/wait.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
-#define BUFFER_SIZE 1024
+#define PROMPT_SIZE 256
+#define PATH_SIZE 512
+#define TOK_SIZE 1024
+#define BUFFER_SIZE 2014
+
+const char *shell_name = "StD";
 
 void shell();
-int parse_input(char *);
-void call_cmd(char *, char *);
+void parse_input(char *);
+void execute(char **);
 void change_directory(char*);
