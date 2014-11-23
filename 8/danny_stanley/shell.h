@@ -11,10 +11,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define PROMPT_SIZE 256
-#define PATH_SIZE 512
-#define TOK_SIZE 1024
-#define BUFFER_SIZE 2014
+#define PROMPT_SIZE 1024
+#define PATH_SIZE 768
+#define TOK_INIT_SIZE 256
 
 const char *shell_name = "StD";
 

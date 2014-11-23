@@ -5,6 +5,7 @@ int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
 int args;
 char **argv;
+char *tok;
 int cmd_status = 1;
 int valid_input = 0;
 
@@ -47,6 +48,7 @@ void cleanup() {
         free(argv[args]);
     }
     free(argv);
+    free(tok);
 }
 
 int main() {
@@ -78,7 +80,8 @@ void parse_input(char *input) {
     argv = (char **) malloc(sizeof(char *));
     args = 0;
     int index = 0;
-    char tok[TOK_SIZE];
+    int tokSize = TOK_INIT_SIZE;
+    char *tok = (char *) malloc(TOK_INIT_SIZE);
     int tokIndex = 0;
     tok[0] = '\0';
     while (input[index]) {
@@ -88,6 +91,10 @@ void parse_input(char *input) {
             else {
                 tok[tokIndex] = input[index];
                 ++tokIndex;
+                if (tokIndex >= tokSize) { // Expand buffer for tok
+                    tokSize += TOK_INIT_SIZE;
+                    tok = realloc(tok, tokSize);
+                }
             }
         }
         else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
@@ -115,6 +122,7 @@ void parse_input(char *input) {
     else {
         valid_input = 0;
     }
+    printf("%d\n", tokSize);
     cleanup();
 }
 
@@ -127,7 +135,7 @@ void execute(char **argv) {
 
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
-        printf("I'm sad to see you go... :(");
+        printf("I'm sad to see you go... :(\n");
         cleanup();
         free(prompt);
         exit(0);
