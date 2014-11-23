@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pwd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
 
@@ -47,6 +49,9 @@ void exec(char ** argarray, int len){
 }
 
 void shell(){
+  struct passwd *p = getpwuid(getuid());
+  char * user = p->pw_name;
+  
   char *s = (char *)(malloc(10*sizeof(char)));
   char *command = (char *)(malloc(10*sizeof(char)));
   char *token = (char *)(malloc(10*sizeof(char)));
@@ -55,7 +60,13 @@ void shell(){
   //prompt
   char cwd[256];
   getcwd(cwd,sizeof(cwd));
-  printf("%s$ ",cwd);
+  if(strstr(cwd,getenv("HOME"))){
+    //printf("There exists HOME in pwd.\n");
+    char * path = strdup(cwd+strlen(getenv("HOME")));
+    printf("%s:~%s$ ",user,path);
+  } else {
+    printf("%s:%s$ ",user,cwd);
+  }
   fgets(s,100,stdin);
 
   s = strip(s);
@@ -74,7 +85,7 @@ void shell(){
   token = s;
   argarray[i] = token;
   while (token = strsep(&s," ")){
-    //getting rid of empty tokens btw arguments
+    //getting rid of empty tokens btwnXS arguments
     if (strlen(token)==0){
       alen--;
       argarray=realloc(argarray,alen*3*sizeof(char));

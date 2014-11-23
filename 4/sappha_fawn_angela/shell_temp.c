@@ -22,7 +22,6 @@ int main() {
   }
   return 0;
 }
-
 char** execute_all(){
   char s[256];
   //printf("sizeofs:%d\n", sizeof(s));
@@ -52,7 +51,7 @@ char** execute_all(){
   args[i] = NULL;
   int c = 0;
   for (c = 0; args[c]; c++){
-    printf("args[%d]:%s end\n", c, args[c]);
+    printf("args[%d]:%s\n", c, args[c]);
     //printf("what is sep now? %s\n", sep);
     execute(args[c]);
   }

@@ -1,0 +1,17 @@
+seashell
+by Aida Piccato and Madina Radjabova
+
+Features:
+	Forks and executes commands!
+	Can summon a winged unicorn for fast & magical transit!
+
+Attempted:
+
+Bugs:
+	At times, Aida's behavior is malfunctional. She gets sassy when
+	in presence of her chapstick. She insists that I mention it is
+	Burt's Bees "minty fresh" flavored chapstick. Upon smelling it,
+	I concur that it does indeed smell nice.
+
+
+	

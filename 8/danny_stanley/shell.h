@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <ncurses.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <sys/wait.h>

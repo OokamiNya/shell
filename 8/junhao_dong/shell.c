@@ -1,72 +1,71 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
+#include "shell.h"
 
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
+#define TRUE 1
+#define FALSE 0
+#define BUFFER_LEN 256
 
+/* TODO:
+   `exit` + konami easter eggs??
+   fish ascii art on `exit`: http://www.ascii-art.de/ascii/def/fish.txt
+   optimize memory usage: malloc arrays with variable size
+   
+   REAL TODO:
+   write cd + print dir with fish: pwd, dup2?
+     accept ~ . .. - 
+   handle ; parsing
 
-void execute(){
-  char *input = (char *) malloc(256);
-  fgets(input, 256, stdin);
+   NOTES/ISSUES:
+   1)
+   
+ */
 
+char ** parseInput(char *input, char *tok){
   int argc = 0;
-  char *argv[256];
+  char **argv = (char **)malloc(BUFFER_LEN);
   char *arg;
-  
-  for (arg = strsep(&input," \n"); *arg; arg = strsep(&input, " \n"), argc++)
+
+  for (arg = strsep(&input,tok); *arg; arg = strsep(&input, tok), argc++){
       argv[argc] = arg;
-
+  }
   argv[argc] = NULL;
+  return argv;
+}
+
+void changeDir(){
   
-  execvp(argv[0], argv);
 }
 
-static void sighandler(int signo){
-  int f, fd, status;
-
-  if(signo == SIGUSR1){
-    printf("SIGUSR1 received.\n");
-    fd = open("whoOut.txt", O_APPEND | O_WRONLY | O_CREAT);
-    dup2(fd, STDOUT_FILENO);
-    execlp("who","who",NULL);
+void execute(char **argv){
+  //"exit" command
+  if (!strcmp(argv[0],"exit")){
+    execlp("echo","echo","Sea ya next time",NULL);
   }
-  else if(signo == SIGUSR2){
-    printf("SIGUSR2 received.\n");
-    fd = open("whoOut.txt", O_APPEND | O_WRONLY | O_CREAT);
-    dup2(fd, STDOUT_FILENO);
-    execlp("ps","ps",NULL);
+  //"cd" command
+  else if (!strcmp(argv[0],"cd")){
+    changeDir();
   }
-  else if(signo == SIGINT){
+  else{
+    int f, status;
     f = fork();
-
-    if (f==0){
-      printf("\n\nPrinting whoOut.txt (who):\n");
-      execlp("cat","cat","whoOut.txt",NULL);
-    }else{
+    if (!f)
+      execvp(argv[0], argv);
+    else
       wait(&status);
-      printf("\n\nPrinting psOut.txt (ps):\n");
-      execlp("cat","cat","psOut.txt",NULL);
-    }
+  }
+}
+
+void shell(){
+  char *input;
+  while (TRUE){
+    printf("><((((º> ");
+    fgets(input, BUFFER_LEN, stdin);
+    // finish later; for (int i = 0; i < parseInput(input,";")
+    execute(parseInput(input," \n"));
   }
 }
 
 int main(){
-  signal(SIGUSR1,sighandler);
-  signal(SIGUSR2,sighandler);
-  signal(SIGINT,sighandler);
-  while (1){
-    printf("running with pid:    %d\n", getpid());
-    sleep(1);
-  }
-}
-
-int main(){
-  printf("Enter a command...\n");
-  printf("$ ");
-  execute();
+  printf("\n=======Welcome to Shellfish, Home of the Selfish=======\n");
+  shell();
+  return 0;
 }

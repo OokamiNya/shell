@@ -8,15 +8,15 @@
 #include <errno.h>
 
 
-
 int main(){
   char* args=calloc(256,sizeof(char));
   char** addresses=calloc(256,sizeof(char*));
   
   char* cwd=calloc(256,sizeof(char));  
   getcwd(cwd,256);
+  int status;
   while (1){
-    printf("%s :^) -",cwd);
+    printf("(ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
     fgets(args,256,stdin);
     args = strsep(&args,"\n");
 
@@ -30,21 +30,30 @@ int main(){
       execlp("cd","cd",args+3);
       chdir(args+3);
       getcwd(cwd,256);
-    }else if(args[0]){//if they spam enter obnoxiously like eric does -eric
-      int i=0,j=1,pid=fork();
-      if (!pid){
-	addresses[0]=args;
-	do{
-	  if (args[0]==32){
-	    addresses[j++]=args+1+i;
-	    args[i]=0;
-	  }
-	}while(args[++i]);
-	execvp(args,addresses);
-      }else
-	sleep(1);
+    }else if(args[0]){//prevents empty lines
+      if (! strstr(args,"|") &&
+	  ! strstr(args,"<") &&
+	  ! strstr(args,">")){//if no pipe or redirects
+	int i=0,j=1,pid=fork();
+	if (!pid){
+	  addresses[0]=args;
+	  do{
+	    if (args[0]==32){
+	      addresses[j++]=args+1+i;
+	      args[i]=0;
+	    }
+	  }while(args[++i]);
+	  execvp(args,addresses);
+	}else
+	  wait(&status);
+      }//plan how code will be put together with nested fancy
+      //for example:
+      //ls | grep poop > swag.txt
+
     }
-      
+
+    
+    
     
     
   }

@@ -7,41 +7,44 @@
 #include <sys/stat.h>
 
 void prompt(char* s) {
-  printf ("shell prompt: ");
+  printf ("[ :^) ]  ");
   fgets (s, 256, stdin);
 }
 
-void docmd(char* s) {
+int countargs(char* s) {
+  char* temp = malloc(256*sizeof(char));
+  char* starttemp = temp;
+  strncpy(temp, s, 256);
+  int argc = 0;
+  while(strsep(&temp, " ")) {
+    argc++;
+  }
+  free(starttemp);
+  return argc;
+}
+
+void splitcmd(char* s, char** args) {
   char *c = s;
   char *t;
-  char **args = NULL;
   int i = 0; 
   
   c = strsep (&c, "\n");
   
   while ((t = strsep(&c, " "))) {
-    args = realloc (args, sizeof (char *) *(i+1));
     args[i] = t;
     i++;
   }
-  
+
   args [i] = 0;
+}
+
+void docmd(char** args) {
   execvp (args[0], args);
-  free (args);
   printf ("wrong\n");
   exit(0);
 }
 
-int main () {
-  char s[256];
-  while (1) {
-    prompt(s);
-    int f = fork();
-    if(f == 0) {
-      docmd(s);
-    } else {
-      wait();
-    }
-  }
-  return 0;
+void gtfo() {
+  exit(0);
 }
+

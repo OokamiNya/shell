@@ -14,22 +14,21 @@ void shell() {
     char* home = pwd->pw_dir;
     */
     //Fast efficient way
-    char home[BUFFER_SIZE];
-    strcpy(home, getenv("HOME")); // Required because somehow the environment variable changes when you chdir ~/Desktop
+    char *home = getenv("HOME"); // Required because somehow the environment variable changes when you chdir ~/Desktop
     while (!done) {
       getcwd(path_buf, BUFFER_SIZE);
       char *home_index = strstr(path_buf, home);
-      printf("%s -- %s\n", path_buf, home);
+      //printf("%s -- %s\n", path_buf, home);
       if (home_index == NULL) {
 	printf("\e[37;1mStD: \e[36;1m%s\e[32;1m ᐅ \e[033;0m", path_buf);
       }
       else {
-        path_buf += strlen(home); // Removes the home directory from path
-	printf("\e[37;1mStD: \e[36;1m~%s\e[32;1m ᐅ \e[033;0m", path_buf);
+	printf("\e[37;1mStD: \e[36;1m~%s\e[32;1m ᐅ \e[033;0m", path_buf + strlen(home)); // Removes the home directory from path
       }
       fflush(stdout);
       done = parse_input(input);
     }
+    free(path_buf);
     free(input);
 }
 
@@ -83,14 +82,21 @@ void call_cmd(char *cmd, char *argv) {
 }
 
 void change_directory(char *argv) {
+    while (argv[0] == ' ') {
+        argv++; // Remove empty spaces in front of path
+    }
     char *path = strsep(&argv, " \n");
-    if (strstr(path, "~") != NULL){
-      char* home = getenv("HOME");
-      path++; // Goes beyond ~
-      path = strcat(home, path);
+    char *home_cpy = strdup(getenv("HOME"));
+    if (path[0] == '~') {
+        path++; // Goes beyond ~
+        path = strcat(home_cpy, path);
+    }
+    else if (path[0] == '\0') { // When no path specified, use home
+        path = home_cpy;
     }
     errno_result = chdir(path);
     if (errno_result == -1) {
         printf("%s: %s\n", "cd", strerror(errno));
     }
+    free(home_cpy);
 }
