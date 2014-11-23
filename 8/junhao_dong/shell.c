@@ -14,34 +14,51 @@
 */
 
 #define BUFFER_LEN 256
-#define ARGV_LEN sizeof(char *) * 16
 
 /* TODO:
    konami easter eggs??
    fish ascii art on `exit`: http://www.ascii-art.de/ascii/def/fish.txt
    
    REAL TODO:
-   whitespace
-   write cd + print dir with fish: pwd, dup2?; check piazza
+   change_dir()
+   prompt with fish (home dir)
      accept ~ . .. - 
-   memory usage; malloc those arrays more carefully
-   ERRNOs
-   // free argv after done with it
-
-   NOTES/ISSUES:
-   1) 
+   errno
+   method abstraction
+   ctrl-d for EOF
  */
 
 char ** parseInput(char *input, char *delim){
-  int count = 0;
-  char **argv = (char **)malloc(ARGV_LEN);
-  char *arg = strsep(&input,delim);
-  
+  int maxSize = 4; // Limit of the number of tokens in argv
+  int size = 0; // Index counter
+  char **argv = (char **)malloc(sizeof(char *));
+  char *arg = strsep(&input, delim);
+  char *tmp; // Used to trim whitespace
 
-  for (; arg; arg = strsep(&input, delim), count++){
-    argv[count] = arg;
+  for (; arg; arg = strsep(&input, delim), size++){
+    // Reallocate when out of memory
+    if (size == maxSize-2){
+      maxSize *= 2;
+      argv = (char **)realloc(argv, sizeof(char *)*maxSize);
+    }
+    
+    // Trim leading and trailing white space from arg
+    while (isspace(*arg))
+      arg++;
+    if (*arg){
+      tmp = arg + strlen(arg) - 1;
+      while (tmp > arg && isspace(*tmp))
+	tmp--;
+    }
+    *(tmp+1) = 0;
+
+    // Instantiate the array with tokens separated by `delim`
+    argv[size] = arg;
   }
-  argv[count] = NULL;
+
+  // Append NULL to follow execvp() syntax
+  argv[size] = NULL;
+
   return argv;
 }
 
@@ -49,20 +66,25 @@ void changeDir(){
   
 }
 
+// TODO: handle invalid commands
 void execute(char **argv){
+  // Handle "exit" command
   if (!strcmp(argv[0],"exit")){
     printf("Sea ya next time\n");
     exit(EXIT_SUCCESS);
   }
+  // Handle "cd" command
   else if (!strcmp(argv[0],"cd")){
     changeDir();
   }
   else{
     int f, status;
     f = fork();
-    if (!f){ //child
+    // Child executes
+    if (!f){
       execvp(argv[0], argv);
       //error stuff
+      //having to type exit twice when typing non valid cmd
     }
     else
       wait(&status);
@@ -71,21 +93,28 @@ void execute(char **argv){
 
 void shell(){
   char *input;
-  char **argv = (char **)malloc(ARGV_LEN);
+  char **argv = (char **)malloc(sizeof(char *));
+  int count;
+
   while (1){
     printf("><((((º> ");
     fgets(input, BUFFER_LEN, stdin);
     
+    // Separate commands (with ;) from input
     argv = parseInput(input,";\n");
-    while (*argv && strcmp(*argv,"")){ // empty string at end
-      printf("-%s-\n",*argv);
-      execute(parseInput(*argv," "));
-      *argv++;
+
+    // Execute each command
+    count = 0;
+    while (argv[count] && strcmp(argv[count],"")){
+      // DEBUG
+      printf("Command: '%s'\n",argv[count]);
+      execute(parseInput(argv[count], " "));
+      count++;
     }
+    
+    free(argv);
   }
 }
-
-  //  int count, arrLen = 1;//sizeof(argv)/sizeof(char *);
 
 int main(){
   printf("\n=======Welcome to Shellfish, Home of the Selfish=======\n");
