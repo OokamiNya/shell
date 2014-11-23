@@ -1,11 +1,9 @@
-// TODO dynamically allocated cwd size?
-// TODO implement proper use of quotation marks -> ignore quotes and ignore spaces in quotes
+// TODO fg, bg processes (&), jobs
 // TODO git prompt
 // TODO command tab-completion
-// TODO command history
-// TODO redirection
+// TODO simple redirection
+// TODO arithmetic?
 #include "shell.h"
-#include <readline/readline.h>
 
 char cmd_error = FALSE;
 int child_pid;
@@ -15,6 +13,7 @@ char *prompt;
 char **opts;
 char *tok;
 int optCount;
+char old_pwd[DIR_NAME_MAX_SIZE];
 
 static void sighandler(int signo) {
     if (signo == CMD_ERROR_SIGNAL) {
@@ -44,6 +43,26 @@ void print_error() {
     }
 }
 
+void cd(const char *target) {
+    // Duplicate the target; if the target points to old_pwd, we
+    // don't want to overwrite the old_pwd
+    char dup_target[DIR_NAME_MAX_SIZE];
+    strncpy(dup_target, target, sizeof(dup_target));
+    // Store the previous old_pwd in case chdir fails and we have to revert
+    char prev_old_pwd[DIR_NAME_MAX_SIZE];
+    strncpy(prev_old_pwd, old_pwd, sizeof(prev_old_pwd));
+    getcwd(old_pwd, sizeof(old_pwd)); // Set the current dir as the new old_pwd
+    if (chdir(dup_target) < 0) { // Returns -1 if error
+        print_error();
+        cmd_error = TRUE;
+        strncpy(old_pwd, prev_old_pwd, sizeof(old_pwd)); // Restore previous old_pwd
+    }
+}
+
+void cd_back() {
+    cd(old_pwd);
+}
+
 char *get_user() {
     uid_t uid = geteuid();
     struct passwd *passwd = getpwuid(uid);
@@ -53,21 +72,28 @@ char *get_user() {
     return "Anon";
 }
 
-char *get_uid_symbol(char *uid_symbol_container) {
+char *get_uid_symbol() {
+    char *uid_symbol;
     const char non_root = '$';
     const char root = '#';
     if (getuid() != 0) {
         if (cmd_error == TRUE) {
-            sprintf(uid_symbol_container, "%s%s%c%s", bold_prefix, fg_red_160, non_root, reset);
+            int required_size = sizeof(char) * (strlen(bold_prefix) + strlen(fg_red_160) + 1 + strlen(reset) + 1);
+            uid_symbol = (char *) malloc(required_size);
+            sprintf(uid_symbol, "%s%s%c%s", bold_prefix, fg_red_160, non_root, reset);
         }
         else {
-            sprintf(uid_symbol_container, "%s%s%c%s", bold_prefix, fg_white, non_root, reset);
+            int required_size = sizeof(char) * (strlen(bold_prefix) + strlen(fg_white) + 1 + strlen(reset) + 1);
+            uid_symbol = (char *) malloc(required_size);
+            sprintf(uid_symbol, "%s%s%c%s", bold_prefix, fg_white, non_root, reset);
         }
-        return uid_symbol_container;
+        return uid_symbol;
     }
     else {
-        sprintf(uid_symbol_container, "%s%s%c%s", bold_prefix, fg_red_196, root, reset);
-        return uid_symbol_container;
+        int required_size = sizeof(char) * (strlen(bold_prefix) + strlen(fg_red_196) + 1 + strlen(reset) + 1);
+        uid_symbol = (char *) malloc(required_size);
+        sprintf(uid_symbol, "%s%s%c%s", bold_prefix, fg_red_196, root, reset);
+        return uid_symbol;
     }
 }
 
@@ -120,15 +146,15 @@ void execute() {
     }
     else if (strcmp(opts[0], cmd_cd) == 0){
         if (opts[1] == NULL) {
-            if (chdir(home) < 0) { // Returns -1 if error
-                print_error();
-                cmd_error = TRUE;
-            }
+            // By default, cd to home if no directory specified
+            cd(home);
         }
-        else if (chdir(opts[1]) < 0) { // Returns -1 if error
-            print_error();
-            cmd_error = TRUE;
+        else {
+            cd(opts[1]);
         }
+    }
+    else if (strcmp(opts[0], cmd_back) == 0) {
+        cd_back();
     }
     else {
         // Fork to execute command
@@ -147,6 +173,7 @@ void execute() {
             wait(&status);
         }
     }
+    printf("<~~~~ End of Output ~~~~~>\n");
 }
 
 void free_all() {
@@ -162,8 +189,8 @@ void free_all() {
 }
 
 void get_prompt(char *prompt, int prompt_max_size) {
-    char cwd[768];
-    cwd[767] = '\0';
+    char cwd[DIR_NAME_MAX_SIZE];
+    cwd[DIR_NAME_MAX_SIZE - 1] = '\0';
     // Get cwd
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         print_error();
@@ -172,8 +199,7 @@ void get_prompt(char *prompt, int prompt_max_size) {
     abbreviate_home(cwd, sizeof(cwd));
     char *time_str = (char *) malloc (DATE_MAX_SIZE);
     get_time_str(time_str);
-    char *uid_symbol = (char *) calloc(sizeof(char), 20);
-    get_uid_symbol(uid_symbol);
+    char *uid_symbol = get_uid_symbol();
     snprintf(prompt, prompt_max_size, "%s%s[%s]%s %s%s%s:%s%s%s%s%s %s\n%s%s>>%s ", bold_prefix, fg_red_196, time_str, reset, bold_prefix, fg_bright_green, get_user(), reset, bold_prefix, fg_blue_39, cwd, reset, uid_symbol, bold_prefix, fg_green, reset);
     free(uid_symbol);
     free(time_str);
@@ -186,9 +212,10 @@ void parse_input(char input[INPUT_BUF_SIZE]) {
     tok[0] = '\0';
     optCount = 0;
     int i = 0, tokIndex = 0;
+    char state = STATE_NORMAL;
     // Iterate through each char of input
     while (input[i]) {
-        if (input[i] != '\n' && input[i] != ' ') { // Ignore whitespace
+        if ((input[i] != '\n' && input[i] != ' ') || (state == STATE_IN_QUOTES)) { // Ignore whitespace
             // Handle escape characters
             if (input[i] == '\\') {
                 // Add char that follows the escape char to token
@@ -230,6 +257,17 @@ void parse_input(char input[INPUT_BUF_SIZE]) {
                 opts = (char **) malloc(sizeof(char *));
                 // Reset optCount
                 optCount = 0;
+            }
+            // Interpret words in quotes as a single token
+            else if (input[i] == '\"') {
+                if (state != STATE_IN_QUOTES) {
+                    printf("Entering quotes\n");
+                    state = STATE_IN_QUOTES;
+                }
+                else {
+                    printf("Exiting quotes\n");
+                    state = STATE_NORMAL;
+                }
             }
             // Substitute ~ with $HOME, if applicable
             else if (input[i] == '~') {
@@ -295,12 +333,12 @@ int main() {
     signal(SIGINT, sighandler);
     // TODO allow for possible changing home dir
     home = getenv("HOME");
+    getcwd(old_pwd, sizeof(old_pwd));
     while (!feof(stdin)) {
         // Initializations
         prompt = (char *) malloc(PROMPT_MAX_SIZE * sizeof(char));
 
         get_prompt(prompt, PROMPT_MAX_SIZE);
-        //printf("%s", prompt);
         char *line = readline(prompt);
         if (line == NULL) {
             printf("\n[Reached EOF]\n");
@@ -308,6 +346,7 @@ int main() {
             exit(0);
         }
         strncpy(input, line, INPUT_BUF_SIZE);
+        add_history(input);
         free(line);
         printf("input: %s\n", input);
 
