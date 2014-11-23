@@ -31,7 +31,7 @@ int main(){
   while(1){
     //Prompt
     char prompt[4096];
-    wait();
+    wait(NULL);
     strcpy(prompt,"Shell:");//add directory and username
     printf("%s", prompt);
     getcwd(prompt, sizeof(prompt));
@@ -50,13 +50,17 @@ int main(){
       //Executes input
       if(strcmp(args[0],"exit") == 0){
 	exit(0);
+      }else if(strcmp(args[0],"\x1b[A") == 0){
+        printf("up");
       }else if(strcmp(args[0],"cd") == 0){
 	chdir(args[1]);
       }else{
 	int f = fork();
 	if(!f){
 	  execvp(args[0],args);
+      free(args);
 	  printf("Command not found\n");
+      exit(0);
 	}
       }
       
