@@ -33,8 +33,9 @@ int main() {
     } 
     else if (strcmp("cd",first_arg) == 0) {
       chdir(scpy);
-      getcwd(first_arg,sizeof(first_arg));
-      printf("Cding to \n");
+      char direct[1024];
+      getcwd(direct,sizeof(direct));
+      printf("Current Directory: %s\n",direct);
     } 
     else {
       int f = fork();
