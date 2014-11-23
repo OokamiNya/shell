@@ -41,7 +41,7 @@ int shell(){
   printf("_$ "); //fill _ with something (maybe cwd)
   char s[1024];
   fgets(s,sizeof(s),stdin);
-  int n = 1;//2
+  int n = 1;
   char *p = s;
   while (*p){ //now splits on ';' and runs commands in succession
 	if (*p == ';'){
@@ -62,11 +62,12 @@ int shell(){
   for (; i < n; i++){
 	execute(commands[i]);
   }
+  free(commands);
   shell();
 }
 
 int execute(char *s){
-  int n = 1;
+  int n = 2;
   char *p = s;
   while (*p){
 	if (*p == ' '){
@@ -88,19 +89,18 @@ int execute(char *s){
   if (!strcmp(params[0],"cd")){
 	int i = 1;
 	cd (params [i]); // note to self ~ and / don't work
-  }
-  int f = fork();
-  if (!f){
-	if (!strcmp(params[0],"exit")){
-	  printf("Bye!\n\n");
-	  close(STDOUT_FILENO);
-	  char parent[10];
-	  sprintf(parent,"%d",getppid());
-	  execlp("kill","kill","-10",parent,NULL);
-	}
-	execvp(params[0],params);    
+	//inputting just 'cd' causes a seg fault
+  }else if (!strcmp(params[0],"exit")){
+	printf("Bye!\n\n");
+	exit(0);
   }else{
-	int status;
-	wait(&status);
+	int f = fork();
+	if (!f){
+	  execvp(params[0],params);    
+	}else{
+	  int status;
+	  wait(&status);
+	  free(params);
+	}
   }
 }
