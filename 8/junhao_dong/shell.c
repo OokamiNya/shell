@@ -2,31 +2,93 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include <errno.h>
 
 #include "shell.h"
 
-/*
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
-*/
-
 #define BUFFER_LEN 256
+#define HOME getenv("HOME")
 
 /* TODO:
    konami easter eggs??
    fish ascii art on `exit`: http://www.ascii-art.de/ascii/def/fish.txt
    
    REAL TODO:
-   change_dir()
-   prompt with fish (home dir)
-     accept ~ . .. - 
-   errno
-   method abstraction
-   ctrl-d for EOF
+   bug: multiple spaces between command name and arguments are not ignored
+   print prompt with ~
+   'cd' accepts ~ as part of the path
+   pipes and redirecting
+   sighandler - catch sigint, ctrl d for eof
+   method abstraction, utils.c file maybe (for parsing, trim, etc)
+   better errors
+   add color to prompt
+   command history, up arrow for previous command
+   'cd -' goes to previous directory
+   tab completion
+   design.txt thing
+
+   NOTES/FEATURES: (will be moved to README later)
+   does not handle all errors (ex: error from getcwd)
+   ignores multiple ;'s rather than give syntax error (as in bash)
  */
+
+
+void printPrompt(){
+  char *cwd = getcwd(cwd,0);
+  // If path includes $HOME
+  if (strstr(cwd,HOME)){
+    int absPathLen = strlen(cwd);
+    int homeLen = strlen(HOME);
+    // Replace $HOME with '~'
+    strncpy(cwd, &cwd[homeLen] - 1, absPathLen - homeLen + 1);
+    *cwd = '~';
+  }
+  printf("%s$\n", cwd);
+  printf("><((((º> ");
+
+  free(cwd);
+}
+
+void changeDir(char *arg){
+  // If `cd` is given an argument
+  if (arg){
+    // Replace '~' with $HOME
+    if (arg[0]=='~')
+      arg = strncat(HOME,arg+1,BUFFER_LEN);
+
+    // If error
+    if (chdir(arg) < 0)
+      printf("cd: %s: %s\n", arg, strerror(errno));
+  }
+  else
+    chdir("/home/junhao");
+}
+
+void execute(char **argv){
+  // Handle "exit" command
+  if (!strcmp(argv[0], "exit")){
+    printf("Sea ya next time\n");
+    free(argv);
+    exit(EXIT_SUCCESS);
+  }
+  // Handle "cd" command
+  else if (!strcmp(argv[0], "cd")){
+    changeDir(argv[1]);
+  }
+  else{
+    int f, status;
+    f = fork();
+    // If child process
+    if (!f)
+      if (execvp(argv[0], argv) < 0){
+	// If error
+	printf("%s: command not found\n", argv[0]);
+	exit(EXIT_FAILURE);
+      }
+    else
+      wait(&status);
+  }
+}
 
 char ** parseInput(char *input, char *delim){
   int maxSize = 4; // Limit of the number of tokens in argv
@@ -41,11 +103,11 @@ char ** parseInput(char *input, char *delim){
       maxSize *= 2;
       argv = (char **)realloc(argv, sizeof(char *)*maxSize);
     }
-    
+
     // Trim leading and trailing white space from arg
     while (isspace(*arg))
       arg++;
-    if (*arg){
+    if (*arg){ // If *arg isn't all white space
       tmp = arg + strlen(arg) - 1;
       while (tmp > arg && isspace(*tmp))
 	tmp--;
@@ -55,40 +117,10 @@ char ** parseInput(char *input, char *delim){
     // Instantiate the array with tokens separated by `delim`
     argv[size] = arg;
   }
-
   // Append NULL to follow execvp() syntax
   argv[size] = NULL;
 
   return argv;
-}
-
-void changeDir(){
-  
-}
-
-// TODO: handle invalid commands
-void execute(char **argv){
-  // Handle "exit" command
-  if (!strcmp(argv[0],"exit")){
-    printf("Sea ya next time\n");
-    exit(EXIT_SUCCESS);
-  }
-  // Handle "cd" command
-  else if (!strcmp(argv[0],"cd")){
-    changeDir();
-  }
-  else{
-    int f, status;
-    f = fork();
-    // Child executes
-    if (!f){
-      execvp(argv[0], argv);
-      //error stuff
-      //having to type exit twice when typing non valid cmd
-    }
-    else
-      wait(&status);
-  }
 }
 
 void shell(){
@@ -97,17 +129,15 @@ void shell(){
   int count;
 
   while (1){
-    printf("><((((º> ");
+    printPrompt();
     fgets(input, BUFFER_LEN, stdin);
-    
+
     // Separate commands (with ;) from input
-    argv = parseInput(input,";\n");
+    argv = parseInput(input, ";\n");
 
     // Execute each command
     count = 0;
-    while (argv[count] && strcmp(argv[count],"")){
-      // DEBUG
-      printf("Command: '%s'\n",argv[count]);
+    while (argv[count] && strcmp(argv[count], "")){
       execute(parseInput(argv[count], " "));
       count++;
     }
@@ -117,7 +147,7 @@ void shell(){
 }
 
 int main(){
-  printf("\n=======Welcome to Shellfish, Home of the Selfish=======\n");
+  printf("Shellfish: Home of the Selfish\n");
   shell();
   return 0;
 }
