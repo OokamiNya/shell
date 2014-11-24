@@ -4,13 +4,24 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
-#include "signal.h"
+
+static void child_sighandler(int signo){
+  if (signo == SIGINT){
+    kill(getpid(), SIGKILL);
+  }
+}
+
+static void parent_sighandler(int signo){
+  printf("buttsbuttsbuttsbutts\n");
+}
 
 int main(){
 
+
+  printf("\n");
   chdir(getenv("HOME"));
+  //  signal(SIGINT, parent_sighandler);
   
-  signal(SIGINT, sighandler);
   while(1){
 
     char input[256];
@@ -30,7 +41,8 @@ int main(){
     else{
       int f = fork();
       wait();
-      if (!f){
+      if (!f){ //child process stuff
+	//	signal(SIGINT, child_sighandler);
 	execute(input);
       }
     }
