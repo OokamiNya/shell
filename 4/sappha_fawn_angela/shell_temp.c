@@ -65,16 +65,13 @@ void execute(char a[256]){
 
   //parsing our command
   while (sep = strsep(&s1, " ")){
-    printf("sep: %sh\n", sep);
+    //printf("sep: %sh\n", sep);
     //fix spaces
     if (strcmp(sep, " ")) {
-      printf("hi\n");
       i++;
       arg = realloc(arg, sizeof(char*)*i);
       arg[i-1] = sep;
     }
-    else
-      printf("bye\n");
   }
   arg[i] = 0;
   if (strcmp(arg[0], "exit") == 0) { //if calling exit
