@@ -20,7 +20,7 @@ void command(char* comm){
   i = 0;
   while (argcount){
     char *blah = strsep(&temp," ");
-    arguments[i]=blah;//last index would be NULL
+    arguments[i]=blah;//last index should be NULL
     printf("%d: %s \n",i,arguments[i]);
     i++;
     argcount--;
@@ -71,7 +71,7 @@ void shell(){
 	printf("Ready to Exit\n");
 	exit(childcom);
       }
-      waitpid(childcom);
+      waitpid(&childcom);
     }
     shell();
     exit(0);
