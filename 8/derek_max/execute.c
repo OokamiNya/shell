@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "execute.h"
 #include <errno.h>
 //#include "strsep.h"
@@ -65,9 +66,16 @@ int execute(char* input){
     exit(EXIT_FAILURE);
   }
   else{
-      execvp(args[0], args);
-      printf("%s\n", strerror(errno));
-      exit(EXIT_FAILURE); //only runs if execvp fails
+
+    //Move this to redirect
+    int fd;
+    fd = open("a.txt", O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    dup2(fd,1);
+    // end move to redirect
+    
+    execvp(args[0], args);
+    printf("%s\n", strerror(errno));
+    exit(EXIT_FAILURE); //only runs if execvp fails
   }
 }
 /*
@@ -75,3 +83,4 @@ int main(){
   execute("ls -al > a.txt");
 }
 */
+
