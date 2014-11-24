@@ -24,6 +24,9 @@ void command(char* comm){
     argcount--;
   }
   execvp(arguments[0],arguments);
+  if (errno){
+    printf("%s \n", strerror(errno));
+  }
   free(arguments);
 }
 
@@ -40,28 +43,30 @@ void shell(){
     printf("Bye!\n");
     exit(0);
   }
-  /* end of code for exit */
   else{
     /* code for cd */
-    char* blah=temp;
-    temp=strsep(&blah," ");
-    if (strcmp(temp,"cd")==0){
+    char* newd= (char *)malloc(sizeof(temp));
+    strcpy(newd,temp);
+    char *cdcomm=strsep(&newd," ");
+    if (strcmp(cdcomm,"cd")==0){
       char *newdir = currdir;
-      if (blah){
+      if (newd){
 	strcat(newdir,"/");
-	strcat(newdir,blah);
+	strcat(newdir,newd);
       }
       else{
 	strcat(newdir,"/..");
       }
       chdir(newdir);
     }
-    /* end of code for cd */
+    /* code for running other commands */
     else{
       int childcom = fork();
       if (childcom==0){
-	command(uinput);
-	exit(0);
+	printf("Hey! I'm the child!\n");
+	command(temp);
+	printf("Ready to Exit\n");
+	exit(childcom);
       }
       waitpid(childcom);
     }
