@@ -14,21 +14,23 @@ void command(char* comm){
     }
   }
   argcount=argcount+2; //1 for command itself and 1 for NULL
-  printf("argcount: %d \n", argcount);
   char **arguments=(char **)malloc((argcount)*sizeof(char *));
   char *temp = comm;
   i = 0;
   while (argcount){
     char *blah = strsep(&temp," ");
     arguments[i]=blah;//last index should be NULL
-    printf("%d: %s \n",i,arguments[i]);
     i++;
     argcount--;
   }
   execvp(arguments[0],arguments);
-  printf("test2\n");
   if (errno){
-    printf("%s \n", strerror(errno));
+    if (errno==2){
+      printf("command error: Command not found\n");
+    }
+    else{
+      printf("command error:%d  %s \n", errno, strerror(errno));
+    }
   }
   free(arguments);
 }
@@ -61,17 +63,18 @@ void shell(){
 	strcat(newdir,"/..");
       }
       chdir(newdir);
+      if (errno){
+	printf("'cd' error: %s \n", strerror(errno));
+      }
     }
     /* code for running other commands */
     else{
       int childcom = fork();
       if (childcom==0){
-	printf("Hey! I'm the child!\n");
 	command(temp);
-	printf("Ready to Exit\n");
 	exit(childcom);
       }
-      waitpid(&childcom);
+      wait();
     }
     shell();
     exit(0);
