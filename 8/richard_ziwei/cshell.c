@@ -31,7 +31,24 @@ void normal_stuff(char arg[]){
   }
   wait(&pid);
 }
-
+char pipe_it(char arg[]){
+  int in = STDIN_FILENO;
+  dup2(STDIN_FILENO,STDOUT_FILENO);
+  dup2(STDOUT_FILENO,in);
+  while(strchr(arg,'|')){
+    char * orig;
+    orig = strsep(&arg,"|");
+    orig[strlen(orig)-1]=0;
+    arg++;
+    printf("orig:<%s>\targ:<%s>\n",orig,arg);
+    normal_stuff(orig);
+    pipe_it(arg);
+  }
+  arg++;
+  normal_stuff(arg);
+  return 1;
+}
+      
 char redirection(char arg[]){
   //Multiple pipes and redirects?
   if (strchr(arg,'>') || strchr(arg,'<')){
@@ -54,23 +71,16 @@ char redirection(char arg[]){
 	strsep(&arg," ");
 	fd=open(arg, O_RDONLY);
 	dup2(fd,STDIN_FILENO);
-	//printf("I GET THIS FAR\n");
       }
       close(fd);
-      //normal_stuff(orig);
-      
       execlp(orig,orig,NULL);//FIX THIS TO ACCEPT ARGS
-      
     }
     wait(&pid);
     return 1;
-  }/*
+  }
   else if (strchr(arg,'|')){
-    int pid = fork();
-    if (!pid){
-      ch
-   */
-      
+    return pipe_it(arg);
+  }   
   return 0;
   
 }

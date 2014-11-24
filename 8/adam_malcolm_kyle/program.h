@@ -10,3 +10,4 @@ void execute(char * start);
 void child_process(char * args[]);
 void normal_process(char * args[]);
 void redirect(char * args[], int redir);
+void set_home(char * start);
