@@ -1,5 +1,6 @@
 #include "program.h"
 
+char home[256] = "/";
 
 void process(char * start){
   //site of user input processing
@@ -14,6 +15,8 @@ void execute(char * start){
   //Splits the string arguements and runs them with a child process and execvp
   //Returns nothing
   //printf("%s\n",start);
+  if( ! strncmp(start,"HOME=",5))
+    set_home(start);
   char * args[10];
   int x = 0;
   char * y;
@@ -42,10 +45,23 @@ void execute(char * start){
     }
   }
 }
+
+void set_home(char * start){
+  //Sets the 'home' directory which allows for the use of the character "~"
+  //Takes the location of new home directory in relation to current directory
+  getcwd(home,256);
+  strsep(&start, "=");
+  start = strsep(&start, "\n");
+  strcat(home,"/");
+  strcat(home,start);
+}
 void normal_process(char * args[]){
   //For processes that require the main process to run
   //Takes the process with args as an array
   if (! (strcmp("cd",args[0]))){
+    if (! strcmp(args[1],"~")){
+      chdir(home);
+    }
     chdir(args[1]);
   }
   else if (! (strcmp("exit",args[0])))
