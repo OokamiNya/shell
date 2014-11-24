@@ -6,11 +6,6 @@
 #include <errno.h>
 #include <string.h>
 
-//void print_prompt();
-//char ** parse();
-//int contains(char **args, char keys);
-//int handle(char **args);
-
 void print_prompt();
 void parse(char ** a); //parses user input into an array of strings
 int contains(char **a);
@@ -20,6 +15,25 @@ int execute(char **a); //runs exec
 semi colons work but need to be split by at least one space. also i did it in a rather inefficet way
  */
 
+
+int main(){
+
+  print_prompt();
+  int run = 1;
+
+  while(run){
+
+    char ** args; //= (char**)malloc(sizeof(char *) * 64);
+    parse(args);
+
+    execute(args);
+    print_prompt();
+
+  }
+  
+  return 0;
+
+}
 
 
 void parse(char ** args){
@@ -72,22 +86,23 @@ void parse(char ** args){
 
 }
 
-
-int contains(char** args){
+//returns -1 if c not found in args
+//returns index of first occurrence otherwise
+int contains(char** args, char *c){
 
   //printf("IN CONTAINS\n");
 
-  //  testing that parsing works
   int i=0;
-  while( args[i] ){
-    if ( strcmp(args[i], ";") == 0 ){
-      return 1;
-    }//else if:  > < | return 2 3 4
 
-
+  while(args[i]){
+    if (strcmp(args[i],c) == 0 ){
+      return i;
+    }
     i++;
   }
-  return 0;
+
+  return -1;
+
 }
 
 void print_array(char ** args){
@@ -149,23 +164,3 @@ int execute(char ** args){
  
   return 0;  
 }
-
-int main(){
-
-  print_prompt();
-  int run = 1;
-  while(run){
-
-    char ** args = (char**)malloc(sizeof(char *) * 64);//64?
-    parse(args);
-
-    execute(args);
-    print_prompt();
-  }
-
-
-  
-  return 0;
-}
-
-

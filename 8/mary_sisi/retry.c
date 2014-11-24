@@ -105,3 +105,28 @@ void parse(char ** args){
   //return args;
 
 }
+
+
+//not yet implemented (or considered, basically) - multiple redirections in the same line (probably requires recursion, but we'll handle it later)
+int execute(char ** args){
+
+  if(contains(args,";")){
+    //execute first set of commands (*also recursive)
+    //recurse and execute next, etc.
+  }
+
+  if(contains(args,"<")){
+    //redirects [command(s) in a] file to stdin
+  }else if(contains(args,">")){
+    //redirects stdout to a file
+  }else if(contains(args,"|")){
+    //output of 1st to input of 2nd
+  }else if(contains(args,"cd")){
+    //covered
+  }else if(contains(args,"exit")){
+    //covered
+  }else{
+    //fork and execvp
+  }
+
+}
