@@ -24,12 +24,11 @@ int main(){
   commands[3] = "exit";
   */
   while(1){
-    printf("help:%p\n", *(commands[i]));
-    if(!(*commands[i])){
+    if(!(commands[i])){
       break;
     }
     printf("> ");
-    printf("commands[%d]:%s\n", i, commands[i]);
+    //printf("commands[%d]:%s\n", i, commands[i]);
     if(commands[i]){
       char* exit_parse = strstr(commands[i], "exit");
       if(exit_parse){
@@ -43,8 +42,10 @@ int main(){
       fflush(stdout);
       execute(commands[i]);
     }
-    printf("hi\n");
+
     i++;
+
   }
+
   return 1;
 }
