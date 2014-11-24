@@ -88,13 +88,33 @@ void parse_input(char *input) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
             }
+            else if (input[index] == '~') {
+                if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
+                    char *home = getenv("HOME");
+                    strcpy(tok + tokIndex, home);
+                    tokIndex += strlen(home);
+                }
+                else {
+                    char user[USER_SIZE];
+                    int userIndex = 0;
+                    while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/') { // +1 to index since we are "looking ahead"
+                        user[userIndex] = input[index+1];
+                        ++userIndex;
+                        ++index;
+                    }
+                    user[userIndex] = '\0';
+                    char *user_home = getpwnam(user)->pw_dir;
+                    strcpy(tok + tokIndex, user_home);
+                    tokIndex += strlen(user_home);
+                }
+            }
             else {
                 tok[tokIndex] = input[index];
                 ++tokIndex;
-                if (tokIndex >= tokSize) { // Expand buffer for tok
-                    tokSize += TOK_INIT_SIZE;
-                    tok = realloc(tok, tokSize);
-                }
+            }
+            if (tokIndex >= tokSize) { // Expand buffer for tok
+                tokSize += TOK_INIT_SIZE;
+                tok = realloc(tok, tokSize);
             }
         }
         else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
@@ -165,19 +185,15 @@ void execute(char **argv) {
 }
 
 void change_directory(char *path) {
-    char *path_cpy = path;
-    char *home_cpy = strdup(getenv("HOME"));
-    if (path_cpy[0] == '~') {
-        path_cpy++; // Goes beyond ~
-        path_cpy = strcat(home_cpy, path_cpy);
+    if (!path) { // When no path specified, use home
+        path = getenv("HOME");
     }
-    else if (path_cpy[0] == '\0') { // When no path specified, use home
-        path_cpy = home_cpy;
+    else if (path[0] == '-') { // TODO: Backtracking directories
+
     }
-    errno_result = chdir(path_cpy);
+    errno_result = chdir(path);
     if (errno_result == -1) {
         printf("cd: %s: %s\n", path, strerror(errno));
         cmd_status = 0;
     }
-    free(home_cpy);
 }
