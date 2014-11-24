@@ -28,23 +28,18 @@ char** execute_all(){
   fgets(s, sizeof(s), stdin);
   
   char* s1 = s;
-  //printf("original s1:%s\n", s1);
   char *sep;
   char** args = (char**)(malloc(sizeof(char*)));
   int i = 0;
 
   //deleting trailing newspace
   s1 = strsep(&s1, "\n");  
-  //printf("now s1:%s\n", s1);
   
   //parsing our command
   while (sep = strsep(&s1, ";")){
-    //printf("sep:%s\n", sep);
     args = (char**)realloc(args, sizeof(char*)*(i+1));
    
     args[i] = sep;
-    //printf("args[%d]:%s\n",i,args[i]);
-    //printf("sep:%s\n",sep);
     i++;
   }
   args = (char**)realloc(args, sizeof(char*)*(i));
@@ -52,7 +47,6 @@ char** execute_all(){
   int c = 0;
   for (c = 0; args[c]; c++){
     printf("args[%d]:%s\n", c, args[c]);
-    //printf("what is sep now? %s\n", sep);
     execute(args[c]);
   }
   return args;
@@ -67,7 +61,6 @@ void printprompt() {
 
 void execute(char a[256]){
   char *s1 = a;
-  //printf("a:%s\n", a);
   char *sep;
   char** arg = NULL;
   int i = 0;
@@ -80,16 +73,13 @@ void execute(char a[256]){
     arg[i-1] = sep;
   }
   arg[i] = 0;
-  //printf("arg[0]:%s\n", args[0]);
   if (strcmp(arg[0], "exit") == 0) { //if calling exit
-    //printf("%s", args[0]);
     exit(0);
   }
   else if (strcmp(arg[0], "cd") == 0) {//if calling cd
   
   }
   else { //otherwise, we need to fork
-    //printf("%s", arg[0]);
     int f, status;
     f = fork();
     if (f == 0) {//child process
