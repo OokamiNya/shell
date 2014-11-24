@@ -110,23 +110,46 @@ void parse(char ** args){
 //not yet implemented (or considered, basically) - multiple redirections in the same line (probably requires recursion, but we'll handle it later)
 int execute(char ** args){
 
-  if(contains(args,";")){
+  //i is to be used as a location marker in args
+  int i;
+
+  if(i = contains(args,";")){
+    //part1 will contain the first line of command to be run
+    char ** part1;
+    //allocate space for its contents
+    allocate_array_mem(part1, i);
+    //copy over the aforementioned first line of command from args into part1
+    while(i > 0){
+      part1[i]=args[i];
+    }
+
     //execute first set of commands (*also recursive)
     //recurse and execute next, etc.
   }
 
-  if(contains(args,"<")){
+  if(i = contains(args,"<")){
     //redirects [command(s) in a] file to stdin
-  }else if(contains(args,">")){
+  }else if(i = contains(args,">")){
     //redirects stdout to a file
-  }else if(contains(args,"|")){
+  }else if(i = contains(args,"|")){
     //output of 1st to input of 2nd
-  }else if(contains(args,"cd")){
+  }else if(i = contains(args,"cd")){
     //covered
-  }else if(contains(args,"exit")){
+  }else if(i = contains(args,"exit")){
     //covered
   }else{
     //fork and execvp
+  }
+
+}
+
+
+//allocates memory for a string of 64 characters for each element in the array, the number of elements being indicated by i
+void allocate_array_mem(char ** buffer, int i){
+
+  while(i > 0){
+    buffer[i] = (char *)malloc(64, sizeof(char));
+    i--;
   }
 
 }
