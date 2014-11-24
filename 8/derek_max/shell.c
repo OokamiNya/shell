@@ -24,27 +24,36 @@ int main(){
   commands[3] = "exit";
   */
   while(1){
-    printf("help:%p\n", *(commands[i]));
-    if(!(*commands[i])){
+    if(!(commands[i])){
       break;
     }
     printf("> ");
-    printf("commands[%d]:%s\n", i, commands[i]);
+    //printf("commands[%d]:%s\n", i, commands[i]);
     if(commands[i]){
-      char* exit_parse = strstr(commands[i], "exit");
-      if(exit_parse){
-	if(strlen(exit_parse) == 4){ //assuming that exit is the only command, then this shoudl work...
-	  //have to add special case for no input I think...?
-	  printf("Exiting.\n");
-	  exit(EXIT_SUCCESS);
-	}
+      if(!strcmp(commands[i], "exit")){
+	printf("Exiting.\n");
+	exit(EXIT_SUCCESS);
       }
+      else if (!strcmp(commands[i], "cd")){
+	printf("cd not yet supported\n");
+	goto leave;
+      }
+      //special_parse = strstr(commands[i], "cd");
+      //if(special_parse){
+      //if(strlen(special_parse) == 2){
+      //  
+      //}
+      //}
+      
       //add an if for cd later
       fflush(stdout);
       execute(commands[i]);
     }
-    printf("hi\n");
+
+  leave:
     i++;
+    
   }
+  
   return 1;
 }

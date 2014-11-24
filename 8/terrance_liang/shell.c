@@ -31,10 +31,27 @@ void command(char* comm){
     else{
       printf("command error:%d  %s \n", errno, strerror(errno));
     }
+    errno=0;
   }
   free(arguments);
 }
 
+char * getHomeDir(){
+  char currdir[500];
+  getcwd(currdir,sizeof(currdir));
+  char * cdir = currdir;
+  char * tempdir=(char *)malloc(sizeof(currdir));
+  strcpy(tempdir,currdir);
+  while(strstr(currdir,getlogin())){
+    strcpy(tempdir,currdir);
+    strcat(currdir,"/..");
+    chdir(currdir);
+    getcwd(currdir,sizeof(currdir));
+  }
+  return tempdir;
+}
+  
+  
 void shell(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
@@ -60,11 +77,13 @@ void shell(){
 	strcat(newdir,newd);
       }
       else{
-	strcat(newdir,"/..");
+	char* homedir = getHomeDir();
+	strcpy(newdir,homedir);
       }
       chdir(newdir);
       if (errno){
 	printf("'cd' error: %s \n", strerror(errno));
+	errno=0;
       }
     }
     /* code for running other commands */
@@ -82,6 +101,7 @@ void shell(){
 }
 
 int main(){
+  printf("User: %s\n", getlogin());
   shell();
   return 0;
 }

@@ -6,14 +6,16 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <uuid/uuid.h>
 #include <pwd.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define PROMPT_SIZE 1024
-#define PATH_SIZE 768
+#define PROMPT_SIZE 2014
+#define PATH_SIZE 1024
 #define TOK_INIT_SIZE 256
+#define USER_SIZE 128
 
 const char *shell_name = "StD";
 
