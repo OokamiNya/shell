@@ -40,7 +40,7 @@ void splitcmd(char* s, char** args) {
 
 void docmd(char** args) {
   execvp (args[0], args);
-  printf ("LMFAO no such command ur a dum@$$ XDDDDDD :^)\n");
+  printf ("LMFAO no such command XDDDDDD q:^)-k\n");
   exit(0);
 }
 
