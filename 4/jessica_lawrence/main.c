@@ -19,7 +19,10 @@ int main () {
     } else if(!strcmp(args[0],"exit")) {
       gtfo();
     } else if(!strcmp(args[0],"cd")) {
-      printf("ayyyyyy");
+      if (chdir (args[1])){
+        //will not take flags
+        printf ("no such directory GET FKIN NOSCOPED REKT LMAO\n");
+      }
     } else {
       int f = fork();
       if(f == 0) {
