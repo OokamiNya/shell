@@ -17,7 +17,7 @@ int contains(char **a);
 int execute(char **a); //runs exec
 
 /*
-semi colons work but print out the promt over and over for each  semicolons used
+semi colons work but need to be split by at least one space. also i did it in a rather inefficet way
  */
 
 
@@ -106,16 +106,12 @@ void print_prompt(){
 }
 
 int execute(char ** args){
-  //RUNNING PARSED CODE
   if(contains(args) == 0){//regular input no ; < > |(
-    //printf("NO semicolon");
     if (strcmp(args[0], "exit") == 0){
-      //run = 0;
       printf("BYE!!!!\n");
     }
     else if  (strcmp(args[0], "cd") == 0){
-      chdir(args[1]);
-      print_prompt();
+      chdir(args[1]);      
     }
     else{
       int f = fork();
@@ -125,14 +121,12 @@ int execute(char ** args){
 	//everything else
 	//redirection
       }else{
-	wait(&status);
-	print_prompt();
+	wait(&status);	
       }
     }
-  }else if (contains(args) == 1){
-    //printf("has semicolon!!\n");
+  }else if (contains(args) == 1){ // if has semi colon
     char ** part1 =  (char**)malloc(sizeof(char *) * 64);
-    int j = 0; // counter for index of args
+    int j = 0;
     while( args[j]){   
       if( strcmp(args[j], ";") != 0 ){
 	part1[j] = args[j];
@@ -152,8 +146,8 @@ int execute(char ** args){
       }
     }
   }
-    return 0;
-  
+ 
+  return 0;  
 }
 
 int main(){
@@ -166,7 +160,7 @@ int main(){
     parse(args);
 
     execute(args);
-    
+    print_prompt();
   }
 
 
