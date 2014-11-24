@@ -40,8 +40,9 @@ int main() {
       getcwd(direct,sizeof(direct));
       printf("Current Directory: %s\n",direct);
     }
-    
-    first_arg = strsep(&scpy," ");
+   
+
+    }
     
     if(strcmp(">",first_arg) == 0) {
       printf("registered >\n");
