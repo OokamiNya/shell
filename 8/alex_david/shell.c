@@ -120,6 +120,10 @@ int execute(char *s){
 	  int fd = open(params[y+1],O_CREAT | O_APPEND | O_WRONLY,0644);
 	  dup2(fd,STDOUT_FILENO);
 	  params[y] = NULL;
+	}else if (!strcmp(params[y],"<")){
+	  int fd = open(params[y+1],O_RDONLY);
+	  dup2(fd,STDIN_FILENO);
+	  params[y] = NULL;
 	}
       }
       execvp(params[0],params);    
