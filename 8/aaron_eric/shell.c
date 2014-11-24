@@ -27,16 +27,27 @@ int main() {
     char ** semicolon_parsed = parse_string(input,";");
     int i = 0;
     for (;semicolon_parsed[i];++i) {
-      int j = fork();
-      if (j) {
-	wait();
+      char ** command = parse_string(semicolon_parsed[i]," ");
+      if (command[0][0] == 'c' && command[0][1] == 'd') {//fuck strstr
+	if (command[1])
+	  chdir(command[1]);
+	else {
+	  char * home = getenv("HOME");
+	  chdir(home);
+	}
       }
       else {
-	char ** command = parse_string(semicolon_parsed[i]," ");
-	execvp(command[0],command);
-	free(command);
-	return 0;
-      }      
+	int j = fork();
+	if (j) {
+	  wait();
+      }
+	else {
+	  
+	  execvp(command[0],command);
+	  free(command);
+	  return 0;
+	}      
+      }
     }
     free(semicolon_parsed);
   }
