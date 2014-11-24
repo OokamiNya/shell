@@ -41,41 +41,64 @@ void run(char *input){
   //problemChild=inputA[0];
   //printf("%s\n",problemChild);
   if (!strcmp(inputA[0],"cd")){
-    int i = chdir(inputA[1]);
-    if (i!=0){
-      printf("%s is not a directory.",inputA[0]);
+    if(inputA[1]){
+      if (inputA[1][0]=='~'){
+	printf("here\n");
+	char a;
+	char * b=(char *) malloc(sizeof(char)*strlen(inputA[1]));
+	strcpy(b,inputA[1]);
+	a=b[1];
+	int c=0;
+	while (a){
+	  inputA[1][c]=a;
+	  a++;
+	}
+	printf("%s\n",inputA[1]);
+	int j=chdir(strcat(getenv("HOME"),inputA[1]));
+	return;
+      }
+      //printf("hey\n");
+      int i = chdir(inputA[1]);
+      if (i!=0){
+	printf("%s is not a directory.",inputA[0]);
+	return;
+      }
     }
-    return;
+      else{
+	//printf("%s\n",getenv("HOME"));
+	chdir(getenv("HOME"));
+	return;
+      }
+    }
+    if (!strcmp(inputA[0],"exit")){
+      int z=fork();
+      if (z==0){
+	printf("Thanks for using our shell!\n");}
+      exit(0);
+      return;
+    }
+    //printf("heyhey\n");
+    else{
+      int f=fork();
+      if (!f)
+	execvp(inputA[0],inputA);
+      return;
+    }
   }
-  if (!strcmp(inputA[0],"exit")){
-    int z=fork();
-    if (z==0){
-      printf("Thanks for using our shell!\n");}
-    exit(0);
-    return;
-  }
-  //printf("heyhey\n");
-  else{
-    int f=fork();
-    if (!f)
-      execvp(inputA[0],inputA);
-    return;
-  }
-}
 
 
 
 
-int main(){
-  char s[1024];
-  int f=1;
-  while(1){
-    printf("wedemboyz$$:");
-    fgets(s,1024,stdin);
-    //f=fork();
-    run(s);
-    //return 0;
-    wait(NULL);
-  }
-  return 0;
+  int main(){
+    char s[1024];
+    int f=1;
+    while(1){
+      printf("wedemboyz$$:");
+      fgets(s,1024,stdin);
+      //f=fork();
+      run(s);
+      //return 0;
+      wait(NULL);
+    }
+    return 0;
 }
