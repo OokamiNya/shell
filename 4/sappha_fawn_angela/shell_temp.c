@@ -1,6 +1,7 @@
 #include "shell.h"
 
 char** execute_all();
+char* trim(char *);
 
 static void sighandler(int signo){
   if (signo == SIGINT){
@@ -12,19 +13,18 @@ int main() {
   signal(SIGINT, sighandler);
   while(1) {
     printprompt();    
-    execute_all();
-    //int i; 
-    //for (i = 0; parsed[i]; i++){
-      //printf("parsed[%d]:%s hi\n",i, parsed[i]);
-      //execute(parsed[i]);
-      //printf("parsed[%d]:%s hi2\n",i,parsed[i]);
-    // }
+    int i;
+    char ** parsed = execute_all();
+    //runs through array of commands
+    for (i = 0; parsed[i]; i++){
+      //printf("parsed[%d]:%s\n",i, parsed[i]);
+      execute(parsed[i]);
+     }
   }
   return 0;
 }
 char** execute_all(){
   char s[256];
-  //printf("sizeofs:%d\n", sizeof(s));
   fgets(s, sizeof(s), stdin);
   
   char* s1 = s;
@@ -38,17 +38,14 @@ char** execute_all(){
   //parsing our command
   while (sep = strsep(&s1, ";")){
     args = (char**)realloc(args, sizeof(char*)*(i+1));
-   
-    args[i] = sep;
+    char * temp = (char *)malloc(sizeof(char)*256);
+    strcpy(temp, sep);
+    temp = trim(temp);
+    args[i] = temp;
     i++;
   }
   args = (char**)realloc(args, sizeof(char*)*(i));
   args[i] = NULL;
-  int c = 0;
-  for (c = 0; args[c]; c++){
-    printf("args[%d]:%s\n", c, args[c]);
-    execute(args[c]);
-  }
   return args;
 }
 
@@ -56,7 +53,7 @@ void printprompt() {
   char* wd;
   //getcwd(wd, sizeof(wd));
   //printf("owl:%s$ ", wd);
-  printf("owl:$");
+  printf("owl:$ ");
 }
 
 void execute(char a[256]){
@@ -68,9 +65,16 @@ void execute(char a[256]){
 
   //parsing our command
   while (sep = strsep(&s1, " ")){
-    i++;
-    arg = realloc(arg, sizeof(char*)*i);
-    arg[i-1] = sep;
+    printf("sep: %sh\n", sep);
+    //fix spaces
+    if (strcmp(sep, " ")) {
+      printf("hi\n");
+      i++;
+      arg = realloc(arg, sizeof(char*)*i);
+      arg[i-1] = sep;
+    }
+    else
+      printf("bye\n");
   }
   arg[i] = 0;
   if (strcmp(arg[0], "exit") == 0) { //if calling exit
@@ -90,4 +94,18 @@ void execute(char a[256]){
     } 
   }
   free(arg);
+}
+
+char * trim (char * s) {
+  int l = strlen(s);
+  //trailing white space -- backwards
+  while(isspace(s[l - 1])) {
+    l--;
+  }
+  //leading white space -- forward
+  while(* s && isspace(* s)){
+    s++;
+    l--;
+  }
+  return strndup(s, l);
 }
