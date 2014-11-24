@@ -3,5 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <signal.h>
 
-void execute( char * args[] );
+void execute( char * split_cmds );
