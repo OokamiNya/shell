@@ -22,6 +22,10 @@ POTENTIAL IMPROVEMENTS:
 
 - factor out code for memory allocation for arrays in parse() and execute()
 
+- in execute: consider multiple redirections on the same line (e.g. "ls | wc retry.c > commands.txt")
+
+- also: see lines 100-101 in parse(), and the note above execute() in retry.c
+
  */
 
 
@@ -95,7 +99,8 @@ void parse(char ** args){
     args[i] = (char *)malloc(64, sizeof(char));
     i++;
   }
-  //MIGHT BE ABLE TO REPLACE THE ABOVE WITH ALLOCATE_ARRAY_MEM(ARGS, 64) OR WHATEVER INTEGER VALUE IF SAID FUNCTION ACTUALLY WORKS
+  //SHOULD BE ABLE TO REPLACE THE ABOVE WITH ALLOCATE_ARRAY_MEM(ARGS, 64) OR WHATEVER INTEGER VALUE IF SAID FUNCTION ACTUALLY WORKS
+  //ALSO, CHECK IF THERE'S A WAY TO DETERMINE THE NUMBER OF ELEMENTS COMING FROM THE USER INPUT (so that it'll be a more efficient while(i<some_num_of_input_values) rather than a potentially-limited and probably-often-extremely-excessive while(i<64)
 
   //reset the counter variable for use in the next loop
   i = 0;
@@ -143,6 +148,7 @@ int contains(char ** args, char * c){
 }
 
 
+//CURRENTLY BEING REWRITTEN IN RETRY.C
 int execute(char ** args){
   if(contains(args) == 0){//regular input no ; < > |(
     if (strcmp(args[0], "exit") == 0){
