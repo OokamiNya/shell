@@ -7,9 +7,11 @@ clean:
 	@rm -f shell
 
 build:
-	@gcc -Wall -o shell $(LIBS) $(FILES)
+	@gcc -Wall -c -g $(FILES)
+	@gcc -o shell shell.o $(LIBS)
 
 run:
+	@rm -f shell.o
 	@./shell
 
 test:
