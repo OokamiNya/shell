@@ -27,16 +27,39 @@ int main() {
     char *first_arg;
     first_arg = strsep(&scpy," ");
     
+    //Exit
     if(strcmp("exit",first_arg) == 0) {
       printf("Exiting\n");
       exit(0);
     } 
+
+    //CD
     else if (strcmp("cd",first_arg) == 0) {
       chdir(scpy);
       char direct[1024];
       getcwd(direct,sizeof(direct));
       printf("Current Directory: %s\n",direct);
-    } 
+    }
+    
+    first_arg = strsep(&scpy," ");
+    
+    if(strcmp(">",first_arg) == 0) {
+      printf("registered >\n");
+    }
+
+    else if(strcmp("<",first_arg) == 0) {
+      printf("registered <\n");
+    }
+    
+    else if(strcmp("|",first_arg) == 0) {
+      printf("registered |\n");
+    }
+    
+    else if(strcmp(";",first_arg) == 0) {
+      printf("registered ;\n");
+    }
+    
+    //Execute
     else {
       int f = fork();
       if(f == 0) {
