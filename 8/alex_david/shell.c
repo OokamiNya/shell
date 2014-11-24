@@ -59,8 +59,22 @@ int shell(){
     n++;
   }
   int i = 0;
+  int j = 0;
+  int m = 0;
   for (; i < n; i++){
-    execute(commands[i]);
+    //checks if | in input
+    if (strchr (commands[i], '|')){
+      while (k = strsep(&command[i],"|")){
+	command [i][j] = k;
+	if (strcmp(k,"")){ //if any blanks from multiple |
+	  execute(k[0]);//execute only first command
+	  break;
+	}
+	for (inti 
+    }
+    else{
+      execute(commands[i]);
+    }
   }
   free(commands);
   shell();

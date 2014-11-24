@@ -39,6 +39,7 @@ void exec(char ** argarray, int len){
       printf("WEIRD ERROR\n");
     }
     else if(f == 0){
+      //printf("TEST\n");
       execvp(argarray[0],argarray);
     }
     else{
@@ -49,14 +50,17 @@ void exec(char ** argarray, int len){
 }
 
 void shell(){
+  //printf("begin.\n");
   struct passwd *p = getpwuid(getuid());
+  //printf("whoa??\n");
   char * user = p->pw_name;
   
+  //printf("mallocs here\n");
   char *s = (char *)(malloc(10*sizeof(char)));
   char *command = (char *)(malloc(10*sizeof(char)));
   char *token = (char *)(malloc(10*sizeof(char)));
   int alen = 1; //+1 for NULL
-
+  
   //prompt
   char cwd[256];
   getcwd(cwd,sizeof(cwd));
@@ -79,19 +83,23 @@ void shell(){
   }
   
   s = strsep(&s,"\n");
-  char **argarray = (char **)(malloc(alen*3*sizeof(char)));
+  char **argarray = (char **)(malloc(alen*sizeof(char *)));
   //delimiting stuff
   int i=0;
   token = s;
+  token = strsep(&s," ");
+  argarray[i] = (char*)malloc(256*sizeof(char)+1);
   argarray[i] = token;
-  while (token = strsep(&s," ")){
+  while (token){
     //getting rid of empty tokens btwnXS arguments
     if (strlen(token)==0){
       alen--;
-      argarray=realloc(argarray,alen*3*sizeof(char));
+      argarray=realloc(argarray,alen*sizeof(char *));
     }
     else{
+      argarray[i] = (char*)malloc(256*sizeof(char)+1);
       argarray[i] = token;
+      token = strsep(&s, " ");
       i++;
     }
   }
@@ -99,6 +107,15 @@ void shell(){
   argarray[i] = NULL;
   
   exec(argarray, alen);
+  //printf("done.\n");
+  free(s);
+  free(token);
+  free(command);
+  //printf("freeing argarray\n");
+  free(argarray); //works until you try to enter 2+ args
+  
+  
+  
 }
 
 
