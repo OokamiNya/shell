@@ -48,7 +48,9 @@ void run(char *input){
 	char * b=(char *) malloc(sizeof(char)*strlen(inputA[1]));
 	strcpy(b,inputA[1]);
 	a=b[1];
-	int c=0;
+	printf("This is a: %c\n",a);
+	int c=1;
+	inputA[1][0]=a;
 	while (a){
 	  inputA[1][c]=a;
 	  a++;
