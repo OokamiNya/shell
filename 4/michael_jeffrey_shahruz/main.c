@@ -41,6 +41,7 @@ int main() {
       int f = fork();
       if(f == 0) {
 	exec_line(s);
+       	exit(-1);
       }
       else {
 	wait(&status);
