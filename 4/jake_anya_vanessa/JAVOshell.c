@@ -4,7 +4,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
-#include "signal.h"
+
+static void sighandler(int signo){
+  if (signo == SIGINT){
+    kill(getpid(), SIGKILL);
+  }
+}
 
 int main(){
 
