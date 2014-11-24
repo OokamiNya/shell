@@ -14,16 +14,19 @@ void command(char* comm){
     }
   }
   argcount=argcount+2; //1 for command itself and 1 for NULL
+  printf("argcount: %d \n", argcount);
   char **arguments=(char **)malloc((argcount)*sizeof(char *));
   char *temp = comm;
   i = 0;
   while (argcount){
     char *blah = strsep(&temp," ");
     arguments[i]=blah;//last index would be NULL
+    printf("%d: %s \n",i,arguments[i]);
     i++;
     argcount--;
   }
   execvp(arguments[0],arguments);
+  printf("test2\n");
   if (errno){
     printf("%s \n", strerror(errno));
   }
