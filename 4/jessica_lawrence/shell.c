@@ -11,6 +11,18 @@ void prompt(char* s) {
   fgets (s, 256, stdin);
 }
 
+int countcmds(char* s) {
+  char* temp = malloc(256*sizeof(char));
+  char* starttemp = temp;
+  strncpy(temp, s, 256);
+  int argc = 0;
+  while(strsep(&temp, ";")) {
+    argc++;
+  }
+  free(starttemp);
+  return argc;
+}
+
 int countargs(char* s) {
   char* temp = malloc(256*sizeof(char));
   char* starttemp = temp;
@@ -23,12 +35,23 @@ int countargs(char* s) {
   return argc;
 }
 
+void splitinput(char* s, char** cmds) {
+  char *c = s;
+  char *t;
+  int i = 0; 
+  
+  while ((t = strsep(&c, ";"))) {
+    cmds[i] = t;
+    i++;
+  }
+}
+
 void splitcmd(char* s, char** args) {
   char *c = s;
   char *t;
   int i = 0; 
   
-  c = strsep (&c, "\n");
+  c = strsep(&c,"\n");
   
   while ((t = strsep(&c, " "))) {
     args[i] = t;
@@ -45,6 +68,8 @@ void docmd(char** args) {
 }
 
 void gtfo() {
+  printf("bye :^(\n");
   exit(0);
 }
+
 
