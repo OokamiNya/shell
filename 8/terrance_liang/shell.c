@@ -120,7 +120,7 @@ void shell(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
   printf("CShell: %s ",currdir);
-  char uinput[256];
+  char uinput[5000];
   fgets(uinput,sizeof(uinput),stdin);
   char *temp = uinput;
   temp=strsep(&temp,"\n");
