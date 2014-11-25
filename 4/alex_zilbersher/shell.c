@@ -30,6 +30,8 @@ int run_command(char* s){
       }
       args[i]=0;
       execvp(args[0],args);
+      printf("Command not found: %s\n",args[0]);
+      exit(-1);
     }
   }
   return 0;

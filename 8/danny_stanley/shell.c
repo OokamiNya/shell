@@ -3,11 +3,17 @@
 
 int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
+
 int args;
 char **argv;
+int tokIndex;
+int tokSize;
 char *tok;
+
 int cmd_status = 1;
 int valid_input = 0;
+
+node* path_history; //For cd history
 
 static void signalhandler(int signal) {
     switch(signal) {
@@ -42,7 +48,7 @@ char * create_prompt(char *prompt_buf, int prompt_size) {
     return prompt_buf;
 }
 
-void cleanup() {
+void cleanup_argv() {
     --args; // Initially subtract 1 from args to make it zero-based
     for (; args >= 0; --args) {
         free(argv[args]);
@@ -51,9 +57,20 @@ void cleanup() {
     free(tok);
 }
 
+void setup_argv() {
+    argv = (char **) malloc(sizeof(char *));
+    args = 0;
+    tokSize = TOK_INIT_SIZE;
+    tokIndex = 0;
+    tok = (char *) malloc(TOK_INIT_SIZE);
+}
+
 int main() {
     signal(SIGINT, signalhandler);
     prompt = (char *) malloc(PROMPT_SIZE);
+    char current_path[PATH_SIZE];
+    path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
+    printf("LL:%s\n", get_arg(path_history));
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
         cmd_status = valid_input = 1;
@@ -66,7 +83,7 @@ int main() {
         }
         printf("$input: `%s`\n", line);
         parse_input(line);
-        if (cmd_status && valid_input) {
+        if (valid_input) { // Inputs that contain non-whitespace characters
             add_history(line);
         }
         free(line);
@@ -77,24 +94,126 @@ int main() {
 }
 
 void parse_input(char *input) {
-    argv = (char **) malloc(sizeof(char *));
-    args = 0;
     int index = 0;
-    int tokSize = TOK_INIT_SIZE;
-    char *tok = (char *) malloc(TOK_INIT_SIZE);
-    int tokIndex = 0;
+    setup_argv();
     tok[0] = '\0';
     while (input[index]) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
             }
+            else if (input[index] == '>') {
+                if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                }
+                else { // If there is a blank redirection, they want cat functionality!
+                    ++args;
+                    argv = (char **) realloc(argv, args * sizeof(char *));
+                    argv[args-1] = strdup("cat");
+                }
+                argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+                argv[args] = NULL;
+
+                int mode; // Selecting whether to append or write
+                if (input[index+1] == '>') {
+                    ++index;
+                    mode = O_APPEND;
+                }
+                else {
+                    mode = O_TRUNC;
+                }
+
+                while (input[index+1] == ' ') { // Remove prepending whitespace from filename
+                    ++index;
+                }
+                char filename[OUTPUT_FILENAME_SIZE];
+                int fileIndex = 0;
+                while (input[index+1] && input[index+1] != ' ' && input[index+1] != ';') { // Takes string literal as filename
+                    filename[fileIndex] = input[index+1];
+                    ++fileIndex;
+                    ++index;
+                }
+                filename[fileIndex] = '\0';
+                int output = open(filename, O_CREAT | O_WRONLY | mode, 0644); // Open file for redirection
+                if (output == -1) {
+                    printf("Redirecting to file failed: %s\n", strerror(errno));
+                }
+                else {
+                    int stdout_backup = dup(STDOUT_FILENO);
+                    dup2(output, STDOUT_FILENO); // Redirects stdout to file
+                    execute(argv);
+                    close(output);
+                    dup2(stdout_backup, STDOUT_FILENO); // Restores stdout
+                }
+                cleanup_argv(); // Clean up redirection commands, so that they don't run again later on
+                setup_argv();
+            }
+            else if (input[index] == ';') {
+                if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                    argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+                    argv[args] = NULL;
+                    execute(argv);
+                    cleanup_argv();
+                    setup_argv();
+                }
+            }
+            else if (input[index] == '\\') {
+                ++index; // Move on to add next character right after '\'
+                tok[tokIndex] = input[index];
+                ++tokIndex;
+            }
+            else if (input[index] == '"') {
+                ++index; // Go past "
+                while (input[index] && input[index] != '"') { // Continues interpreting as string literal until next '"'
+                    tok[tokIndex] = input[index];
+                    ++tokIndex;
+                    ++index;
+                }
+            }
+            else if (input[index] == '~') {
+                if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
+                    char *home = getenv("HOME");
+                    strcpy(tok + tokIndex, home);
+                    tokIndex += strlen(home);
+                }
+                else { // Replace ~user with home directory of user
+                    char user[USER_SIZE];
+                    int userIndex = 0;
+                    while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/' && input[index+1] != ';' && input[index+1] != '>' && input[index+1] != '|') { // +1 to index since we are "looking ahead"
+                        user[userIndex] = input[index+1];
+                        ++userIndex;
+                        ++index;
+                    }
+                    user[userIndex] = '\0';
+                    struct passwd *found_user = getpwnam(user);
+                    char *user_home;
+                    if (found_user) {
+                        user_home = found_user->pw_dir; // Retrieves user home directory, otherwise defaults to user input
+                    }
+                    else {
+                        user_home = user;
+                    }
+                    strcpy(tok + tokIndex, user_home);
+                    tokIndex += strlen(user_home);
+                }
+            }
             else {
                 tok[tokIndex] = input[index];
                 ++tokIndex;
-                if (tokIndex >= tokSize) { // Expand buffer for tok
-                    tokSize += TOK_INIT_SIZE;
-                    tok = realloc(tok, tokSize);
-                }
+            }
+            if (tokIndex >= tokSize) { // Expand buffer for tok
+                tokSize += TOK_INIT_SIZE;
+                tok = realloc(tok, tokSize);
             }
         }
         else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
@@ -122,8 +241,8 @@ void parse_input(char *input) {
     else {
         valid_input = 0;
     }
-    printf("%d\n", tokSize);
-    cleanup();
+    printf("Token Size: %d\n", tokSize);
+    cleanup_argv();
 }
 
 void execute(char **argv) {
@@ -132,16 +251,17 @@ void execute(char **argv) {
     for (; i <= args; ++i) {
         printf("$argv[%d]: `%s`\n", i, argv[i]);
     }
+    printf("--------------------------------------------------\n");
 
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
         printf("I'm sad to see you go... :(\n");
-        cleanup();
+        cleanup_argv();
         free(prompt);
         exit(0);
     }
     else if (!strcmp(cmd, "cd")) {
-        change_directory(argv[1]); // Only parse the first argument in cd
+      path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
     }
     else {
         pid_t pid = fork();
@@ -164,20 +284,22 @@ void execute(char **argv) {
     }
 }
 
-void change_directory(char *path) {
-    char *path_cpy = path;
-    char *home_cpy = strdup(getenv("HOME"));
-    if (path_cpy[0] == '~') {
-        path_cpy++; // Goes beyond ~
-        path_cpy = strcat(home_cpy, path_cpy);
+node* change_directory(char *path , node* history) {
+    if (!path) { // When no path specified, use home
+        path = getenv("HOME");
     }
-    else if (path_cpy[0] == '\0') { // When no path specified, use home
-        path_cpy = home_cpy;
+    else if (path[0] == '-') { // TODO: Backtracking directories
+      printf("Previous Path: %s\n",get_prev(history)->arg);
+      path = get_arg(get_prev(history)); //How do you free this memory
     }
-    errno_result = chdir(path_cpy);
+    errno_result = chdir(path);
     if (errno_result == -1) {
         printf("cd: %s: %s\n", path, strerror(errno));
         cmd_status = 0;
     }
-    free(home_cpy);
+    else{
+      history = insert_node(history, path);
+      printf("Previous Path: %s\n",history->arg);
+    }
+    return history;
 }

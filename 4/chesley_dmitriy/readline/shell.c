@@ -1,11 +1,13 @@
+// TODO advanced tilde
+// TODO inline substitution with ``
 // TODO fg, bg processes (&), jobs
-// TODO strip '* ' from git prompt, put () in function, error case, unicode
 // TODO command tab-completion
 // TODO simple redirection
 // TODO arithmetic?
 // TODO feature toggle(runtime config?)
 // TODO shells vars dict
 // TODO control statements
+// TODO optimization
 #include "shell.h"
 
 char cmd_error = CMD_OKAY;
@@ -15,8 +17,10 @@ char input[INPUT_BUF_SIZE];
 char *prompt;
 char **opts;
 char *tok;
-int optCount;
+int optCount, tokIndex;
 char old_pwd[DIR_NAME_MAX_SIZE];
+char state_stack[STATE_STACK_SIZE];
+int stack_pointer = 0;
 
 static void sighandler(int signo) {
     if (signo == CMD_ERROR_SIGNAL) {
@@ -172,11 +176,11 @@ void execute() {
                 kill(getppid(), CMD_ERROR_SIGNAL);
             }
             // Note: child automatically exits after successful execvp
-            exit(0);
+            exit(1);
         }
         else {
             int status;
-            wait(&status);
+            waitpid(child_pid, &status, 0);
             if (WIFEXITED(status)) {
                 if (WEXITSTATUS(status)) { // If exit status not 0
                     cmd_error = CMD_ERROR;
@@ -187,6 +191,24 @@ void execute() {
     printf("<~~~~ End of Output ~~~~~>\n");
 }
 
+void reset_execute_variables() {
+    // Reset tok
+    tok[0] = '\0';
+    // Reset tokIndex
+    tokIndex = 0;
+    // Reset opts
+    if (optCount > 0) {
+        for (;optCount >= 0;--optCount) {
+            free(opts[optCount]);
+        }
+    }
+    free(opts);
+    // Reset optCount
+    optCount = 0;
+    // Reinstantiate opts
+    opts = (char **) malloc(sizeof(char *));
+}
+
 void free_all() {
     // Free dynamically allocated memory
     free(prompt);
@@ -195,8 +217,8 @@ void free_all() {
             free(opts[optCount]);
         }
     }
-    free(opts);
     free(tok);
+    free(opts);
 }
 
 void get_prompt(char *prompt, int prompt_max_size) {
@@ -214,10 +236,9 @@ void get_prompt(char *prompt, int prompt_max_size) {
     char hostname[256];
     hostname[255] = '\0';
     gethostname(hostname, sizeof(hostname));
-    char *git_branch_container = (char *) malloc(GIT_BRANCH_MAX_SIZE * sizeof(char));
-    git_branch(git_branch_container, GIT_BRANCH_MAX_SIZE);
-    snprintf(prompt, prompt_max_size, "%s%s[%s]%s %s%s%s%s%s%s@%s%s%s%s:%s%s%s%s%s %s%s(%s)%s %s\n%s%s>>%s ", bold_prefix, fg_red_196, time_str, reset, bold_prefix, fg_bright_green, get_user(), reset, bold_prefix, fg_blue_24, hostname, reset, bold_prefix, fg_bright_green, reset, bold_prefix, fg_blue_39, cwd, reset, bold_prefix, fg_green, git_branch_container, reset, uid_symbol, bold_prefix, fg_green, reset);
-    free(git_branch_container);
+    char *git_container = git();
+    snprintf(prompt, prompt_max_size, "%s%s[%s]%s %s%s%s%s%s%s@%s%s%s%s:%s%s%s%s%s %s%s%s%s %s\n%s%s>>%s ", bold_prefix, fg_red_196, time_str, reset, bold_prefix, fg_bright_green, get_user(), reset, bold_prefix, fg_blue_24, hostname, reset, bold_prefix, fg_bright_green, reset, bold_prefix, fg_blue_39, cwd, reset, bold_prefix, fg_green, git_container, reset, uid_symbol, bold_prefix, fg_green, reset);
+    free(git_container);
     free(uid_symbol);
     free(time_str);
 }
@@ -228,11 +249,26 @@ void parse_input(char input[INPUT_BUF_SIZE]) {
     tok = (char *) malloc(sizeof(char));
     tok[0] = '\0';
     optCount = 0;
-    int i = 0, tokIndex = 0;
-    char state = STATE_NORMAL;
+    tokIndex = 0;
+    int i = 0;
+    clear_state_stack();
+    inline char *get_next_keyword(const char *extra_delims) {
+        char *keyword = (char *) malloc(sizeof(char));
+        int keyword_index = 0;
+        int index = i;
+        char tmp = input[++index];
+        while (tmp && tmp != '\n' && tmp != ' ' && strchr(extra_delims, tmp) == NULL) {
+            keyword = (char *) realloc(keyword, (keyword_index + 1) * sizeof(char));
+            keyword[keyword_index++] = tmp;
+            tmp = input[++index];
+        }
+        keyword = (char *) realloc(keyword, (keyword_index + 1) * sizeof(char));
+        keyword[keyword_index] = '\0';
+        return keyword;
+    }
     // Iterate through each char of input
     while (input[i]) {
-        if ((input[i] != '\n' && input[i] != ' ') || (state == STATE_IN_QUOTES)) { // Ignore whitespace
+        if ((input[i] != '\n' && input[i] != ' ') || (get_state() == STATE_IN_QUOTES)) { // Ignore whitespace
             // Handle escape characters
             if (input[i] == '\\') {
                 // Add char that follows the escape char to token
@@ -259,31 +295,21 @@ void parse_input(char input[INPUT_BUF_SIZE]) {
                 opts[optCount] = NULL;
 
                 execute();
-                // Reset tok
-                tok[0] = '\0';
-                // Reset tokIndex
-                tokIndex = 0;
-                // Reset opts
-                if (optCount > 0) {
-                    for (;optCount >= 0;--optCount) {
-                        free(opts[optCount]);
-                    }
-                }
-                free(opts);
-                // Reinstantiate opts
-                opts = (char **) malloc(sizeof(char *));
-                // Reset optCount
-                optCount = 0;
+                reset_execute_variables();
             }
             // Interpret words in quotes as a single token
-            else if (input[i] == '\"') {
-                if (state != STATE_IN_QUOTES) {
-                    printf("Entering quotes\n");
-                    state = STATE_IN_QUOTES;
+            else if (input[i] == '\"' || input[i] == '\'') {
+                if (get_state() != STATE_IN_QUOTES) {
+                    if (push_state(STATE_IN_QUOTES) < 0) {
+                        cmd_error = CMD_ERROR;
+                        return;
+                    }
                 }
                 else {
-                    printf("Exiting quotes\n");
-                    state = STATE_NORMAL;
+                    if (pop_state() < 0) {
+                        cmd_error = CMD_ERROR;
+                        return;
+                    }
                 }
             }
             // Substitute ~ with $HOME, if applicable
@@ -296,6 +322,40 @@ void parse_input(char input[INPUT_BUF_SIZE]) {
                 tok[tokIndex + strlen(home)] = '\0';
                 // Update tokIndex
                 tokIndex += strlen(home);
+            }
+            // Redirection of stdout to file (>)
+            // TODO append(>>)
+            else if (input[i] == '>') {
+                printf("opt: %s\n", opts[0]);
+                printf("optCount: %d\n", optCount);
+                printf("Got >\n");
+                while (input[i+1] == ' ') {
+                    // Advance past the optional whitespace following the redirection symbol
+                    ++i;
+                }
+                const char *extra_delims = "";
+                char *file = get_next_keyword(extra_delims);
+                printf("Redirect to file: %s\n", file);
+                int fd = open(file, O_CREAT | O_WRONLY | O_TRUNC, 0644); // Open file for redirection
+                // TODO use a state for this to get substitution and escapes
+                if (fd < 0) {
+                    fprintf(stderr, "[Error]: Cannot open file for redirection.");
+                }
+                int stdout_dup = dup(STDOUT_FILENO);
+                dup2(fd, STDOUT_FILENO); // Redirect stdout to fd
+                // Add required NULL argument for exec
+                opts = (char **) realloc(opts, (optCount + 1) * sizeof(char *));
+                opts[optCount] = NULL;
+                printf("opt: %s\n", opts[0]);
+                printf("optCount: %d\n", optCount);
+                // Advance past file name
+                i += strlen(file);
+                execute();
+                close(fd);
+                dup2(stdout_dup, STDOUT_FILENO); // Restore stdout
+                close(stdout_dup);
+                free(file);
+                reset_execute_variables();
             }
             // Copy char to var tok
             else {
@@ -353,29 +413,35 @@ void git_branch(char *container, size_t container_size) {
     int pipes[2];
     if (pipe(pipes) < 0) { // Returns -1 if error
         print_error();
-        // Notify parent of error
-        kill(getppid(), CMD_ERROR_SIGNAL);
+        return;
     }
     // Fork to execute command
     child_pid = fork();
     if (!child_pid) {
         dup2(pipes[1], STDOUT_FILENO);
         close(pipes[0]);
+        freopen("/dev/null", "w", stderr); // Redirect stderr to /dev/null
         if (execvp(l_opts[0], l_opts) < 0) { // Returns -1 if error
+            container[0] = '\0';
         }
         // Note: child automatically exits after successful execvp
-        exit(0);
+        exit(1);
     }
     else {
         close(pipes[1]);
         char output[1024];
         int bytes = read(pipes[0], output, sizeof(output));
+        if (bytes == 0) { // Git error (e.g. not in git repo)
+            container[0] = '\0';
+            return;
+        }
         output[bytes] = '\0';
         int i = 0;
         int container_index = 0;
         for (;output[i];++i) {
-            if (output[i] == '*') {
-                while (output[i] && output[i] != '\n' && (container_index < container_size - 1)) {
+            if (output[i] == '*' && output[i + 1] == ' ') {
+                i += 2; // Advance past * and space
+                while (output[i] && output[i] != '\n' && (container_index < container_size - 2)) {
                     container[container_index++] = output[i];
                     ++i;
                 }
@@ -385,6 +451,103 @@ void git_branch(char *container, size_t container_size) {
         container[container_index] = '\0';
         wait(NULL);
     }
+}
+
+void git_status(char *container, size_t container_size) {
+    if (container_size < GIT_STATUS_MAX_SIZE) {
+        fprintf(stderr, "[Error]: Incorrect size for git status container.");
+        return;
+    }
+    char *l_opts[3] = {"git", "status", NULL};
+    int pipes[2];
+    if (pipe(pipes) < 0) { // Returns -1 if error
+        print_error();
+        return;
+    }
+    // Fork to execute command
+    child_pid = fork();
+    if (!child_pid) {
+        dup2(pipes[1], STDOUT_FILENO);
+        close(pipes[0]);
+        freopen("/dev/null", "w", stderr); // Redirect stderr to /dev/null
+        if (execvp(l_opts[0], l_opts) < 0) { // Returns -1 if error
+            container[0] = '\0';
+        }
+        // Note: child automatically exits after successful execvp
+        exit(0);
+    }
+    else {
+        close(pipes[1]);
+        char output[4096];
+        int bytes = read(pipes[0], output, sizeof(output));
+        if (bytes == 0) { // Git error (e.g. not in git repo)
+            container[0] = '\0';
+            return;
+        }
+        output[bytes] = '\0';
+        int container_index = 0;
+        if (strstr(output, "Changes to be committed") != NULL) {
+            sprintf(container, " %s", cross);
+            container_index += strlen(cross) + 1;
+        }
+        else {
+            sprintf(container, " %s", check);
+            container_index += strlen(check) + 1;
+        }
+        if (strstr(output, "Changes not staged for commit") != NULL) {
+            sprintf(container, "%s %s", container, delta);
+            container_index += strlen(delta) + 1;
+        }
+        container[container_index] = '\0';
+        wait(NULL);
+    }
+}
+
+char *git() {
+    char *git_branch_container = (char *) malloc(GIT_BRANCH_MAX_SIZE * sizeof(char));
+    int container_size = GIT_BRANCH_MAX_SIZE + GIT_STATUS_MAX_SIZE;
+    char *git_container = (char *) malloc(container_size * sizeof(char));
+    git_container[0] = '\0';
+    git_branch(git_branch_container, GIT_BRANCH_MAX_SIZE);
+    if (strlen(git_branch_container) != 0) { // If in valid git repo
+        char *git_status_container = (char *) malloc(GIT_STATUS_MAX_SIZE * sizeof(char));
+        git_status(git_status_container, GIT_STATUS_MAX_SIZE);
+        snprintf(git_container, container_size, "(%s%s)", git_branch_container, git_status_container);
+        git_container[container_size - 1] = '\0';
+        free(git_status_container);
+    }
+    free(git_branch_container);
+    return git_container;
+}
+
+int push_state(const char state) {
+    if (stack_pointer > STATE_STACK_SIZE - 1) {
+        fprintf(stderr, "[Error]: Too many states on the stack.\n");
+        return -1;
+    }
+    state_stack[stack_pointer++] = state;
+    return 0;
+}
+
+const char pop_state() {
+    if (stack_pointer < 1) {
+        fprintf(stderr, "[Error]: Pop: Negative stack pointer.\n");
+        return -1;
+    }
+    return state_stack[--stack_pointer];
+}
+
+const char get_state() {
+    if (stack_pointer < 1) {
+        fprintf(stderr, "[Error]: Get: Negative stack pointer.\n");
+        return -1;
+    }
+    return state_stack[stack_pointer - 1];
+}
+
+void clear_state_stack() {
+    stack_pointer = 0;
+    state_stack[stack_pointer++] = STATE_NORMAL;
 }
 
 int main() {

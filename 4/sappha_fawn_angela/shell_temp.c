@@ -1,8 +1,5 @@
 #include "shell.h"
 
-char** execute_all();
-char* trim(char *);
-
 static void sighandler(int signo){
   if (signo == SIGINT){
     exit(0);
@@ -65,16 +62,15 @@ void execute(char a[256]){
 
   //parsing our command
   while (sep = strsep(&s1, " ")){
-    printf("sep: %sh\n", sep);
+    //printf("sep: %sh\n", sep);
     //fix spaces
-    if (strcmp(sep, " ")) {
-      printf("hi\n");
+    //printf("%d\n", *sep);
+    //printf("TF:%d\n", sep == "\0");
+    //if (strcmp(sep, " ")) {
       i++;
       arg = realloc(arg, sizeof(char*)*i);
       arg[i-1] = sep;
-    }
-    else
-      printf("bye\n");
+      //}
   }
   arg[i] = 0;
   if (strcmp(arg[0], "exit") == 0) { //if calling exit
