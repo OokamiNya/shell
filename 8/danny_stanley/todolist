@@ -1,0 +1,5 @@
+When you do ctrl-c, shouldn't the shell treat it as bash would? It should reprint the path out and reset everything if a program is not running
+
+I created the Linked Lists but forgot what that was for - whoops
+
+Add other stuff here that needs to be done
