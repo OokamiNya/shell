@@ -20,7 +20,8 @@
 
 #define interino char *
 
-
+char origin[256];
+char * table;
 
 char ** parse_string(char * s, char * parser) {
   char ** parsed = NULL;
@@ -38,7 +39,7 @@ char ** parse_string(char * s, char * parser) {
 }
 
 char * get_nth_donger(int n) {
-  FILE * dongerinos = fopen("dongers.txt", "rb");
+  FILE * dongerinos = fopen(table, "rb");
   fseek(dongerinos, 0, SEEK_END);
   long dongersize = ftell(dongerinos);
   rewind(dongerinos);
@@ -50,20 +51,36 @@ char * get_nth_donger(int n) {
   char ** parsed_dongerinos = parse_string(filerino, "\n");
 
   //-----------------DONGERS NEED TO BE EDITED
-  int i = 0;
+  /*int i = 0;
   for (;i<128;++i)
-    printf("i is %d, donger |%s|\n",i,parsed_dongerinos[i]);
+  printf("i is %d, donger |%s|\n",i,parsed_dongerinos[i]);*/
 
   return parsed_dongerinos[n];
 }
 
+char hash() {
+  char cwd[256];
+  getcwd(cwd, sizeof(cwd));
+  //printf("%s",cwd);
+  char c = 0;
+  int i = 0;
+  for (;cwd[i];i++) 
+    c = c^cwd[i];
+  //printf("%i",c);
+  return c;
+}
+
+
 interino main() {
+  getcwd(origin, sizeof(origin));
+  table = strcat(origin,"/dongers.txt");
+  //printf(">>>%s<<<",table);
   //get_nth_donger(2);
   //exit(1);
   while ("( ‾ʖ̫‾)") {
-   
+    printf("%s: ",get_nth_donger(hash()));
     //printf("MY ASS\n");
-    printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
+    //printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
     char input[256];
     fgets(input,sizeof(input),stdin);
     char ** semicolon_parsed = parse_string(input,";");
