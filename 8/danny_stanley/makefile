@@ -1,19 +1,18 @@
 FILES = shell.c link_list.c
+OBJECTS = shell.o link_list.o
 LIBS = -lreadline
 
 all: clean build run
 
 clean:
 	@rm -f shell
-	@rm -f *~
 
 build:
 	@gcc -Wall -c -g $(FILES)
-	@gcc -o shell shell.o link_list.o $(LIBS)
+	@gcc -o shell $(OBJECTS) $(LIBS)
 
 run:
-	@rm -f shell.o
-	@rm -f link_list.o
+	@rm -f *.o
 	@./shell
 
 test:
