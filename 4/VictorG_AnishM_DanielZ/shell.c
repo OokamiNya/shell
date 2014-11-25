@@ -9,6 +9,19 @@
 #include <errno.h>
 //more includes
 
+void semirun(char *input){
+  char * j=input;
+  printf("%s",j);
+  //while(strtok(j,";")){
+  //j=strtok(j,";");
+  //printf("%s",j);
+    //run
+    //j=strtok(j,";");
+    //rintf("%s",j);
+  //}
+  
+}
+
 char ** separate(char *s){
   char *pos;
   int i=0;
@@ -17,13 +30,13 @@ char ** separate(char *s){
     *pos = '\0';
   char *s1=s;
   char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
-  printf("yo\n");
+  //printf("yo\n");
   //printf("%s\n",s);
 
   for (i=0;s[i];i++){
     s2[i] = (char *)(malloc(strlen(s)*sizeof(char)));
     //printf("s2 :%p:\n", s2[i]);
- 
+
     s2[i] = strsep(&s1, " ");
     //printf("%s\n",s2[i]);
   }
@@ -35,35 +48,82 @@ char ** separate(char *s){
   return s2;
 }
 void run(char *input){
-  char **inputA=malloc(strlen(input)*strlen(input)*sizeof(char)+sizeof(char));
+  char **inputA;//=malloc(strlen(input)*strlen(input)*sizeof(char)+sizeof(char));
   inputA=separate(input);
-  printf("%s\n",inputA[0]);
-  char* problemChild=inputA[0];
-  /*
-  if (strcmp(problemChild,"cd")){
-    int i = chdir("../..");
-    if (i!=0){
-      printf("%s is not a directory.",problemChild);
+  //char* problemChild=(char *)malloc(strlen(inputA[0])*sizeof(char));
+  //problemChild=inputA[0];
+  //printf("%s\n",problemChild);
+  if (!strcmp(inputA[0],"cd")){
+    if(inputA[1]){
+      if (inputA[1][0]=='~'){
+	//printf("here\n");
+	char a;
+	char * b=(char *) malloc(sizeof(char)*strlen(inputA[1]));
+	strcpy(b,inputA[1]);
+	a=b[1];
+	//printf("This is b: %s\n",b);
+	int c=1;
+	inputA[1][0]=b[c];
+        for (c=2;!inputA[1][c];c++){
+	  inputA[1][c]=b[c];
+	  //printf("%c\n",b[c]);
+	}
+	printf("%s\n",inputA[1]);
+	char *env;
+	strcpy(env,getenv("HOME"));
+	chdir(strcat(env,inputA[1]));
+	//free(env);
+	free(b);
+	free(inputA);
+	return;
+      }
+      //printf("hey\n");
+      int i = chdir(inputA[1]);
+      if (i!=0){
+	printf("%s is not a directory.",inputA[0]);
+	free(inputA);
+	return;
+      }
     }
+    printf("%s\n",getenv("HOME"));
+    chdir(getenv("HOME"));
+    free(inputA);
     return;
-  }
-  if (strcmp(problemChild,"exit")){
-    printf("Thanks for using our shell!");
-    exit(0);
-    }*/
-  execvp(inputA[0],inputA);
-  
+    }
+    if (!strcmp(inputA[0],"exit")){
+      int z=fork();
+      if (z==0){
+	printf("Thanks for using our shell!\n");}
+      free(inputA);
+      exit(0);
+      return;
+    }
+    //printf("heyhey\n");
+    else{
+      int f=fork();
+      if (!f)
+	execvp(inputA[0],inputA);
+      free(inputA);
+      return;
+    }
 }
-
-
-
-
+ 
+ 
+ 
+ 
 int main(){
   char s[1024];
-  //while (1){
-  printf("wedemboyz$$:");
-  fgets(s,1024,stdin);
-  run(s);
-    //}
+  int f=1;
+  /*while(1){
+    printf("==|==<(x_x)>===>:");
+    fgets(s,1024,stdin);
+    //f=fork();
+    run(s);
+    //return 0;
+    wait(NULL);
+  }
+  */
+  semirun("ls;w;ls");
   return 0;
 }
+ 

@@ -2,7 +2,10 @@
 by Jessica Ng and Lawrence Lim
 
 Features:
+    Friendly encouraging :^) face!
     Forks and executes commands!
+    Exits too!
+    Semicolon nonsense!
     That's it!
 
 Attempted:
@@ -10,6 +13,11 @@ Attempted:
 
 Bugs:
     grasshoppers
+    does bad things with extra spaces
+
+To do:
+    strsep -> strchr for \n
+    write the design doc :^(
 
 Files & Function Headers:
 main.c
@@ -22,6 +30,26 @@ shell.c
      * :^)
      ***************/
 
-    /***** void docmd(char* s) *****
+    /***** int countargs(char* s) *****
+     * :^)
+     ***************/
+
+    /***** int countargs(char* s) *****
+     * :^)
+     ***************/
+
+    /***** void splitinput(char* s, char** cmds) *****
+     * :^)
+     ***************/
+
+    /***** void splitcmd(char* s, char** args) *****
+     * :^)
+     ***************/
+
+    /***** void docmd(char** args) *****
+     * :^)
+     ***************/
+
+    /***** void gtfo() *****
      * :^)
      ***************/

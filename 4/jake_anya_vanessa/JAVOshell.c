@@ -4,33 +4,58 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
-#include "signal.h"
+#include <fcntl.h>
+
+static void sighandler(int signo){
+  if (signo == SIGINT){
+    printf("we stopped a thing 1?\n");
+  }
+}
 
 int main(){
-
-  chdir(getenv("HOME"));
   
+  /* piping things
+  int fd;
+  fd = open("loop.c", O_WRONLY | O_TRUNC);
+  dup2(fd, STDOUT_FILENO);
+  printf("Woo! This is working!");
+  */
+
+  printf("\n");
+  chdir(getenv("HOME"));
   signal(SIGINT, sighandler);
+  
   while(1){
 
     char input[256];
     char cwd[256];
     getcwd(cwd,256);
-    printf("JAVO:>%s ",cwd);
+    cwd[strlen(cwd)] = 0;
+    //substituting home with ~
+    /* char * newcwd; */
+    /* if(!strncmp(cwd,getenv("HOME"),strlen(getenv("HOME")))){ */
+    /*   newcwd = "~"; */
+    /*   strncat(newcwd, strstr(cwd,getenv("HOME")), sizeof(cwd)-sizeof(getenv("HOME"))); */
+    /* } */
+    /* else */
+    /*   newcwd = cwd; */
+    //
+    
+    printf("JAVO:%s> ",newcwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
-    printf("input: %s\n", input);
 
-    if(!strcmp(input,"exit")){
+    if(!strcmp(input,"exit\n")){
       exit(-1);
     }
-    else if(strncmp(input,"cd",2)){
+    else if(!strncmp(input,"cd",2)){
       execute(input);
     }
     else{
       int f = fork();
       wait();
       if (!f){
+	signal(SIGINT, sighandler);
 	execute(input);
       }
     }

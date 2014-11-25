@@ -9,3 +9,5 @@
 
 void printprompt();
 void execute();
+char** execute_all();
+char* trim(char *);

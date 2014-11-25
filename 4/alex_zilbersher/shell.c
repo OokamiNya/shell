@@ -11,31 +11,28 @@ int run_command(char* s){
   char *args[256];
   char *s1=s;
   char *s2;
-  int i=0;
-  int semi=0; //for ; in commands
-  while(s2=strsep(&s1," ")){
-    if(strcmp(s2,"")!=0){
-      if(strcmp(s2,";")!=0){
-	args[i]=s2;
-	i++;
-      }else{
-	semi=1;
-	break;
-      }
-    }
-  }
-  args[i]=0;
-  if(semi){
+  char *s3;
+  if(s2=strsep(&s1,";")){
     int f=fork();
     if(f){
       wait(&f);
-      printf("\n");
+      if(s1){ //this ensures that it will not print a new line if no other command is run after it (eg: just ls)
+	printf("\n");
+      }
       run_command(s1);
     }else{
+      int i=0;
+      while(s3=strsep(&s2," ")){
+	if(strcmp(s3,"")!=0){
+	  args[i]=s3;
+	  i++;
+	}
+      }
+      args[i]=0;
       execvp(args[0],args);
+      printf("Command not found: %s\n",args[0]);
+      exit(-1);
     }
-  }else{
-    execvp(args[0],args);
   }
   return 0;
 }

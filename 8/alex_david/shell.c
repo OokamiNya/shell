@@ -15,8 +15,8 @@ static void sighandler(int signo){
 
 int main(){
   signal(SIGUSR1,sighandler);
-  printf("-- _ SHELL --\n\n"); //fill _ with name or change]
-  command();
+  printf("-- Alex L. and David B. SHELL --\n\n"); 
+  shell();
   return 0;
 }
 
@@ -25,22 +25,67 @@ int cd (char* s) {
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
-  printf ("%s", cwd);
  
   strcat (cwd, "/");
   strcat (cwd, s);
-  printf ("%s", cwd);
   
   //strcat (cwd, "/0");
   int ret = chdir(cwd);
-  printf("\n%d\n", ret);
 }
 
 
-int command(){
-  printf("_$ "); //fill _ with something (maybe cwd)
+int shell(){
+  char cwd[256];
+  getcwd(cwd,sizeof(cwd));
+  int r = 0;
+  char *t = cwd;
+  while (*t){
+    if (*t == '/'){
+      r++;
+    }
+    t++;
+  }
+  if (r <= 3){
+    printf("%s$ ",cwd);
+  }else{
+    t = cwd;
+    while (r > 2){
+      if (*t == '/'){
+	r--;
+      }
+      t++;
+    }
+    printf(".../%s$ ",t); //now lists top 3 directory levels
+  }
+  
   char s[1024];
   fgets(s,sizeof(s),stdin);
+  int n = 1;
+  char *p = s;
+  while (*p){ //now splits on ';' and runs commands in succession
+    if (*p == ';'){
+      n++;
+    }
+    p++;
+  }
+  char **commands = malloc(sizeof(char *) * n);
+  p = s;
+  *strchr(p,'\n') = '\0';
+  n = 0;
+  char *k;
+  while (k = strsep(&p,";")){
+    commands[n] = k;
+    n++;
+  }
+  int i = 0;
+  for (; i < n; i++){
+    execute(commands[i]);
+  }
+  free(commands);
+  shell();
+}
+
+int execute(char *s){
   int n = 2;
   char *p = s;
   while (*p){
@@ -51,35 +96,46 @@ int command(){
   }
   char **params = malloc(sizeof(char *) * n);
   p = s;
-  *strchr(p,'\n') = '\0';
   n = 0;
   char *k;
   while (k = strsep(&p," ")){
-	params[n] = k;
-	n++;
+    if (strcmp(k,"")){ //removes blanks from multiple spaces
+      params[n] = k;
+      n++;
+    }  
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
     int i = 1;
-    while (!strcmp(params[i],"")){//gets rid of extra "" made by extra spaces, make i start from 0 later
-      i ++;
-    }
-    cd (params [i]); // note to self ~ and / don't work, make ; work for other commands
-  }
-  int f = fork();
-  if (!f){
-    if (!strcmp(params[0],"exit")){
-      printf("Bye!\n\n");
-      dup2(STDIN_FILENO,STDOUT_FILENO);
-      char parent[10];
-      sprintf(parent,"%d",getppid());
-      execlp("kill","kill","-10",parent,NULL);
-    }
-    execvp(params[0],params);    
+    cd (params [i]); // note to self ~ and / don't work
+    //inputting just 'cd' causes a seg fault
+  }else if (!strcmp(params[0],"exit")){
+    printf("Bye!\n\n");
+    exit(0);
   }else{
-    int status;
-    wait(&status);
-    command();
+    int f = fork();
+    if (!f){
+      int y = 0;
+      for (;y < n; y++){ //redirection
+	if (!strcmp(params[y],">")){
+	  int fd = open(params[y+1],O_CREAT | O_TRUNC | O_WRONLY,0644);
+	  dup2(fd,STDOUT_FILENO);
+	  params[y] = NULL;
+	}else if (!strcmp(params[y],">>")){
+	  int fd = open(params[y+1],O_CREAT | O_APPEND | O_WRONLY,0644);
+	  dup2(fd,STDOUT_FILENO);
+	  params[y] = NULL;
+	}else if (!strcmp(params[y],"<")){
+	  int fd = open(params[y+1],O_RDONLY);
+	  dup2(fd,STDIN_FILENO);
+	  params[y] = NULL;
+	}
+      }
+      execvp(params[0],params);    
+    }else{
+      int status;
+      wait(&status);
+      free(params);
+    }
   }
-  return 1;
 }

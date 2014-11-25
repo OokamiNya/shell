@@ -19,6 +19,7 @@ char *removespace(char *str) // remove leading space
   return str;
 }
 
+
 char ** parse(char * input){
   char buf[256];
   strcpy(buf, input);
