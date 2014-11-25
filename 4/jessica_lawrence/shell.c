@@ -11,24 +11,40 @@ void prompt(char* s) {
   fgets (s, 256, stdin);
 }
 
-void docmd(char* s) {
+int countargs(char* s) {
+  char* temp = malloc(256*sizeof(char));
+  char* starttemp = temp;
+  strncpy(temp, s, 256);
+  int argc = 0;
+  while(strsep(&temp, " ")) {
+    argc++;
+  }
+  free(starttemp);
+  return argc;
+}
+
+void splitcmd(char* s, char** args) {
   char *c = s;
   char *t;
-  char **args = NULL;
   int i = 0; 
   
   c = strsep (&c, "\n");
   
   while ((t = strsep(&c, " "))) {
-    args = realloc (args, sizeof (char *) *(i+1));
     args[i] = t;
     i++;
   }
-  
+
   args [i] = 0;
+}
+
+void docmd(char** args) {
   execvp (args[0], args);
-  free (args);
-  printf ("wrong\n");
+  printf ("LMFAO no such command XDDDDDD q:^)-k\n");
+  exit(0);
+}
+
+void gtfo() {
   exit(0);
 }
 

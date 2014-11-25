@@ -6,20 +6,51 @@
 #include <errno.h>
 #include <string.h>
 
-//void print_prompt();
-//char ** parse();
-//int contains(char **args, char keys);
-//int handle(char **args);
-
 void print_prompt();
 void parse(char ** a); //parses user input into an array of strings
 int contains(char **a);
 int execute(char **a); //runs exec
 
-/*
-semi colons work but need to be split by at least one space. also i did it in a rather inefficet way
- */
+int main(){
 
+  printf("\nSisi -- try typing a command with multiple arguments and as many spaces as you want, but not ; or < or > or | -- parse returns correctly now\n");
+  printf("\nUnfortunately, this does nothing else yet; but the returning works, so that's great!\n");
+  printf("\n... for now.\n\n");
+
+  print_prompt();
+
+  while(1){
+
+    char * a[64];
+    parse(a);
+
+    int i=0;
+    while(a[i]){
+      printf("a[%d]: %s\n",i,a[i]);
+      i++;
+    }
+  
+    /*
+    if(contains(a,";")){
+      //run
+    }else if(contains(a)){
+
+    }else{
+    
+    }
+    */
+  }
+
+  return 0;
+
+}
+
+
+void print_prompt(){
+  char path[256];
+  getcwd(path, 256);   
+  printf("%s$ ", path);
+}
 
 
 void parse(char ** args){
@@ -48,6 +79,7 @@ void parse(char ** args){
     args[i] = (char*)calloc(64,sizeof(char));
     i++;
   }
+
   //resetting the counter variable
   i=0;
 
@@ -70,102 +102,6 @@ void parse(char ** args){
   //terminate args
   args[i] = 0;
 
+  //return args;
+
 }
-
-
-int contains(char** args){
-
-  //printf("IN CONTAINS\n");
-
-  //  testing that parsing works
-  int i=0;
-  while( args[i] ){
-    if ( strcmp(args[i], ";") == 0 ){
-      return 1;
-    }//else if:  > < | return 2 3 4
-
-
-    i++;
-  }
-  return 0;
-}
-
-void print_array(char ** args){
-  int i = 0;
-  while(args[i]){
-    printf("args[%d]:  %s\t",i,args[i]);
-    i++;
-  }
-}
-
-void print_prompt(){
-  char path[256];
-  getcwd(path, 256);  
-  
-  printf("%s$ ", path);
-}
-
-int execute(char ** args){
-  if(contains(args) == 0){//regular input no ; < > |(
-    if (strcmp(args[0], "exit") == 0){
-      printf("BYE!!!!\n");
-    }
-    else if  (strcmp(args[0], "cd") == 0){
-      chdir(args[1]);      
-    }
-    else{
-      int f = fork();
-      int status;
-      if( !f ){
-	execvp(args[0], args );
-	//everything else
-	//redirection
-      }else{
-	wait(&status);	
-      }
-    }
-  }else if (contains(args) == 1){ // if has semi colon
-    char ** part1 =  (char**)malloc(sizeof(char *) * 64);
-    int j = 0;
-    while( args[j]){   
-      if( strcmp(args[j], ";") != 0 ){
-	part1[j] = args[j];
-	j++;
-      }else{
-	execute(part1);
-	j++;
-	// this is super inefficent but it does work
-	char ** part2 =  (char**)malloc(sizeof(char *) * 64);
-	int i = 0;
-	while (args[j]){
-	  part2[i] = args[j];
-	  j++;
-	  i++;
-	}
-	execute(part2);	
-      }
-    }
-  }
- 
-  return 0;  
-}
-
-int main(){
-
-  print_prompt();
-  int run = 1;
-  while(run){
-
-    char ** args = (char**)malloc(sizeof(char *) * 64);//64?
-    parse(args);
-
-    execute(args);
-    print_prompt();
-  }
-
-
-  
-  return 0;
-}
-
-

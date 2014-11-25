@@ -27,19 +27,25 @@ char** parse(char* input, char* s){
     return args;
 }
 
+char* getinput(char* input){
+  char prompt[4096];
+  wait(-10);
+  strcpy(prompt,"Shell:");//add directory and username
+  printf("%s", prompt);
+  getcwd(prompt, sizeof(prompt));
+  printf("%s$ ", prompt);
+    
+  //char input[4096];
+  fgets(input, 4096, stdin);
+  return input;
+}
+
 int main(){
+  char a = 0;
   while(1){
     //Prompt
-    char prompt[4096];
-    wait();
-    strcpy(prompt,"Shell:");//add directory and username
-    printf("%s", prompt);
-    getcwd(prompt, sizeof(prompt));
-    printf("%s$ ", prompt);
-    
     char input[4096];
-    fgets(input, 4096, stdin);
-
+    getinput(input);
     //attempt at semicolon
     char ** superargs = parse(input,";"); 
     int j = 0;
@@ -56,7 +62,9 @@ int main(){
 	int f = fork();
 	if(!f){
 	  execvp(args[0],args);
+	  free(args);
 	  printf("Command not found\n");
+	  exit(0);
 	}
       }
       

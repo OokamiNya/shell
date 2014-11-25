@@ -1,1 +1,1 @@
-int execute();
+int execute(char* input);

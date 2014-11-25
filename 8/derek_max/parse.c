@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "execute.h"
+#include "parse.h"
 #include <errno.h>
 
 char *removespace(char *str) // remove leading space
@@ -38,10 +38,11 @@ char ** parse(char * input){
     i++;
   }
   args[i] = '\0';
-  printf("%s\n%s\n%s\n", args[0], args[1], args[2]);
+  //printf("%s\n%s\n%s\n", args[0], args[1], args[2]);
   return args;
 }
-
+/*
 int main(){
-  parse("ls -l ;   touch cat   ");
+  parse("ls -l ;   touch cat   \n");
 }
+*/

@@ -8,10 +8,16 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <sys/wait.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
-#define BUFFER_SIZE 1024
+#define PROMPT_SIZE 1024
+#define PATH_SIZE 768
+#define TOK_INIT_SIZE 256
+
+const char *shell_name = "StD";
 
 void shell();
-int parse_input(char *);
-void call_cmd(char *, char *);
+void parse_input(char *);
+void execute(char **);
 void change_directory(char*);
