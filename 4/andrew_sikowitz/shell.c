@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 #include <pwd.h>
+#include <errno.h>
 
 #include "shell.h"
 
@@ -50,13 +52,14 @@ int parse(char * input) {
       c++;
   }
   
-  char ** commands = (char **) malloc(1024*c);
+  char ** commands = (char **) malloc(sizeof(char **)*c);
   char * ph = input;
   j = -2;
   for (i=0; i<c; i++) {
     j = j+2; //j starts at 0, 1, or 2 depending on:
     //First run starts at 0
-    //Next runs starts at 1 to ignore >, or 2 to ignore >>, etc.
+    //Next runs starts at 1 to ignore > in for loop
+    //Or 2 to ignore >>, etc. but include it in final string
     commands[i] = (char *) malloc(1024);
     for (; j<strlen(ph) && !isRed(ph[j]); j++) {}
     if (ph[j-1] == ' ') {
@@ -79,11 +82,11 @@ int parse(char * input) {
     }
   }
 
-  for (i=0; i<c; i++) {
+  /*for (i=0; i<c; i++) {
     printf("%s\n", commands[i]);
-  }
+    }*/
 
-  //run(commands, c);
+  run(commands, c);
   
   return 0;
 }
@@ -96,27 +99,70 @@ int separate(char * input) {
 
   return 0;
 }
-/*
-char ** sparse(char * command) {
-  int c = 0;
-  int i;
-  for (i=0; i<c; i++) {
 
+char ** sparse(char * command) {
+  int c = 1;
+  int i;
+  for (i=0; i<strlen(command); i++) {
+    if (command[i] == ' ')
+      c++;
   }
+  
+  char ** args = (char **) malloc(sizeof(char **) * (c+1)); //+1 for null
+  for (i=0; i<c; i++) {
+    args[i] = (char *) malloc(strlen(command));
+    strncpy(args[i], strsep(&command, " "), strlen(command)+1);
+  }
+  args[c] = (char *) malloc(1);
+  args[c] = NULL;
+
+  return args;
 }
 
 int run(char ** commands, int c) {
-  int f, status;
-  f = fork();
-  if (f) {
-    wait(&status);
+  if (!strncmp(commands[0], "cd", 2)) {
+    char ** args = sparse(commands[0]);
+    if (chdir(args[1]))
+      printf("%s\n", strerror(errno));
   }
+  else if (!strncmp(commands[0], "exit", 4)) {
+    //
+  }   
   else {
-    int i;
-    for (i=c-1; i>=0; i--) {
+    int f, status;
+    f = fork();
+    if (f) {
+      wait(&status);
+    }
+    else {
+      int i, fd;
+      char * file;
+      for (i=c-1; i>=0; i--) {
+	if (commands[i][0] == '>') {
+	  file = clean(commands[i]+1); //Ignores >
+	  printf("%s\n", file);
+	  fd = open(file, O_CREAT | O_WRONLY);
+	  dup2(fd, STDOUT_FILENO);
+	}
+	else if (commands[i][0] == '<') {
+	  file = clean(commands[i]+1);
+	  fd = open(file, O_RDONLY);
+	  dup2(fd, STDIN_FILENO);
+	}
+	else {
+	  char ** args = sparse(commands[i]);
+	  if (execvp(args[0], args))
+	    printf("%s\n", strerror(errno));
+	  exit(-1);
+	}
+      }
+      char ** args = sparse(commands[0]); //Default
+      execvp(args[0], args);
+    }
+  }
+}
       
-      char ** func = sparse(commands[0]);
-*/
+      
 int main() {
   //Main program
   printf("PID: %d\n", getpid());
