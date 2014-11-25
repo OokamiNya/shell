@@ -17,34 +17,33 @@ int main()
       //process input
       fgets(raw_in, IN_LEN, stdin);
       raw_in = strsep(&raw_in, "\n");
+      char **in = &raw_in;
 
       //parse functions
       int num_cmds = count_delims(raw_in, DELIMS) + 1;
-      /* char **in = &raw_in; */
-      /* char *delim = malloc(1 * sizeof(char)); */
+      int count;
+      for (count = 0; count < num_cmds; count++)
+	{
+	  printf("%s\n", strsep_save(in, DELIMS, NULL));
+	}
+      /* command_t **cmds = (command_t **)malloc(num_cmds * sizeof(command_t *)); */
+      /* parse(&raw_in, cmds, num_cmds); */
+
+      /* //exec functions */
       /* int count; */
       /* for (count = 0; count < num_cmds; count++) */
       /* 	{ */
-      /* 	  printf("%s\n", strsep_save(in, DELIMS, delim)); */
+      /* 	  printf("COMMAND: %s\n", cmds[count]->execstr); */
+      /* 	  int pid = fork(); */
+      /* 	  if (pid == 0) */
+      /* 	    { */
+      /* 	      execstr(cmds[count]->execstr); */
+      /* 	    } */
+      /* 	  else */
+      /* 	    { */
+      /* 	      wait(NULL); */
+      /* 	    } */
       /* 	} */
-      /* free(delim); */
-      command_t **cmds = (command_t **)malloc(num_cmds * sizeof(command_t *));
-      parse(&raw_in, cmds, num_cmds);
-
-      //exec functions
-      int count;
-      for (count = 0; count < num_cmds; count++)
-      	{
-      	  int pid = fork();
-      	  if (pid == 0)
-      	    {
-      	      execstr(cmds[count]->execstr);
-      	    }
-      	  else
-      	    {
-      	      wait(NULL);
-      	    }
-      	}
     }
   free(raw_in);
   free(prompt);
