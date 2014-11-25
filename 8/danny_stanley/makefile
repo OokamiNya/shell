@@ -5,6 +5,7 @@ all: clean build run
 
 clean:
 	@rm -f shell
+	@rm -f *~
 
 build:
 	@gcc -Wall -c -g $(FILES)
