@@ -21,16 +21,15 @@ int main(){
 }
 
 int cd (char* s) {
+  if (!strcmp(s,"/")) return chdir(s);
+  if (!strcmp(s,"~")) return chdir("/home"); //needs to be fixed
   char path[1000];
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
- 
   strcat (cwd, "/");
   strcat (cwd, s);
-  
-  //strcat (cwd, "/0");
-  int ret = chdir(cwd);
+  return chdir(cwd);
 }
 
 
@@ -106,8 +105,12 @@ int execute(char *s){
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
-    int i = 1;
-    cd (params [i]); // note to self ~ and / don't work
+    if (params[1]){
+      int i = 1;
+      if (cd (params [i])) printf("No such directory\n"); // note to self ~ and / don't work
+    }else{
+      cd("~");
+    }
     //inputting just 'cd' causes a seg fault
   }else if (!strcmp(params[0],"exit")){
     printf("Bye!\n\n");
