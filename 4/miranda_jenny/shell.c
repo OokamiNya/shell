@@ -1,11 +1,13 @@
 #include "shell.h"
 
 int i = 1;
-int f;
+int f=0;
 static void sighandler(int signo){
   if(signo == SIGINT){
-    if (f == 0){
+    printf("f: %d",f);
+    if (!f){
       exit(0);
+
     }
   }
 }
@@ -17,6 +19,7 @@ void execute( char* split_cmds) {
   while( (split_args = strsep(&split_cmds, " ")) ) {
     args[a] = split_args;
     a++;
+    //printf("%d\n",a);
   }
       args[a]=0;
   if ( !strcmp(args[0], "cd") ) {
@@ -28,13 +31,15 @@ void execute( char* split_cmds) {
   else{
     f = fork();
     if ( !f ) {
+      
+      //printf("%s\n",args[0]);
       execvp(args[0], args);
       exit(0);
     }
     else {
-      printf("waiting...\n");
+      //printf("waiting...\n");
       wait(&f);
-      printf("done waiting\n");
+      //printf("done waiting\n");
       f=0;
     }
   }
@@ -42,11 +47,12 @@ void execute( char* split_cmds) {
 
 int main(){
   printf( "Welcome to the The Magic Conch Shell.\n" );
-    
-  signal(SIGINT, sighandler);
+  signal(SIGINT,sighandler);   
+ 
   char input_str[100];
   char cwd[200];
   while( i ) {
+ 
     getcwd( cwd, sizeof(cwd) );
     printf( "%s$ ", cwd );
         
@@ -83,7 +89,7 @@ int main(){
 	fd=open(split_cmds,O_WRONLY|O_CREAT|O_EXCL,0644);
 	dup2(fd, STDOUT_FILENO);
 	execute(cmd);
-	dup2(temp_stdout,fd);
+	dup2(temp_stdout, STDOUT_FILENO);
       }
       else if (strchr(split_cmds,'<') != 0){
 	char * cmd;
@@ -92,13 +98,13 @@ int main(){
 	fd=open(split_cmds,O_WRONLY|O_CREAT|O_EXCL,0644);
 	dup2(fd, STDIN_FILENO);
 	execute(cmd);
-	dup2(temp_stdin,fd);
+	dup2(temp_stdin, STDIN_FILENO);
       }
       else{
 	execute(split_cmds);
       }
             
-            
+           
     }
   }
   return 0;
