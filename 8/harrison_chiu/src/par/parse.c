@@ -21,22 +21,24 @@ int parse(char **in, command_t *cmds[], int num_cmds)
 
 char *strsep_save(char **stringp, char *delims, char *found)
 {
-  char *out = *stringp;
-  int i_stringp, i_del;
-  for (i_stringp = 0; *stringp[i_stringp]; i_stringp++)
+  char *string = *stringp;
+  int i_string;
+  for (i_string = 0; string[i_string]; i_string++)
     {
+      int i_del;
       for (i_del = 0; delims[i_del]; i_del++)
-  	{
-  	  if (*stringp[i_stringp] == delims[i_del])
-  	    {
-  	      *found = delims[i_del];
-  	      *stringp[i_stringp] = 0;
-	      *stringp = *stringp[++i_stringp];
-  	      return out;
-  	    }
-  	}
+      	{
+      	  if (string[i_string] == delims[i_del])
+      	    {
+      	      char *tok = string;
+      	      *found = delims[i_del];
+      	      string[i_string++] = 0;
+      	      *stringp = &string[i_string];
+      	      return tok;
+      	    }
+      	}
     }
-  return out;
+  return string;
 }
 
 int count_delims(char *in, char *delims)
