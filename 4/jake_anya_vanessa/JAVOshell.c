@@ -33,7 +33,6 @@ int main(){
     printf("JAVO:%s> ",cwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
-    printf("input: %s\n", input);
 
     if(!strcmp(input,"exit\n")){
       exit(-1);

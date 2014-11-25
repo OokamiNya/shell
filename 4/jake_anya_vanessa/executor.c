@@ -19,9 +19,6 @@ int execute(char s[256]) {
   char * newstr;
   newstr = strsep(&(arg[i-1]), "\n");
   arg[i-1] = newstr;
-  
-  printf("%s\n",arg[0]);
-  printf("%d\n",strcmp(arg[0],"cd"));
 
   if(!strcmp(arg[0],"cd")){
     if (sizeof(arg) / sizeof(char *) > 1)
