@@ -47,7 +47,24 @@ int main() {
     }
     
     else if(strchr(s,'>')) {
-      printf("registered >\n");
+      //note: need to reconcile $: ls > foo and $: ls>foo
+      char *first_cmd = (char*)malloc(1024);
+      strcpy(first_cmd, first_arg);
+      printf("first_cmd :%s:\n",first_cmd);
+      printf("rest of str :%s:\n", scpy);
+      char *temp;
+      temp = strsep(&scpy, ">");
+      if( strcmp(temp, "") ){
+	char *first_cmd_args = strsep(&temp, " ");
+	printf("temp now :%s:\n", temp);
+	printf("first_cmd_args :%s:\n",first_cmd_args);
+      } else{
+	printf("temp :%s:\n",temp);
+	prtinf("temp is first_cmd_args\n");
+      }
+      if( strncmp(scpy," ",1) == 0 ){ scpy++; }
+      printf("rest of str :%s:\n", scpy);
+      //printf("registered >\n");
     }
     
     else if(strchr(s,'<')) {
@@ -101,10 +118,13 @@ int exec_line(char *s) {
   char* string2;
   char *array[256];
   
-  int i=0;
-  for(;s[i]!='\n';i++){
+
+  if( strchr(s, '\n') ){
+    int i=0;
+    for(;s[i]!='\n';i++){
+    }
+    s[i]=0;
   }
-  s[i]=0;
   
   char* string1=s;
   
