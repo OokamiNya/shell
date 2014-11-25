@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
+//#include <fcntl.h>
 
 /* to do 
    - hash table + custom dongerinos for directory
@@ -16,6 +16,12 @@
    - !!!!!!!!!
    -?!??
    - ¿¿¿¿¿?
+*/
+
+#define interino char *
+
+
+
 char ** parse_string(char * s, char * parser) {
   char ** parsed = NULL;
   char * item = strtok(s,parser);
@@ -31,9 +37,29 @@ char ** parse_string(char * s, char * parser) {
   return parsed;
 }
 
-#define interino char *
+char * get_nth_donger(int n) {
+  FILE * dongerinos = fopen("dongers.txt", "rb");
+  fseek(dongerinos, 0, SEEK_END);
+  long dongersize = ftell(dongerinos);
+  rewind(dongerinos);
+  char * filerino = malloc(dongersize+1);
+  fread(filerino, dongersize, 1, dongerinos);
+  fclose(dongerinos);
+  filerino[dongersize] = 0;
+
+  char ** parsed_dongerinos = parse_string(filerino, "\n");
+
+  //-----------------DONGERS NEED TO BE EDITED
+  int i = 0;
+  for (;i<128;++i)
+    printf("i is %d, donger |%s|\n",i,parsed_dongerinos[i]);
+
+  return parsed_dongerinos[n];
+}
 
 interino main() {
+  //get_nth_donger(2);
+  //exit(1);
   while ("( ‾ʖ̫‾)") {
    
     //printf("MY ASS\n");
@@ -63,16 +89,14 @@ interino main() {
 	int j = fork();
 	if (j) {
 	  wait();
-      }
+	}
 	else {
 	  execvp(command[0],command);
-	  free(command);
 	  return "( ͝° ͜ʖ͡°)つ";
-	}      
+	} 
       }
-      
+      free(command);
     }
     free(semicolon_parsed);
   }
 }
-*/
