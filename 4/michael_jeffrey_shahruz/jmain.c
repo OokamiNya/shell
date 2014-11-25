@@ -88,7 +88,6 @@ void runs_command(char *scpy) {
       
       int f = fork();
       if(f == 0) {
-	printf("execing : %s\n",s);
 	exec_line(s);
        	exit(-1);
       }
