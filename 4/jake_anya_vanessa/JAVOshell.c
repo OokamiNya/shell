@@ -4,15 +4,22 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <fcntl.h>
 
 static void sighandler(int signo){
   if (signo == SIGINT){
     printf("we stopped a thing 1?\n");
-    printf("2JAVO:> ");
   }
 }
 
 int main(){
+  
+  /* piping things
+  int fd;
+  fd = open("loop.c", O_WRONLY | O_TRUNC);
+  dup2(fd, STDOUT_FILENO);
+  printf("Woo! This is working!");
+  */
 
   printf("\n");
   chdir(getenv("HOME"));
