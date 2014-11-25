@@ -96,6 +96,14 @@ void parse_input(char *input) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
             }
+            else if (input[index] == '>') {
+                if (input[index+1] == '>') {
+                    // TODO: Implement append
+                }
+                else {
+                    
+                }
+            }
             else if (input[index] == ';') {
                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
                     if (tokIndex != 0) { // Adds last token to argv
@@ -133,13 +141,20 @@ void parse_input(char *input) {
                 else { // Replace ~user with home directory of user
                     char user[USER_SIZE];
                     int userIndex = 0;
-                    while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/') { // +1 to index since we are "looking ahead"
+                    while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/' && input[index+1] != ';' && input[index+1] != '>' && input[index+1] != '|') { // +1 to index since we are "looking ahead"
                         user[userIndex] = input[index+1];
                         ++userIndex;
                         ++index;
                     }
                     user[userIndex] = '\0';
-                    char *user_home = getpwnam(user)->pw_dir;
+                    struct passwd *found_user = getpwnam(user);
+                    char *user_home;
+                    if (found_user) {
+                        user_home = found_user->pw_dir;
+                    }
+                    else {
+                        user_home = user;
+                    }
                     strcpy(tok + tokIndex, user_home);
                     tokIndex += strlen(user_home);
                 }
