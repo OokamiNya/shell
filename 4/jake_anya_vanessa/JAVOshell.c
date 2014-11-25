@@ -35,7 +35,7 @@ int main(){
     if(!strcmp(input,"exit")){
       exit(-1);
     }
-    else if(strncmp(input,"cd",2)){
+    else if(!strncmp(input,"cd",2)){
       execute(input);
     }
     else{

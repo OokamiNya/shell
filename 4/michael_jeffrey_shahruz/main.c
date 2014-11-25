@@ -7,6 +7,7 @@
 // Execs a function, parsing the input and running execvp
 int exec_line(char *input);
 void runs_command(char *scpy);
+void trim(char *str);
 
 int main() {
   int status;
@@ -138,6 +139,7 @@ int exec_line(char *s) {
 }
 
 void runs_command(char *scpy) {
+  trim(scpy);
   char s[1024];
   char *first_arg;
   strcpy(s,scpy);
@@ -166,4 +168,21 @@ void runs_command(char *scpy) {
     }
     
   }
+}
+
+void trim(char *str) {
+  int i;
+    int begin = 0;
+    int end = strlen(str) - 1;
+
+    while (str[begin] == ' ')
+        begin++;
+
+    while ((end >= begin) && str[end] == ' ')
+        end--;
+
+    for (i = begin; i <= end; i++)
+        str[i - begin] = str[i];
+
+    str[i - begin] = '\0';
 }
