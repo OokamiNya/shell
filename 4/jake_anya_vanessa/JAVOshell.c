@@ -5,22 +5,17 @@
 #include <errno.h>
 #include <signal.h>
 
-static void child_sighandler(int signo){
+static void sighandler(int signo){
   if (signo == SIGINT){
-    kill(getpid(), SIGKILL);
+    printf("we stopped a thing?\n");
   }
-}
-
-static void parent_sighandler(int signo){
-  printf("buttsbuttsbuttsbutts\n");
 }
 
 int main(){
 
-
   printf("\n");
   chdir(getenv("HOME"));
-  //  signal(SIGINT, parent_sighandler);
+  signal(SIGINT, sighandler);
   
   while(1){
 
@@ -41,8 +36,8 @@ int main(){
     else{
       int f = fork();
       wait();
-      if (!f){ //child process stuff
-	//	signal(SIGINT, child_sighandler);
+      if (!f){
+	signal(SIGINT, sighandler);
 	execute(input);
       }
     }
