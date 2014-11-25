@@ -7,7 +7,6 @@
 // Execs a function, parsing the input and running execvp
 int exec_line(char *input);
 void runs_command(char *scpy);
-void trim(char *str);
 
 int main() {
   int status;
@@ -49,22 +48,39 @@ int main() {
     
     else if(strchr(s,'>')) {
       //note: need to reconcile $: ls > foo and $: ls>foo
-      char *first_cmd = (char*)malloc(1024);
+      /*char *first_cmd = (char*)malloc(1024);
       strcpy(first_cmd, first_arg);
-      printf("first_cmd :%s:\n",first_cmd);
-      printf("rest of str :%s:\n", scpy);
+      
       char *temp;
       temp = strsep(&scpy, ">");
       if( strcmp(temp, "") ){
 	char *first_cmd_args = strsep(&temp, " ");
-	printf("temp now :%s:\n", temp);
+	//printf("temp now :%s:\n", temp);
 	printf("first_cmd_args :%s:\n",first_cmd_args);
       } else{
 	printf("temp :%s:\n",temp);
 	prtinf("temp is first_cmd_args\n");
       }
       if( strncmp(scpy," ",1) == 0 ){ scpy++; }
-      printf("rest of str :%s:\n", scpy);
+      printf("rest of str :%s:\n", scpy);*/
+      
+      char *scpy2 = (char *)malloc(1024);
+      strcpy(scpy2, s);
+      char *first_cmd = (char *)malloc(1024);
+      first_cmd = strsep(&scpy2, ">");
+      
+      int i = 0;
+      char *temp = first_cmd;
+      for(; temp[i]; i++){}
+      temp[i] = NULL;
+      printf("first_cmd :%s:\n",first_cmd);
+ 
+      char *second_cmd = (char *)malloc(1024);
+      strcpy(second_cmd, scpy2);
+      printf("second_cmd :%s:\n",second_cmd);
+
+      int fd;
+
       //printf("registered >\n");
     }
     
@@ -119,13 +135,11 @@ int exec_line(char *s) {
   char* string2;
   char *array[256];
   
-
-  if( strchr(s, '\n') ){
-    int i=0;
-    for(;s[i]!='\n';i++){
-    }
-    s[i]=0;
+  int i=0;
+  for(;s[i]!='\n';i++){
   }
+  s[i]=0;
+  
   
   char* string1=s;
   
@@ -139,7 +153,6 @@ int exec_line(char *s) {
 }
 
 void runs_command(char *scpy) {
-  trim(scpy);
   char s[1024];
   char *first_arg;
   strcpy(s,scpy);
@@ -168,21 +181,4 @@ void runs_command(char *scpy) {
     }
     
   }
-}
-
-void trim(char *str) {
-  int i;
-    int begin = 0;
-    int end = strlen(str) - 1;
-
-    while (str[begin] == ' ')
-        begin++;
-
-    while ((end >= begin) && str[end] == ' ')
-        end--;
-
-    for (i = begin; i <= end; i++)
-        str[i - begin] = str[i];
-
-    str[i - begin] = '\0';
 }
