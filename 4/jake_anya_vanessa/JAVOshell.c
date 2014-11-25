@@ -22,7 +22,18 @@ int main(){
     char input[256];
     char cwd[256];
     getcwd(cwd,256);
-    printf("JAVO:%s> ",cwd);
+    cwd[strlen(cwd)] = 0;
+    //substituting home with ~
+    /* char * newcwd; */
+    /* if(!strncmp(cwd,getenv("HOME"),strlen(getenv("HOME")))){ */
+    /*   newcwd = "~"; */
+    /*   strncat(newcwd, strstr(cwd,getenv("HOME")), sizeof(cwd)-sizeof(getenv("HOME"))); */
+    /* } */
+    /* else */
+    /*   newcwd = cwd; */
+    //
+    
+    printf("JAVO:%s> ",newcwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
 
