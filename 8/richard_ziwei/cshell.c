@@ -1,7 +1,6 @@
-//HAHAHAHAHAHAH
 #include"heads.h"
 
-
+//HANDLES THE CD AND EXIT EXCEPTIONS
 void dumb_exceptions(char arg[]){
   if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){
     strsep(&arg," ");
@@ -16,6 +15,7 @@ void dumb_exceptions(char arg[]){
   }
 }
 
+//HANDLES THE NORMAL COMMANDS WITH ARGUEMENTS
 void normal_stuff(char arg[]){
   int pid = fork();
   if (!pid){
@@ -31,6 +31,8 @@ void normal_stuff(char arg[]){
   }
   wait(&pid);
 }
+
+//PIPING
 char pipe_it(char arg[]){
   int in = STDIN_FILENO;
   dup2(STDIN_FILENO,STDOUT_FILENO);
@@ -42,13 +44,14 @@ char pipe_it(char arg[]){
     arg++;
     printf("orig:<%s>\targ:<%s>\n",orig,arg);
     normal_stuff(orig);
-    pipe_it(arg);
   }
   arg++;
   normal_stuff(arg);
   return 1;
 }
-      
+
+//REDIRECTION > < >>
+//WILL CALL PIPE_IT
 char redirection(char arg[]){
   //Multiple pipes and redirects?
   if (strchr(arg,'>') || strchr(arg,'<')){
@@ -81,9 +84,10 @@ char redirection(char arg[]){
   else if (strchr(arg,'|')){
     return pipe_it(arg);
   }   
-  return 0;
-  
+  return 0;  
 }
+
+
 int main(){
   //should probably factor this so ; works
   while (1){
