@@ -50,30 +50,6 @@ int main() {
   }
 }
 
-int exec_line(char *s) {
-  trim(s);
-  char* string2;
-  char *array[256];
-  
-
-  if( strchr(s, '\n') ){
-    int i=0;
-    for(;s[i]!='\n';i++){
-    }
-    s[i]=0;
-  }
-  
-  char* string1=s;
-  
-  for(i=0;string1;i++){
-    string2 = strsep(&string1," ");
-    array[i]=string2;
-  }
-  array[i]=0;
-  execvp(array[0],array);
-  return 0;
-}
-
 void runs_command(char *scpy) {
   trim(scpy);
   char s[1024];
@@ -82,7 +58,7 @@ void runs_command(char *scpy) {
   
   first_arg = strsep(&scpy," ");
   //Exit
-    if(strcmp("exit",first_arg) == 0) {
+    if(strcmp("exit",first_arg) == 0 || strcmp("Exit",first_arg) == 0) {
       printf("Exiting\n");
       exit(0);
     } 
@@ -119,6 +95,30 @@ void runs_command(char *scpy) {
     }
     
   }
+}
+
+int exec_line(char *s) {
+  trim(s);
+  char* string2;
+  char *array[256];
+  
+  int i=0;
+  
+  if( strchr(s, '\n') ){
+    for(;s[i]!='\n';i++){
+    }
+    s[i]=0;
+  }
+  
+  char* string1=s;
+  
+  for(i=0;string1;i++){
+    string2 = strsep(&string1," ");
+    array[i]=string2;
+  }
+  array[i]=0;
+  execvp(array[0],array);
+  return 0;
 }
 
 void trim(char *str) {
