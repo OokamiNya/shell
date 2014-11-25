@@ -6,11 +6,16 @@
 
 // Execs a function, parsing the input and running execvp
 int exec_line(char *input);
-
+void runs_command(char *scpy);
 
 int main() {
   int status;
   char s[1024];
+  
+  char *s1;
+  char *s2;
+  char *commands[1024];
+  
   while(1) {
     printf("^_^: ");
     fgets(s,sizeof(s),stdin);
@@ -40,24 +45,42 @@ int main() {
       getcwd(direct,sizeof(direct));
       printf("Current Directory: %s\n",direct);
     }
-   
-
-    }
     
-    if(strcmp(">",first_arg) == 0) {
+    else if(strchr(s,'>')) {
       printf("registered >\n");
     }
-
-    else if(strcmp("<",first_arg) == 0) {
+    
+    else if(strchr(s,'<')) {
       printf("registered <\n");
     }
     
-    else if(strcmp("|",first_arg) == 0) {
+    else if(strchr(s,'|')) {
       printf("registered |\n");
     }
     
-    else if(strcmp(";",first_arg) == 0) {
-      printf("registered ;\n");
+    else if(strchr(s,';')) {
+      char *s1;
+      char *s2;
+      char *commands[1024];
+      
+      char *jefscpy;
+      jefscpy=(char*)malloc(1024);
+      strcpy(jefscpy,s);
+      //lw -l ; pwd
+      // this part parses the input by ";" and puts each command in commands
+      s1 = s;
+      for(i=0;s1;i++){
+	s2 = strsep(&s1,";");
+	commands[i]=s2;
+      }
+      
+      for(i=0;jefscpy;i++) {
+	jefscpy = commands[i];
+	if(!jefscpy) {
+	  break;
+	}
+	runs_command(jefscpy);
+      }
     }
     
     //Execute
@@ -65,18 +88,17 @@ int main() {
       int f = fork();
       if(f == 0) {
 	exec_line(s);
-       	exit(-1);
+	exit(0);
       }
       else {
 	wait(&status);
-      }
-      
-    }
+      } 
+    }    
   }
 }
 
 int exec_line(char *s) {
-  char* s2;
+  char* string2;
   char *array[256];
   
   int i=0;
@@ -84,13 +106,44 @@ int exec_line(char *s) {
   }
   s[i]=0;
   
-  char* s1=s;
+  char* string1=s;
   
-  for(i=0;s1;i++){
-    s2 = strsep(&s1," ");
-    array[i]=s2;
+  for(i=0;string1;i++){
+    string2 = strsep(&string1," ");
+    array[i]=string2;
   }
   array[i]=0;
   execvp(array[0],array);
   return 0;
+}
+
+void runs_command(char *scpy) {
+  char s[1024];
+  char *first_arg;
+  strcpy(s,scpy);
+  
+  first_arg = strsep(&scpy," ");
+  
+  if(strcmp("exit",first_arg) == 0) {
+    printf("Exiting\n");
+    exit(0);
+  } 
+  else if (strcmp("cd",first_arg) == 0) {
+    chdir(scpy);
+    char direct[1024];
+    getcwd(direct,sizeof(direct));
+    printf("Current Directory: %s\n",direct);
+  } 
+  else {
+    
+    int f = fork();
+    if(f == 0) {
+      exec_line(s);
+      exit(0);
+    }
+    else {
+      wait(NULL);
+    }
+    
+  }
 }

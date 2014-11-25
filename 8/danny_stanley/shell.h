@@ -14,7 +14,7 @@
 
 #define PROMPT_SIZE 2014
 #define PATH_SIZE 1024
-#define TOK_INIT_SIZE 256
+#define TOK_INIT_SIZE 512
 #define USER_SIZE 128
 
 const char *shell_name = "StD";
