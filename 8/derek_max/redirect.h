@@ -1,3 +1,3 @@
-int output();
-int input();
-int pipe();
+int output(char** args, char * dest);
+//int input();
+//int pipe();

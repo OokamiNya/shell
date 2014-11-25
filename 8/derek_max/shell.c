@@ -7,6 +7,7 @@
 
 #include "parse.h"
 #include "execute.h"
+#include "redirect.h"
 
 int main(){
   char buf[256];
