@@ -80,8 +80,8 @@ void shell(){
 	char* homedir = getHomeDir();
 	strcpy(newdir,homedir);
       }
-      chdir(newdir);
-      if (errno){
+      int test= chdir(newdir);
+      if (errno && test){
 	printf("'cd' error: %s \n", strerror(errno));
 	errno=0;
       }
