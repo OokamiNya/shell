@@ -46,7 +46,7 @@ int execute(char* input){
     if(!prev){
       break;
     }
-    if(strcmp(prev, ">") == 0){
+    if(strcmp(prev, ">") == 0 || strcmp(prev, "<") == 0){
       redir = 1;
     }
     if (redir){
@@ -70,10 +70,14 @@ int execute(char* input){
     exit(EXIT_FAILURE);
   }
   else{
-    //printf("redir=%d\n", redir);
+    printf("redir=%d\n", redir);
     if (redir){
-      //printf("---- Redirecting ----\n\n");
-      output(args,args2[1]);
+      printf("---- Redirecting ----\n\n");
+      if (strcmp(args2[0], ">") == 0){
+	redir_out(args,args2[1]);
+      } else if (strcmp(args2[0], "<") == 0){
+	redir_in(args,args2[1], i);
+      }
     }
     execvp(args[0], args);
     printf("%s\n", strerror(errno));
