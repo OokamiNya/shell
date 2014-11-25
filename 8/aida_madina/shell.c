@@ -6,7 +6,7 @@
 
 int main() {
   
-  char command[256];
+  char *command;
   char input[256];
   char *args_array[10];
   char *comm_array[10];
@@ -30,10 +30,10 @@ int main() {
       count_commands++;
     }
 
-    comm_array[0] = strtok(input, ';');
+    comm_array[0] = strtok(input, ";");
     int i = 1;
     while (i < num_commands) {
-      comm_array[i] = strtok(NULL, ';');
+      comm_array[i] = strtok(NULL, ";");
       i++;
     }
     
