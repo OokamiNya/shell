@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "colors.h"
+#include "link_list.h"
 
 int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
