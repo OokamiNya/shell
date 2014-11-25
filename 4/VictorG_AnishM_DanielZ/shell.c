@@ -9,6 +9,19 @@
 #include <errno.h>
 //more includes
 
+void semirun(char *input){
+  char * j=input;
+  printf("%s",j);
+  //while(strtok(j,";")){
+  //j=strtok(j,";");
+  //printf("%s",j);
+    //run
+    //j=strtok(j,";");
+    //rintf("%s",j);
+  //}
+  
+}
+
 char ** separate(char *s){
   char *pos;
   int i=0;
@@ -94,20 +107,23 @@ void run(char *input){
       return;
     }
 }
-
-
-
-
-  int main(){
-    char s[1024];
-    int f=1;
-    while(1){
-      printf("==|==<(x_x)>===>:");
-      fgets(s,1024,stdin);
-      //f=fork();
-      run(s);
-      //return 0;
-      wait(NULL);
-    }
-    return 0;
+ 
+ 
+ 
+ 
+int main(){
+  char s[1024];
+  int f=1;
+  /*while(1){
+    printf("==|==<(x_x)>===>:");
+    fgets(s,1024,stdin);
+    //f=fork();
+    run(s);
+    //return 0;
+    wait(NULL);
+  }
+  */
+  semirun("ls;w;ls");
+  return 0;
 }
+ 
