@@ -3,9 +3,13 @@
 
 int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
+
 int args;
 char **argv;
+int tokIndex;
+int tokSize;
 char *tok;
+
 int cmd_status = 1;
 int valid_input = 0;
 
@@ -42,13 +46,21 @@ char * create_prompt(char *prompt_buf, int prompt_size) {
     return prompt_buf;
 }
 
-void cleanup() {
+void cleanup_argv() {
     --args; // Initially subtract 1 from args to make it zero-based
     for (; args >= 0; --args) {
         free(argv[args]);
     }
     free(argv);
     free(tok);
+}
+
+void setup_argv() {
+    argv = (char **) malloc(sizeof(char *));
+    args = 0;
+    tokSize = TOK_INIT_SIZE;
+    tokIndex = 0;
+    tok = (char *) malloc(TOK_INIT_SIZE);
 }
 
 int main() {
@@ -77,16 +89,27 @@ int main() {
 }
 
 void parse_input(char *input) {
-    argv = (char **) malloc(sizeof(char *));
-    args = 0;
     int index = 0;
-    int tokSize = TOK_INIT_SIZE;
-    char *tok = (char *) malloc(TOK_INIT_SIZE);
-    int tokIndex = 0;
+    setup_argv();
     tok[0] = '\0';
     while (input[index]) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
+            }
+            else if (input[index] == ';') {
+                if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                    argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+                    argv[args] = NULL;
+                    execute(argv);
+                    cleanup_argv();
+                    setup_argv();
+                }
             }
             else if (input[index] == '\\') {
                 ++index; // Move on to add next character right after '\'
@@ -156,7 +179,7 @@ void parse_input(char *input) {
         valid_input = 0;
     }
     printf("%d\n", tokSize);
-    cleanup();
+    cleanup_argv();
 }
 
 void execute(char **argv) {
@@ -169,7 +192,7 @@ void execute(char **argv) {
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
         printf("I'm sad to see you go... :(\n");
-        cleanup();
+        cleanup_argv();
         free(prompt);
         exit(0);
     }
