@@ -68,6 +68,9 @@ void setup_argv() {
 int main() {
     signal(SIGINT, signalhandler);
     prompt = (char *) malloc(PROMPT_SIZE);
+    char current_path[PATH_SIZE];
+    path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
+    printf("LL:%s\n", get_arg(path_history));
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
         cmd_status = valid_input = 1;
@@ -242,8 +245,8 @@ node* change_directory(char *path , node* history) {
         path = getenv("HOME");
     }
     else if (path[0] == '-') { // TODO: Backtracking directories
-      printf("Previous Path: %s\n",history->arg);
-      path = get_arg(history); //How do you free this memory
+      printf("Previous Path: %s\n",get_prev(history)->arg);
+      path = get_arg(get_prev(history)); //How do you free this memory
     }
     errno_result = chdir(path);
     if (errno_result == -1) {
