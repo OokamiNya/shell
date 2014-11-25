@@ -11,6 +11,7 @@ int exec_line(char *input);
 int main() {
   int status;
   char s[1024];
+  
   while(1) {
     printf("^_^: ");
     fgets(s,sizeof(s),stdin);
@@ -40,23 +41,20 @@ int main() {
       getcwd(direct,sizeof(direct));
       printf("Current Directory: %s\n",direct);
     }
-   
-
-    }
     
-    if(strcmp(">",first_arg) == 0) {
+    else if(strchr(s,'>')) {
       printf("registered >\n");
     }
-
-    else if(strcmp("<",first_arg) == 0) {
+    
+    else if(strchr(s,'<')) {
       printf("registered <\n");
     }
     
-    else if(strcmp("|",first_arg) == 0) {
+    else if(strchr(s,'|')) {
       printf("registered |\n");
     }
     
-    else if(strcmp(";",first_arg) == 0) {
+    else if(strchr(s,';')) {
       printf("registered ;\n");
     }
     
@@ -65,13 +63,12 @@ int main() {
       int f = fork();
       if(f == 0) {
 	exec_line(s);
-       	exit(-1);
+	exit(-1);
       }
       else {
 	wait(&status);
-      }
-      
-    }
+      } 
+    }    
   }
 }
 
