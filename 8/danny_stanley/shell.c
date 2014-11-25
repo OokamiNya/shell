@@ -1,6 +1,5 @@
 #include "shell.h"
 #include "colors.h"
-#include "link_list.h"
 
 int errno_result; // Used in collaboration with errno if function fails
 char *prompt;
@@ -13,6 +12,8 @@ char *tok;
 
 int cmd_status = 1;
 int valid_input = 0;
+
+node* path_history; //For cd history
 
 static void signalhandler(int signal) {
     switch(signal) {
@@ -213,7 +214,7 @@ void execute(char **argv) {
         exit(0);
     }
     else if (!strcmp(cmd, "cd")) {
-        change_directory(argv[1]); // Only parse the first argument in cd
+      path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
     }
     else {
         pid_t pid = fork();
@@ -236,16 +237,22 @@ void execute(char **argv) {
     }
 }
 
-void change_directory(char *path) {
+node* change_directory(char *path , node* history) {
     if (!path) { // When no path specified, use home
         path = getenv("HOME");
     }
     else if (path[0] == '-') { // TODO: Backtracking directories
-
+      printf("Previous Path: %s\n",history->arg);
+      path = get_arg(history); //How do you free this memory
     }
     errno_result = chdir(path);
     if (errno_result == -1) {
         printf("cd: %s: %s\n", path, strerror(errno));
         cmd_status = 0;
     }
+    else{
+      history = insert_node(history, path);
+      printf("Previous Path: %s\n",history->arg);
+    }
+    return history;
 }

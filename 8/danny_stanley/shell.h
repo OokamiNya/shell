@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include "link_list.h"
 
 #define PROMPT_SIZE 2014
 #define PATH_SIZE 1024
@@ -22,4 +23,4 @@ const char *shell_name = "StD";
 void shell();
 void parse_input(char *);
 void execute(char **);
-void change_directory(char*);
+node* change_directory(char*,node*);
