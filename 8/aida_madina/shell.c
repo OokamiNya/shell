@@ -15,32 +15,41 @@ int main() {
   int *status;
   siginfo_t *infop;
   char cwd[256];
+  int num_commands;
   
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(input, sizeof(input), stdin);
     input[strlen(input)-1]='\0';
-    
+ 
     char *count_commands = input;
-    int num_commands;
 
     while(*count_commands) {
-      if (*count_commands == ';')
+      if (*count_commands == ';'){
 	num_commands++;
+      }
+      //printf("teehee%s\n",count_commands);
       count_commands++;
     }
+    printf("%d\n",num_commands);
 
     comm_array[0] = strtok(input, ";");
+    //printf("%s\n",comm_array[0]);
     int i = 1;
     while (i < num_commands) {
       comm_array[i] = strtok(NULL, ";");
+      printf("%d: %s\n",i,comm_array[i]);
+      if(i > num_commands)
+	return;
       i++;
     }
-    
+    printf("num_commands: %d\n",num_commands);
+    exit(0);
     for( i = 0; i < num_commands; i++)
     {
       
       command = comm_array[i];
+      printf("command: %s\n",command);
       char *p = command;
 
       while (*p){
@@ -90,6 +99,7 @@ int main() {
       }
     }
   }
+    
   return 0;
 }
 
