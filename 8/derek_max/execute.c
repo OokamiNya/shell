@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "execute.h"
 #include <errno.h>
 //#include "strsep.h"
@@ -32,39 +33,54 @@ int execute(char* input){
   char* running=malloc(sizeof(buf));
   strcpy(running, buf);
   int i = 0;
-  char** args = calloc(5,256);
+  char** args = calloc(5,256); // function and args
   char* prev;
+  char** args2 = calloc(2, 256); // redirecting i.e {">", "a.txt"}
+  int redir = 0; // 1 if redirect args
   while(1){
 
     prev = strsep(&running, " ");
     if(!prev){
       break;
     }
-    args[i] = prev;
+    if(strcmp(prev, ">") == 0){
+      redir = 1;
+    }
+    if (redir){
+      args2[i] = prev;
+    } else {
+      args[i] = prev;
+    }
     i++;
   }
-
   pid_t f = fork();
   int status;
   int w;
   if (f > 0){ //parent
     w = wait(&status);
-    exit(0);
+    return 1;
+    //exit(0);
   }
   else if (f<0){
+    printf("%s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
   else{
-      execvp(args[0], args);
-      printf("%s\n", strerror(errno));
-      exit(EXIT_FAILURE); //only runs if execvp fails
+
+    //Move this to redirect
+    int fd;
+    fd = open("a.txt", O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    dup2(fd,1);
+    // end move to redirect
+    
+    execvp(args[0], args);
+    printf("%s\n", strerror(errno));
+    exit(EXIT_FAILURE); //only runs if execvp fails
   }
-
-
-
 }
-
+/*
 int main(){
-  execute("asdfasdfasdjfasdfasdfsd");
+  execute("ls -al > a.txt");
 }
+*/
 

@@ -31,15 +31,22 @@ int main(){
 
   for (j; j < i; j++){
     int k = 0;
-    fork();
     char * a1 = strsep_array[j];
     char * a2;
     char * exec_array[256];
-    while (a2 = strsep(&a1, " ")){
-      exec_array[k] = a2;
-      k++;
+
+    int f;
+    f = fork();
+    if (f == 0){
+      while (a2 = strsep(&a1, " ")){
+	exec_array[k] = a2;
+	k++;
+      }
     }
-    execvp(exec_array[k], exec_array); //change hereeeeeee need for loop and new int
+    int l = 0;
+    for (l; l < k; l++){
+      execvp(exec_array[0], exec_array); //change hereeeeeee need for loop and new int
+    }
   }
   //execvp(a[0], a);
   

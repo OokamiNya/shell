@@ -3,36 +3,42 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include "executor.h"
+#include <signal.h>
 
+static void sighandler(int signo){
+  if (signo == SIGINT){
+    printf("we stopped a thing?\n");
+  }
+}
 
 int main(){
 
+  printf("\n");
   chdir(getenv("HOME"));
-  printf("error: %s\n", strerror(errno));
+  signal(SIGINT, sighandler);
   
   while(1){
 
     char input[256];
     char cwd[256];
     getcwd(cwd,256);
-    printf("JAVO:>%s ",cwd);
+    printf("JAVO:%s> ",cwd);
     fgets(input, sizeof(input), stdin);
-    int i = 0;
-    while(input[i] != '\n') {
-      i++;
-    }
-    input[i] = 0;
-    if(!strcmp(input,"exit")){
+    input[sizeof(input)] = 0;
+
+    if(!strcmp(input,"exit\n")){
       exit(-1);
     }
-    else if(input[0]=='c' && input[1]=='d'){
+    else if(!strncmp(input,"cd",2)){
       execute(input);
     }
-    int f = fork();
-    wait();
-    if (!f){
-      execute(input);
+    else{
+      int f = fork();
+      wait();
+      if (!f){
+	signal(SIGINT, sighandler);
+	execute(input);
+      }
     }
   }
   

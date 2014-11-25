@@ -15,7 +15,7 @@ int main() {
     printf("^_^: ");
     fgets(s,sizeof(s),stdin);
     int f = fork();
-
+    
     char scpy;
     strcpy(&scpy,s);
     char *first_arg;
@@ -24,23 +24,25 @@ int main() {
     if(strcmp("exit",first_arg) == 0) {
       printf("exiting\n");
       exit(0);
-    } else if (strcmp("cd",first_arg) == 0) {
+    } 
+    else if (strcmp("cd",first_arg) == 0) {
       printf("cding\n");
-    } else {
-
-   if(f == 0) {
-      exec_line(s);
-    }
+    } 
     else {
-      wait(&status);
+      
+      if(f == 0) {
+	exec_line(s);
+      }
+      else {
+	wait(&status);
+      }
+      
     }
-    
   }
-}
 }
 
 int exec_line(char *s) {
- 
+  
   
   char* s2;
   char *array[256];

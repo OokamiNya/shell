@@ -1,1 +1,2 @@
 all:
+	gcc shell.c
