@@ -15,30 +15,48 @@ static void sighandler(int signo){
 
 int main(){
   signal(SIGUSR1,sighandler);
-  printf("-- _ SHELL --\n\n"); //fill _ with name or change]
+  printf("-- Alex L. and David B. SHELL --\n\n"); 
   shell();
   return 0;
 }
 
 int cd (char* s) {
+  if (!strcmp(s,"/")) return chdir(s);
+  if (!strcmp(s,"~")) return chdir("/home"); //needs to be fixed
   char path[1000];
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
-  printf ("%s", cwd);
- 
   strcat (cwd, "/");
   strcat (cwd, s);
-  printf ("%s", cwd);
-  
-  //strcat (cwd, "/0");
-  int ret = chdir(cwd);
-  printf("\n%d\n", ret);
+  return chdir(cwd);
 }
 
 
 int shell(){
-  printf("_$ "); //fill _ with something (maybe cwd)
+  char cwd[256];
+  getcwd(cwd,sizeof(cwd));
+  int r = 0;
+  char *t = cwd;
+  while (*t){
+    if (*t == '/'){
+      r++;
+    }
+    t++;
+  }
+  if (r <= 3){
+    printf("%s$ ",cwd);
+  }else{
+    t = cwd;
+    while (r > 2){
+      if (*t == '/'){
+	r--;
+      }
+      t++;
+    }
+    printf(".../%s$ ",t); //now lists top 3 directory levels
+  }
+  
   char s[1024];
   fgets(s,sizeof(s),stdin);
   int n = 1;
@@ -59,22 +77,8 @@ int shell(){
     n++;
   }
   int i = 0;
-  int j = 0;
-  int m = 0;
   for (; i < n; i++){
-    //checks if | in input
-    if (strchr (commands[i], '|')){
-      while (k = strsep(&command[i],"|")){
-	command [i][j] = k;
-	if (strcmp(k,"")){ //if any blanks from multiple |
-	  execute(k[0]);//execute only first command
-	  break;
-	}
-	for (inti 
-    }
-    else{
-      execute(commands[i]);
-    }
+    execute(commands[i]);
   }
   free(commands);
   shell();
@@ -101,8 +105,12 @@ int execute(char *s){
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
-    int i = 1;
-    cd (params [i]); // note to self ~ and / don't work
+    if (params[1]){
+      int i = 1;
+      if (cd (params [i])) printf("No such directory\n"); // note to self ~ and / don't work
+    }else{
+      cd("~");
+    }
     //inputting just 'cd' causes a seg fault
   }else if (!strcmp(params[0],"exit")){
     printf("Bye!\n\n");
