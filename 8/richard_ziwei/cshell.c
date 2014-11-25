@@ -1,21 +1,27 @@
-//HAHAHAHAHAHAH
 #include"heads.h"
 
-
-void dumb_exceptions(char arg[]){
+//HANDLES THE CD AND EXIT EXCEPTIONS
+char dumb_exceptions(char arg[]){
   if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){
     strsep(&arg," ");
-    chdir(arg);
-    if (!arg){
+    if (!arg || strcmp(arg,"~")==0){
       chdir(getenv("HOME"));//WE WIN 10/10
     }
+    //else if (!strcmp(arg,".")){
+    //}
+    else{
+      chdir(arg);
+    }
+    return 1;
   }
   else if (!strcmp(arg,"exit")){
     printf("BYE\n");
     exit(-1);
   }
+  return 0;
 }
 
+//HANDLES THE NORMAL COMMANDS WITH ARGUEMENTS
 void normal_stuff(char arg[]){
   int pid = fork();
   if (!pid){
@@ -27,10 +33,16 @@ void normal_stuff(char arg[]){
       i++;
     }
     argarr[i] = NULL;
-    execvp(argarr[0], argarr);
+    if (execvp(argarr[0], argarr) < 0){
+      printf("invalid command\n");//GIVE AN ACTUAL ERRNO
+      exit(-1);
+    }
   }
+  printf("I WORK :D\n");
   wait(&pid);
 }
+
+//PIPING
 char pipe_it(char arg[]){
   int in = STDIN_FILENO;
   dup2(STDIN_FILENO,STDOUT_FILENO);
@@ -42,13 +54,14 @@ char pipe_it(char arg[]){
     arg++;
     printf("orig:<%s>\targ:<%s>\n",orig,arg);
     normal_stuff(orig);
-    pipe_it(arg);
   }
   arg++;
   normal_stuff(arg);
   return 1;
 }
-      
+
+//REDIRECTION > < >>
+//WILL CALL PIPE_IT
 char redirection(char arg[]){
   //Multiple pipes and redirects?
   if (strchr(arg,'>') || strchr(arg,'<')){
@@ -81,9 +94,10 @@ char redirection(char arg[]){
   else if (strchr(arg,'|')){
     return pipe_it(arg);
   }   
-  return 0;
-  
+  return 0;  
 }
+
+
 int main(){
   //should probably factor this so ; works
   while (1){
@@ -93,8 +107,8 @@ int main(){
     printf("%s$ ",direct);
     fgets(input,sizeof(input),stdin);
     input[strlen(input)-1]=0;
-    dumb_exceptions(input);
-    if (!redirection(input)){
+    //im sorry
+    if (!dumb_exceptions(input) && !redirection(input)){
       normal_stuff(input);
     }
   }
