@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-
+#include <fcntl.h>
 
 int countDelim(char* stringy, char delim){
   int argcount = 0;
@@ -56,6 +56,18 @@ char * getHomeDir(){
   return tempdir;
 }
 
+void redirectOut(char* output, char* command ){
+  int childcom = fork();
+  if (childcom==0){
+    int filedata = open(output, O_CREAT|O_APPEND|O_WRONLY, 0644);
+    dup2(filedata, STDOUT_FILENO);
+    execCommand(command);
+    exit(childcom);
+  }
+  wait();
+  dup2(dup(STDOUT_FILENO),STDOUT_FILENO);
+}
+
 void runCommand(char *comm){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
@@ -88,12 +100,18 @@ void runCommand(char *comm){
     }
     /* code for running other commands */
     else{
-      int childcom = fork();
-      if (childcom==0){
-	execCommand(temp);
-	exit(childcom);
+      if (strchr(temp,'>')){
+	char *outcomm = strsep(&temp,">");
+	redirectOut(temp,outcomm);
       }
-      wait();
+      else{
+	int childcom = fork();
+	if (childcom==0){
+	  execCommand(temp);
+	  exit(childcom);
+	}
+	wait();
+      }
     }
   }
 }
