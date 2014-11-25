@@ -29,9 +29,12 @@ void execute( char* split_cmds) {
     f = fork();
     if ( !f ) {
       execvp(args[0], args);
+      exit(0);
     }
     else {
+      printf("waiting...\n");
       wait(&f);
+      printf("done waiting\n");
       f=0;
     }
   }
@@ -94,11 +97,6 @@ int main(){
       else{
 	execute(split_cmds);
       }
-      /*if (fd){
-	dup2(temp_stdin,fd);
-	dup2(temp_stdout,fd);
-	}*/
-            
             
             
     }
