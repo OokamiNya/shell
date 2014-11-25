@@ -41,12 +41,17 @@ void redirect(char *input){
   int stdouttmp = dup(STDOUT_FILENO);
   int stdintmp = dup(STDIN_FILENO);
   if (strchr(input, '>')){
-    char *p = strstr(input, "> ");
+    char *p = strstr(input, ">");
+    if (strlen(p) <= 1) {
+      return;
+    }
     int pend = strcspn(p + 2, " \n");
     char fileoutput[64];
     strncpy(fileoutput, p + 2, pend);
     fileoutput[pend] = 0;
+    umask(0);
     int fdout = open(fileoutput, O_WRONLY |  O_CREAT | O_TRUNC);
+    fchmod(fdout, 0644);
     dup2(fdout, STDOUT_FILENO);
     char input2[64];
     int g = p - input;
@@ -56,12 +61,16 @@ void redirect(char *input){
     strcpy(input, input2);
   }
   if (strchr(input, '<')){
-    char *p = strstr(input, "< ");
+    char *p = strstr(input, "<");
+    if (strlen(p) <= 1) {
+      return;
+    }
     int pend = strcspn(p + 2, " \n");
     char fileoutput[64];
     strncpy(fileoutput, p + 2, pend);
     fileoutput[pend] = 0;
-    int fdin = open(fileoutput, O_WRONLY |  O_CREAT | O_TRUNC);
+    printf("%s", fileoutput);
+    int fdin = open(fileoutput, O_RDWR |  O_CREAT | O_TRUNC);
     dup2(fdin, STDIN_FILENO);
     char input3[64];
     int g = p - input;
@@ -75,10 +84,34 @@ void redirect(char *input){
   dup2(stdouttmp, STDOUT_FILENO);
 
 }
+<<<<<<< HEAD
+void process(char *input){
+  if (strchr(input, '|')){
+    int numArgs;
+    char **commands = (char **) calloc(64, sizeof(char *));
+    char *tmp = 0;
+    tmp = strtok(input, "|");
+    if (tmp == 0){
+      return;
+    }
+    do {
+      commands[numArgs] = (char *) calloc(64, sizeof(char));
+      strcpy(commands[numArgs], tmp);
+      numArgs++;
+    } while(tmp = strtok(NULL, "|"));
+    commands[numArgs]=0;
+  }
+  else {
+    redirect(input);
+  }
+}
+void parse(char * input){
+=======
 
 
 
 void parse(char* input){
+>>>>>>> c87d14d10e50fe03a63822fe667910337a17d319
  
   char **commands = (char **) calloc(64, sizeof(char *));
   int i ;
@@ -151,7 +184,8 @@ int main(){
 
     char input[256];
     fgets(input,sizeof(input),stdin);
-    char *tmp = strtok(input, ";");
+    char *tmp = 0;
+    tmp = strtok(input, ";");
     char **commands = (char **) calloc(64, sizeof(char *));
     int numArgs = 0;
     do {
@@ -163,7 +197,8 @@ int main(){
 
     int i;
     for(i = 0; i<numArgs; i++){
-      parse(commands[i]);
+      process(commands[i]);
+
     }
     for (i= 0; i < numArgs; i++){
       free(commands[i]);
