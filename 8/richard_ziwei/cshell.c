@@ -27,7 +27,9 @@ void normal_stuff(char arg[]){
       i++;
     }
     argarr[i] = NULL;
-    execvp(argarr[0], argarr);
+    if (execvp(argarr[0], argarr) < 0){
+      printf("invalid command");
+    } else execvp(argarr[0], argarr);
   }
   wait(&pid);
 }
