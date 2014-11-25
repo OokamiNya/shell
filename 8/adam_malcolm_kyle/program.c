@@ -30,11 +30,12 @@ void execute(char * start){
     }
     
   }
-  if (redir)
+  args[x -1] = strsep(&args[x-1], "\n");
+  args[x]=0;
+  if (redir){
+    printf("%d", redir);
     redirect(args, redir);
-  else{
-    args[x -1] = strsep(&args[x-1], "\n");
-    args[x]=0;
+  }else{
     if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
       normal_process(args);
     else{
@@ -65,20 +66,24 @@ void child_process(char * args[]){
     wait(&f);
   }
 }
+
 void redirect(char * args[], int redir){
   int c;
-  if(redir-1){
-     c = open(args[2], O_CREAT | O_RDONLY, 0644);
-     dup2(c, STDIN_FILENO);
-     execlp(args[0], args[0], NULL);
-     close(c);
-  }else{
-    c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
-    printf("%s", args[2]);
-    dup2(c, STDOUT_FILENO);
-    execlp(args[0], args[0], NULL);
-    close(c);
+  int i = fork();
+  if(!i){
+    if(redir-1){
+      c = open(args[2], O_CREAT | O_RDWR, 0777);
+      dup2(c, STDIN_FILENO);
+      close(c);
+      execlp(args[0], args[0], NULL);
+    }else{
+      c = open(args[2], O_CREAT | O_WRONLY, 0644);
+      dup2(c, STDOUT_FILENO);
+      execlp(args[0], args[0], NULL);
+      close(c);
+    }
   }
+  redir = 0;
 }
 
 int main(int argc, char *argv[]){
