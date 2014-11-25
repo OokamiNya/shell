@@ -1,18 +1,24 @@
 #include"heads.h"
 
 //HANDLES THE CD AND EXIT EXCEPTIONS
-void dumb_exceptions(char arg[]){
+char dumb_exceptions(char arg[]){
   if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){
     strsep(&arg," ");
-    chdir(arg);
-    if (!arg){
+    if (!arg || strcmp(arg,"~")==0){
       chdir(getenv("HOME"));//WE WIN 10/10
     }
+    //else if (!strcmp(arg,".")){
+    //}
+    else{
+      chdir(arg);
+    }
+    return 1;
   }
   else if (!strcmp(arg,"exit")){
     printf("BYE\n");
     exit(-1);
   }
+  return 0;
 }
 
 //HANDLES THE NORMAL COMMANDS WITH ARGUEMENTS
@@ -99,8 +105,8 @@ int main(){
     printf("%s$ ",direct);
     fgets(input,sizeof(input),stdin);
     input[strlen(input)-1]=0;
-    dumb_exceptions(input);
-    if (!redirection(input)){
+    //im sorry
+    if (!dumb_exceptions(input) && !redirection(input)){
       normal_stuff(input);
     }
   }
