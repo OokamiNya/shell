@@ -101,14 +101,13 @@ void runCommand(char *comm){
 void shell(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
-  printf("T-SHELL: %s ",currdir);
+  printf("CShell: %s ",currdir);
   char uinput[256];
   fgets(uinput,sizeof(uinput),stdin);
   char *temp = uinput;
   temp=strsep(&temp,"\n");
   int numcomm=countDelim(temp,';');
   numcomm++;
-  printf("Commands found: %d\n", numcomm);
   while (numcomm){
     char *blah = strsep(&temp,";");
     runCommand(blah);
