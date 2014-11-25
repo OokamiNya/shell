@@ -4,13 +4,13 @@
 #include <string.h>
 
 void execute();
+void parse();
 
 int main(){
   while(1){
     printf("$ ");
     execute();
   }
-  
   return 0;
 }
 
@@ -33,19 +33,31 @@ void execute(){
 
   command[i] = 0;
 
-  int pid = getpid();
-  //int f = fork();
-  int status;
-
-  int f = fork();
+  pid = fork();
+  int status, w;
   
-  if (f == 0){
-    while (wait(&status) != pid){
-      execvp(a[0], a);
-      //exit(1);
+  if (pid == 0){
+    execvp(a[0],a); 
+    exit(0);
+  }
+
+  else if(pid < 0){
+    printf("NEIN");
+  }
+
+  else{
+    waitpid(pid, &status, 0);
+    if(status == 0){
+      printf("child terminated successfully\n");
+    }
+    if(status == 1){
+      printf("child terminated unsuccessfully\n");
     }
   }
-  printf("PID IS: %d \n F IS: %d", getpid(), f);
-  printf ("fjaw");
-  exit(1); 
+  
+  printf ("fjaw\n");
+}
+
+void parse(){
+
 }

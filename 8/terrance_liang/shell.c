@@ -4,19 +4,24 @@
 #include <unistd.h>
 #include <errno.h>
 
-void command(char* comm){
+
+int countDelim(char* stringy, char delim){
   int argcount = 0;
   int i = 0;
-  char delim = ' ';
-  for (i;i<strlen(comm);i++){
-    if (comm[i]==delim){
+  for (i;i<strlen(stringy);i++){
+    if (stringy[i]==delim){
       argcount++;
     }
   }
+  return argcount;
+}
+
+void execCommand(char* comm){
+  int argcount = countDelim(comm,' ');
   argcount=argcount+2; //1 for command itself and 1 for NULL
   char **arguments=(char **)malloc((argcount)*sizeof(char *));
   char *temp = comm;
-  i = 0;
+  int i = 0;
   while (argcount){
     char *blah = strsep(&temp," ");
     arguments[i]=blah;//last index should be NULL
@@ -31,20 +36,32 @@ void command(char* comm){
     else{
       printf("command error:%d  %s \n", errno, strerror(errno));
     }
+    errno=0;
   }
   free(arguments);
 }
 
-void shell(){
+char * getHomeDir(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
-  printf("T-SHELL: %s ",currdir);
-  char uinput[256];
-  fgets(uinput,sizeof(uinput),stdin);
-  char *temp = uinput;
-  temp=strsep(&temp,"\n");
-  /* code for exit */
-  if (strcmp(uinput,"exit")==0){
+  char * cdir = currdir;
+  char * tempdir=(char *)malloc(sizeof(currdir));
+  strcpy(tempdir,currdir);
+  while(strstr(currdir,getlogin())){
+    strcpy(tempdir,currdir);
+    strcat(currdir,"/..");
+    chdir(currdir);
+    getcwd(currdir,sizeof(currdir));
+  }
+  return tempdir;
+}
+
+void runCommand(char *comm){
+  char currdir[500];
+  getcwd(currdir,sizeof(currdir));
+  char *temp = comm;
+  /*code for exit*/
+  if (strcmp(temp,"exit")==0){
     printf("Bye!\n");
     exit(0);
   }
@@ -55,33 +72,53 @@ void shell(){
     char *cdcomm=strsep(&newd," ");
     if (strcmp(cdcomm,"cd")==0){
       char *newdir = currdir;
-      if (newd){
+      if (newd && strcmp(newd,"~")!=0 && strcmp(newd," ")!=0){
 	strcat(newdir,"/");
 	strcat(newdir,newd);
       }
       else{
-	strcat(newdir,"/..");
+	char* homedir = getHomeDir();
+	strcpy(newdir,homedir);
       }
-      chdir(newdir);
-      if (errno){
+      int test= chdir(newdir);
+      if (errno && test){
 	printf("'cd' error: %s \n", strerror(errno));
+	errno=0;
       }
     }
     /* code for running other commands */
     else{
       int childcom = fork();
       if (childcom==0){
-	command(temp);
+	execCommand(temp);
 	exit(childcom);
       }
       wait();
     }
-    shell();
-    exit(0);
   }
+}
+  
+void shell(){
+  char currdir[500];
+  getcwd(currdir,sizeof(currdir));
+  printf("CShell: %s ",currdir);
+  char uinput[256];
+  fgets(uinput,sizeof(uinput),stdin);
+  char *temp = uinput;
+  temp=strsep(&temp,"\n");
+  int numcomm=countDelim(temp,';');
+  numcomm++;
+  while (numcomm){
+    char *blah = strsep(&temp,";");
+    runCommand(blah);
+    numcomm--;
+  }
+  shell();
+  exit(0);
 }
 
 int main(){
+  printf("Welcome %s!\n", getlogin());
   shell();
   return 0;
 }

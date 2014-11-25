@@ -25,6 +25,8 @@
 #define CMD_ERROR_SIGNAL SIGUSR1
 #define DIR_NAME_MAX_SIZE 768
 #define GIT_BRANCH_MAX_SIZE 128
+#define GIT_STATUS_MAX_SIZE 10
+#define STATE_STACK_SIZE 256
 
 // Shell built-in functions
 const char *cmd_exit = "exit";
@@ -45,6 +47,11 @@ const char *fg_white = "\00138;5;15m\002";
 const char *fg_bright_green = "\00138;5;118m\002";
 const char *fg_green = "\00138;5;34m\002";
 
+// UTF-8
+const char *cross = "\xe2\x9c\x98";
+const char *check = "\xe2\x9c\x94";
+const char *delta = "\xce\x94";
+
 // Parsing states
 const char STATE_NORMAL = 0;
 const char STATE_IN_QUOTES = 1;
@@ -59,7 +66,14 @@ char *get_uid_symbol();
 char *get_time_str(char *time_str_container);
 void abbreviate_home(char *full_path, size_t full_path_length);
 void execute();
+void reset_execute_variables();
 void free_all();
 void get_prompt(char *prompt, int prompt_max_size);
 void parse_input(char input[INPUT_BUF_SIZE]);
 void git_branch(char *container, size_t container_size);
+void git_status(char *container, size_t container_size);
+char *git();
+int push_state(const char state);
+const char pop_state();
+const char get_state();
+void clear_state_stack();
