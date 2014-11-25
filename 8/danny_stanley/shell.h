@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <uuid/uuid.h>
 #include <pwd.h>
 #include <sys/wait.h>
 #include <readline/readline.h>

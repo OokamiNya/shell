@@ -285,21 +285,20 @@ void execute(char **argv) {
 }
 
 node* change_directory(char *path , node* history) {
-    if (!path) { // When no path specified, use home
-        path = getenv("HOME");
-    }
-    else if (path[0] == '-') { // TODO: Backtracking directories
-      printf("Previous Path: %s\n",get_prev(history)->arg);
-      path = get_arg(get_prev(history)); //How do you free this memory
-    }
-    errno_result = chdir(path);
-    if (errno_result == -1) {
-        printf("cd: %s: %s\n", path, strerror(errno));
+  if (!path) { // When no path specified, use home
+    path = getenv("HOME");
+  }
+  else if (path[0] == '-') { // TODO: Backtracking directories
+    path = get_arg(get_prev(history));
+  }
+  errno_result = chdir(path);
+  if (errno_result == -1) {
+    printf("cd: %s: %s\n", path, strerror(errno));
         cmd_status = 0;
-    }
-    else{
-      history = insert_node(history, path);
-      printf("Previous Path: %s\n",history->arg);
-    }
-    return history;
+  }
+  else{
+    history = insert_node(history, path);
+    printf("Previous Path: %s\n",history->arg);
+  }
+  return history;
 }
