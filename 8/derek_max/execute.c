@@ -7,6 +7,8 @@
 #include <errno.h>
 //#include "strsep.h"
 
+#define BUF_SIZE 256
+
 /* char* parseStr(char* str, char* match){ */
 /*   int loc; //where to stop */
 /*   loc = strcspn(str, match); //saw this in some pico code */
@@ -27,16 +29,16 @@
 
 
 int execute(char* input){
-  char buf[256]; //we need this for some reason pls don't buffer overflow
+  char buf[BUF_SIZE]; //we need this for some reason pls don't buffer overflow
   strcpy(buf, input);
   buf[strlen(buf)] = '\0';
   char* running=malloc(sizeof(buf));
   strcpy(running, buf);
   int i = 0;
   int j = 0;
-  char** args = calloc(5,256); // function and args
+  char** args = calloc(5,BUF_SIZE); // function and args
   char* prev;
-  char** args2 = calloc(2, 256); // redirecting i.e {">", "a.txt"}
+  char** args2 = calloc(2, BUF_SIZE); // redirecting i.e {">", "a.txt"}
   int redir = 0; // 1 if redirect args
   while(1){
 
