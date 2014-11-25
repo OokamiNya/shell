@@ -27,7 +27,7 @@ int main(){
     char input[256];
     char cwd[256];
     getcwd(cwd,256);
-    printf("JAVO:>%s ",cwd);
+    printf("JAVO:%s> ",cwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
     printf("input: %s\n", input);
