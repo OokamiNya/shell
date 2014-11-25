@@ -66,7 +66,7 @@ int main() {
         }
         printf("$input: `%s`\n", line);
         parse_input(line);
-        if (cmd_status && valid_input) {
+        if (valid_input) { // Inputs that contain non-whitespace characters
             add_history(line);
         }
         free(line);
@@ -88,13 +88,26 @@ void parse_input(char *input) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
             }
+            else if (input[index] == '\\') {
+                ++index; // Move on to add next character right after '\'
+                tok[tokIndex] = input[index];
+                ++tokIndex;
+            }
+            else if (input[index] == '"') {
+                ++index; // Go past "
+                while (input[index] && input[index] != '"') { // Continues interpreting as string literal until next '"'
+                    tok[tokIndex] = input[index];
+                    ++tokIndex;
+                    ++index;
+                }
+            }
             else if (input[index] == '~') {
                 if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
                     char *home = getenv("HOME");
                     strcpy(tok + tokIndex, home);
                     tokIndex += strlen(home);
                 }
-                else {
+                else { // Replace ~user with home directory of user
                     char user[USER_SIZE];
                     int userIndex = 0;
                     while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/') { // +1 to index since we are "looking ahead"
