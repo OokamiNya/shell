@@ -17,6 +17,38 @@ char *strip (char *p){
   return p;
 }
 
+void parse_string(char *s){
+  //TODO: char**token;
+
+  s = strip(s);
+  // count how many args 
+  token = s;
+  while (token){
+    token=strchr(token+1,' ');
+    alen++;
+  }
+  
+  char **argarray = (char **)(malloc(alen*sizeof(char *)));
+  //delimiting stuff
+  int i=0;
+  token = strsep(&s," ");
+  argarray[i] = (char*)malloc(256*sizeof(char));
+  argarray[i] = token;
+  while (token){
+    //getting rid of empty tokens btwnXS arguments
+    if (strlen(token)==0){
+      alen--;
+      argarray=realloc(argarray,alen*sizeof(char *));
+    }
+    else{
+      argarray[i] = (char*)malloc(256*sizeof(char));
+      argarray[i] = token;
+      token = strsep(&s, " ");
+      i++;
+    }
+  }
+}
+
 void exec(char ** argarray, int len){
   //cmd commands
   if (strcmp(argarray[0],"exit")==0){
@@ -57,7 +89,6 @@ void shell(){
   
   //printf("mallocs here\n");
   char *s = (char *)(malloc(10*sizeof(char)));
-  char *command = (char *)(malloc(10*sizeof(char)));
   char *token = (char *)(malloc(10*sizeof(char)));
   int alen = 1; //+1 for NULL
   
@@ -74,7 +105,6 @@ void shell(){
   fgets(s,100,stdin);
 
   s = strip(s);
-  command = s;
   // count how many args 
   token = s;
   while (token){
@@ -83,12 +113,12 @@ void shell(){
   }
   
   s = strsep(&s,"\n");
+  redirect(s);
   char **argarray = (char **)(malloc(alen*sizeof(char *)));
   //delimiting stuff
   int i=0;
-  token = s;
   token = strsep(&s," ");
-  argarray[i] = (char*)malloc(256*sizeof(char)+1);
+  argarray[i] = (char*)malloc(256*sizeof(char));
   argarray[i] = token;
   while (token){
     //getting rid of empty tokens btwnXS arguments
@@ -97,7 +127,7 @@ void shell(){
       argarray=realloc(argarray,alen*sizeof(char *));
     }
     else{
-      argarray[i] = (char*)malloc(256*sizeof(char)+1);
+      argarray[i] = (char*)malloc(256*sizeof(char));
       argarray[i] = token;
       token = strsep(&s, " ");
       i++;
@@ -110,12 +140,38 @@ void shell(){
   //printf("done.\n");
   free(s);
   free(token);
-  free(command);
-  //printf("freeing argarray\n");
-  free(argarray); //works until you try to enter 2+ args
+  free(argarray);
+
+}
+
+void redirect(char * s){
+  char * tok;
+  int len = 1;
+  if(strchr(s, '>') || strchr(s, '<')){
+    len = 2;
+  }
+  char ** top_arr = (char**)malloc(len*sizeof(char*));
   
   
-  
+  if(strchr(s,'>')){
+    //do redir in stuff
+    int fd, tmp_out, status;
+    fd = open("who.txt", O_WRONLY | O_CREAT | O_TRUNC);
+    tmp_out = dup(STDOUT_FILENO);
+    dup2(fd, STDOUT_FILENO);
+    int f = fork();
+    //if child, execute who cmd
+    //else, change stdout back
+    if( !f ){
+      execlp("who","who",NULL);
+    } else {
+      int w = wait( &status );
+      dup2(tmp_out, STDOUT_FILENO);
+      //printf("finished waiting. w: %d s: %d\n",w,status);
+    }
+  } else if(strchr(s, '<')){
+    //redirin
+  }
 }
 
 
