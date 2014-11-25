@@ -7,7 +7,8 @@
 
 static void sighandler(int signo){
   if (signo == SIGINT){
-    printf("we stopped a thing?\n");
+    printf("we stopped a thing 1?\n");
+    printf("2JAVO:> ");
   }
 }
 
