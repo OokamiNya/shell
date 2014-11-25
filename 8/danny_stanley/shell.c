@@ -102,12 +102,55 @@ void parse_input(char *input) {
             if (0) { // Handler for other cases
             }
             else if (input[index] == '>') {
+                if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                }
+                else { // If there is a blank redirection, they want cat functionality!
+                    ++args;
+                    argv = (char **) realloc(argv, args * sizeof(char *));
+                    argv[args-1] = strdup("cat");
+                }
+                argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+                argv[args] = NULL;
+
+                int mode; // Selecting whether to append or write
                 if (input[index+1] == '>') {
-                    // TODO: Implement append
+                    ++index;
+                    mode = O_APPEND;
                 }
                 else {
-                    
+                    mode = O_TRUNC;
                 }
+
+                while (input[index+1] == ' ') { // Remove prepending whitespace from filename
+                    ++index;
+                }
+                char filename[OUTPUT_FILENAME_SIZE];
+                int fileIndex = 0;
+                while (input[index+1] && input[index+1] != ' ' && input[index+1] != ';') { // Takes string literal as filename
+                    filename[fileIndex] = input[index+1];
+                    ++fileIndex;
+                    ++index;
+                }
+                filename[fileIndex] = '\0';
+                int output = open(filename, O_CREAT | O_WRONLY | mode, 0644); // Open file for redirection
+                if (output == -1) {
+                    printf("Redirecting to file failed: %s\n", strerror(errno));
+                }
+                else {
+                    int stdout_backup = dup(STDOUT_FILENO);
+                    dup2(output, STDOUT_FILENO); // Redirects stdout to file
+                    execute(argv);
+                    close(output);
+                    dup2(stdout_backup, STDOUT_FILENO); // Restores stdout
+                }
+                cleanup_argv(); // Clean up redirection commands, so that they don't run again later on
+                setup_argv();
             }
             else if (input[index] == ';') {
                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
@@ -155,7 +198,7 @@ void parse_input(char *input) {
                     struct passwd *found_user = getpwnam(user);
                     char *user_home;
                     if (found_user) {
-                        user_home = found_user->pw_dir;
+                        user_home = found_user->pw_dir; // Retrieves user home directory, otherwise defaults to user input
                     }
                     else {
                         user_home = user;
@@ -198,7 +241,7 @@ void parse_input(char *input) {
     else {
         valid_input = 0;
     }
-    printf("%d\n", tokSize);
+    printf("Token Size: %d\n", tokSize);
     cleanup_argv();
 }
 
@@ -208,6 +251,7 @@ void execute(char **argv) {
     for (; i <= args; ++i) {
         printf("$argv[%d]: `%s`\n", i, argv[i]);
     }
+    printf("--------------------------------------------------\n");
 
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
