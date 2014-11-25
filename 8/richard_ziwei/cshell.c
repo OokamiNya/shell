@@ -34,9 +34,11 @@ void normal_stuff(char arg[]){
     }
     argarr[i] = NULL;
     if (execvp(argarr[0], argarr) < 0){
-      printf("invalid command");
-    } else execvp(argarr[0], argarr);
+      printf("invalid command\n");//GIVE AN ACTUAL ERRNO
+      exit(-1);
+    }
   }
+  printf("I WORK :D\n");
   wait(&pid);
 }
 
