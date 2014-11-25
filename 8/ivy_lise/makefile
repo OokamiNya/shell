@@ -1,4 +1,4 @@
 all:
-	gcc shell.c
+	gcc 2shell.c
 clean:
 	rm a.out
