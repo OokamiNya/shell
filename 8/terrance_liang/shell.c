@@ -72,7 +72,7 @@ void shell(){
     char *cdcomm=strsep(&newd," ");
     if (strcmp(cdcomm,"cd")==0){
       char *newdir = currdir;
-      if (newd){
+      if (newd && strcmp(newd,"~")!=0){
 	strcat(newdir,"/");
 	strcat(newdir,newd);
       }
@@ -80,8 +80,8 @@ void shell(){
 	char* homedir = getHomeDir();
 	strcpy(newdir,homedir);
       }
-      chdir(newdir);
-      if (errno){
+      int test= chdir(newdir);
+      if (errno && test){
 	printf("'cd' error: %s \n", strerror(errno));
 	errno=0;
       }
@@ -101,7 +101,7 @@ void shell(){
 }
 
 int main(){
-  printf("User: %s\n", getlogin());
+  printf("Welcome %s!\n", getlogin());
   shell();
   return 0;
 }
