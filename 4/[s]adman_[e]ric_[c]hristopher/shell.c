@@ -9,6 +9,29 @@
 #include <errno.h>
 
 int currentPID;
+//runs command once, accepts a command line executable
+void swagexec(char *addresses){
+  addresses = strsep(&addresses, "\n");
+  char *ok2;
+  char *second [256];
+  int x = 0;
+  while (ok2){
+    ok2 = strsep(&addresses , " ");
+    second[x] = ok2;
+    x++;
+  }
+  int pid = fork();
+  if (!pid)
+    execvp(second[0] , second);
+  else
+    printf("I'm not the child\n");
+}
+
+void parse(char *string, char x){
+  while (string = strsep(&string, x)){
+    swagexec(string);    
+  }
+}
 
 static void sighandler(int signo){
   if (signo == SIGINT && getpid() == 0){
@@ -18,6 +41,7 @@ static void sighandler(int signo){
     currentPID = getpid();
   }
 }
+
 
 int main(){
   signal(SIGINT, sighandler);
@@ -35,7 +59,6 @@ int main(){
     fgets(args,256,stdin);
     args = strsep(&args,"\n");
 
-
     char* p;
     for(p=args;*p;++p) *p= tolower(*p);
     //exit
@@ -52,34 +75,18 @@ int main(){
       if (! strstr(args,"|") &&
 	  ! strstr(args,"<") &&
 	  ! strstr(args,">")){//if no pipe or redirects
-	int i=0,j=1,pid=fork();
-	if (!pid){
-	  addresses[0]=args;
-	  do{
-	    if (args[0]==32){
-	      addresses[j++]=args+1+i;
-	      args[i]=0;
-	    }
-	  }while(args[++i]);
-	  execvp(args,addresses);
-	  currentPID = getpid();
-	  printf("Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
-	}else{
-	  wait(&status);
-	  printf("2nd :Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
+	//setup and exec
+	currentPID = getpid();
+	printf("Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
+      }else{
+	wait(&status);
+	printf("2nd :Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
 
-	}
-      }//plan how code will be put together with nested fancy
-      //for example:
-      //ls | grep poop > swag.txt
+      }
+    }//plan how code will be put together with nested fancy
+    //for example:
+    //ls | grep poop > swag.txt
 
-    }
-
-    
-    
-    
-    
   }
-
-  return 0;
+return 0;
 }
