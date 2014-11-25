@@ -32,7 +32,7 @@ int main(){
     input[sizeof(input)] = 0;
     printf("input: %s\n", input);
 
-    if(!strcmp(input,"exit")){
+    if(!strcmp(input,"exit\n")){
       exit(-1);
     }
     else if(!strncmp(input,"cd",2)){
