@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pwd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
 
@@ -13,6 +15,38 @@ char *strip (char *p){
   while(p[strlen(p)-1] == ' ' || p[strlen(p)-1] == '\n')
     p[strlen(p)-1] = '\0';
   return p;
+}
+
+void parse_string(char *s){
+  //TODO: char**token;
+
+  s = strip(s);
+  // count how many args 
+  token = s;
+  while (token){
+    token=strchr(token+1,' ');
+    alen++;
+  }
+  
+  char **argarray = (char **)(malloc(alen*sizeof(char *)));
+  //delimiting stuff
+  int i=0;
+  token = strsep(&s," ");
+  argarray[i] = (char*)malloc(256*sizeof(char));
+  argarray[i] = token;
+  while (token){
+    //getting rid of empty tokens btwnXS arguments
+    if (strlen(token)==0){
+      alen--;
+      argarray=realloc(argarray,alen*sizeof(char *));
+    }
+    else{
+      argarray[i] = (char*)malloc(256*sizeof(char));
+      argarray[i] = token;
+      token = strsep(&s, " ");
+      i++;
+    }
+  }
 }
 
 void exec(char ** argarray, int len){
@@ -37,6 +71,7 @@ void exec(char ** argarray, int len){
       printf("WEIRD ERROR\n");
     }
     else if(f == 0){
+      //printf("TEST\n");
       execvp(argarray[0],argarray);
     }
     else{
@@ -47,19 +82,29 @@ void exec(char ** argarray, int len){
 }
 
 void shell(){
+  //printf("begin.\n");
+  struct passwd *p = getpwuid(getuid());
+  //printf("whoa??\n");
+  char * user = p->pw_name;
+  
+  //printf("mallocs here\n");
   char *s = (char *)(malloc(10*sizeof(char)));
-  char *command = (char *)(malloc(10*sizeof(char)));
   char *token = (char *)(malloc(10*sizeof(char)));
   int alen = 1; //+1 for NULL
-
+  
   //prompt
   char cwd[256];
   getcwd(cwd,sizeof(cwd));
-  printf("%s$ ",cwd);
+  if(strstr(cwd,getenv("HOME"))){
+    //printf("There exists HOME in pwd.\n");
+    char * path = strdup(cwd+strlen(getenv("HOME")));
+    printf("%s:~%s$ ",user,path);
+  } else {
+    printf("%s:%s$ ",user,cwd);
+  }
   fgets(s,100,stdin);
 
   s = strip(s);
-  command = s;
   // count how many args 
   token = s;
   while (token){
@@ -68,19 +113,23 @@ void shell(){
   }
   
   s = strsep(&s,"\n");
-  char **argarray = (char **)(malloc(alen*3*sizeof(char)));
+  redirect(s);
+  char **argarray = (char **)(malloc(alen*sizeof(char *)));
   //delimiting stuff
   int i=0;
-  token = s;
+  token = strsep(&s," ");
+  argarray[i] = (char*)malloc(256*sizeof(char));
   argarray[i] = token;
-  while (token = strsep(&s," ")){
-    //getting rid of empty tokens btw arguments
+  while (token){
+    //getting rid of empty tokens btwnXS arguments
     if (strlen(token)==0){
       alen--;
-      argarray=realloc(argarray,alen*3*sizeof(char));
+      argarray=realloc(argarray,alen*sizeof(char *));
     }
     else{
+      argarray[i] = (char*)malloc(256*sizeof(char));
       argarray[i] = token;
+      token = strsep(&s, " ");
       i++;
     }
   }
@@ -88,6 +137,41 @@ void shell(){
   argarray[i] = NULL;
   
   exec(argarray, alen);
+  //printf("done.\n");
+  free(s);
+  free(token);
+  free(argarray);
+
+}
+
+void redirect(char * s){
+  char * tok;
+  int len = 1;
+  if(strchr(s, '>') || strchr(s, '<')){
+    len = 2;
+  }
+  char ** top_arr = (char**)malloc(len*sizeof(char*));
+  
+  
+  if(strchr(s,'>')){
+    //do redir in stuff
+    int fd, tmp_out, status;
+    fd = open("who.txt", O_WRONLY | O_CREAT | O_TRUNC);
+    tmp_out = dup(STDOUT_FILENO);
+    dup2(fd, STDOUT_FILENO);
+    int f = fork();
+    //if child, execute who cmd
+    //else, change stdout back
+    if( !f ){
+      execlp("who","who",NULL);
+    } else {
+      int w = wait( &status );
+      dup2(tmp_out, STDOUT_FILENO);
+      //printf("finished waiting. w: %d s: %d\n",w,status);
+    }
+  } else if(strchr(s, '<')){
+    //redirin
+  }
 }
 
 

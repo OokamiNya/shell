@@ -27,21 +27,43 @@ char** parse(char* input, char* s){
     return args;
 }
 
+char* getinput(char* input){
+  char prompt[4096];
+  wait(-10);
+  strcpy(prompt,"Shell:");//add directory and username
+  printf("%s", prompt);
+  getcwd(prompt, sizeof(prompt));
+  printf("%s$ ", prompt);
+    
+  //char input[4096];
+  fgets(input, 4096, stdin);
+  return input;
+}
+
+void redirect(char* file,char** args){
+  int fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
+  dup2(fd,STDOUT_FILENO);
+  close(fd);
+  execvp(args[0],args);
+}
+
+char** getinfo(char** args){
+  int i = 0;
+  while(args[i]){
+    if(strcmp(args[i],">")){
+      
+    }
+    i++;
+  }
+}
 int main(){
+  char a = 0;
   while(1){
     //Prompt
-    char prompt[4096];
-    wait();
-    strcpy(prompt,"Shell:");//add directory and username
-    printf("%s", prompt);
-    getcwd(prompt, sizeof(prompt));
-    printf("%s$ ", prompt);
-    
     char input[4096];
-    fgets(input, 4096, stdin);
-
+    getinput(input);
     //attempt at semicolon
-    char ** superargs = parse(input,";"); 
+    char ** superargs = parse(input,";");
     int j = 0;
     while(superargs[j]){
       
@@ -52,16 +74,23 @@ int main(){
 	exit(0);
       }else if(strcmp(args[0],"cd") == 0){
 	chdir(args[1]);
+      }else if(strchr(superargs[j],">")){
+	//redirect(
       }else{
 	int f = fork();
 	if(!f){
 	  execvp(args[0],args);
+	  free(args);
 	  printf("Command not found\n");
+	  break; 
+	  //exit(0);
 	}
+	
       }
-      
+      //free(args);
       j++;
     }
+    //free(superargs);
     
   }
   

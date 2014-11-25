@@ -1,8 +1,8 @@
 Exception: STATUS_ACCESS_VIOLATION at eip=61124573
-eax=00000013 ebx=0028AC6C ecx=1B060000 edx=0000000C esi=00000014 edi=61007200
-ebp=00403060 esp=00288BAC program=C:\Users\Jason\Documents\GitHub\shell\8\jason_lu\a.exe, pid 18172, thread main
+eax=00000013 ebx=0028AC6C ecx=17EE0000 edx=0000000C esi=00000014 edi=61007200
+ebp=00403060 esp=00288BAC program=C:\Users\Jason\Documents\GitHub\shell\8\jason_lu\a.exe, pid 2768, thread main
 cs=0023 ds=002B es=002B fs=0053 gs=002B ss=002B
 Stack trace:
 Frame     Function  Args
-00403060  61124573 (003B0020, 78650020, 63007469, 6F430064)
+00403060  61124573 (003B0020, 78650020, 1B007469, 7500415B)
 End of stack trace

@@ -5,41 +5,60 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-//#include "parse.h"
+#include "parse.h"
 #include "execute.h"
+#include "redirect.h"
 
 int main(){
-  printf("> ");
-  
-  char s[256];
-  //fgets (s, 256, stdin);
-  char* s1 = s;
+  char buf[256];
+
   //char** commands = calloc(5, 256);
-  char* commands[] = {"ls -al", "echo hi", "exit"};
   //commands is null-terminated
   //parse here into commands
   int i = 0;
-  //  commands[0] = "ls -al";
-  //  commands[1] = "echo hi";
-  //  commands[2] = "exit";
-  while(commands[i]){
-    printf("commands[%d]:%s\n", i, commands[i]);
-    strstr("exitls -al", "exit");
-    strstr("exitls -al", "exit");
-    printf("%s\n", strstr("exitls -al", "exit"));
-
-    //    printf("%s", b);
-	   //    printf("%s\n", strstr(commands[i], "exit"));    
-
-
-    printf("%d", 9999999);
-    if(strlen(strstr(commands[i], "exit")) == strlen(commands[i])){ //only if "exit" is in the very beginning will there be no difference
-      //have to add special case for no input I think...?
-
-      printf("Exiting.\n");
-      exit(EXIT_SUCCESS);
+  /*
+  commands[0] = "ls -al";
+  commands[1] = "echo hi";
+  //commands[2] = ""; //still need to fix this
+  commands[2] = "exit";
+  commands[3] = "exit";
+  */
+  while(1){
+    printf("> ");
+    fgets(buf, sizeof(buf), stdin);
+    char** commands = parse(buf);
+    //    printf("commands[0]:%s\n", commands[0]);
+    i=0;
+    while(commands[i]){
+      //printf("commands[%d]:%s\n", i, commands[i]);
+      if(commands[i]){
+	if(!strcmp(commands[i], "exit")){
+	  printf("Exiting.\n");
+	  exit(EXIT_SUCCESS);
+	}
+	else if (strcmp(commands[i], "cd") == 0){
+	  printf("cd not yet supported\n");
+	  break;
+	}
+	//special_parse = strstr(commands[i], "cd");
+	//if(special_parse){
+	//if(strlen(special_parse) == 2){
+	//  
+	//}
+	//}
+	else{	
+	  //add an if for cd later
+	  fflush(stdout);
+	  execute(commands[i]);
+	}
+      }
+      i++;
     }
-    execute(commands[i]);
-    i++;
+    
+    //leave:
+
+    
   }
+  
+  return 1;
 }

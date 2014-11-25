@@ -1,11 +1,11 @@
 #include "program.h"
 
+char home[256] = "/";
 
 void process(char * start){
   //site of user input processing
   while (start){
-    execute(strsep(&start, ";"));
-      
+    execute(strsep(&start, ";"));      
   }
 }
 
@@ -15,6 +15,8 @@ void execute(char * start){
   //Splits the string arguements and runs them with a child process and execvp
   //Returns nothing
   //printf("%s\n",start);
+  if( ! strncmp(start,"HOME=",5))
+    set_home(start);
   char * args[10];
   int x = 0;
   char * y;
@@ -24,17 +26,19 @@ void execute(char * start){
     if(*y != 0){
       if (! strcmp(">",y))
 	redir = 1;
-    
+      if( ! strcmp("<",y))
+	redir = 2;
       args[x] = y;
       x++;
     }
     
   }
-  if (redir)
-    redirect(args);
-  else{
-    args[x -1] = strsep(&args[x-1], "\n");
-    args[x]=0;
+  args[x -1] = strsep(&args[x-1], "\n");
+  args[x]=0;
+  if (redir){
+    //printf("%d", redir);
+    redirect(args, redir);
+  }else{
     if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
       normal_process(args);
     else{
@@ -42,10 +46,23 @@ void execute(char * start){
     }
   }
 }
+
+void set_home(char * start){
+  //Sets the 'home' directory which allows for the use of the character "~"
+  //Takes the location of new home directory in relation to current directory
+  getcwd(home,256);
+  strsep(&start, "=");
+  start = strsep(&start, "\n");
+  strcat(home,"/");
+  strcat(home,start);
+}
 void normal_process(char * args[]){
   //For processes that require the main process to run
   //Takes the process with args as an array
   if (! (strcmp("cd",args[0]))){
+    if (! strcmp(args[1],"~")){
+      chdir(home);
+    }
     chdir(args[1]);
   }
   else if (! (strcmp("exit",args[0])))
@@ -65,8 +82,34 @@ void child_process(char * args[]){
     wait(&f);
   }
 }
-void redireCt(char * args[]){
-  printf("IMPLEMENT ME PLS");
+
+void redirect(char * args[], int redir){
+  int c;
+  int i = fork();
+  if(!i){
+    if(redir-1){
+      c = open(args[2], O_RDWR, 0777);
+      printf("%d\n",c);
+      //dup2(c, STDIN_FILENO);
+      char * hey[256];
+      hey[0] = args[0];
+      read( c, hey[1], sizeof(hey));
+      printf("|%s|\n",hey[1]);
+      hey[2] = 0;
+      execvp(args[0], hey);
+      close(c);
+    }else{
+      c = open(args[2], O_CREAT | O_WRONLY, 0644);
+      dup2(c, STDOUT_FILENO);
+      execlp(args[0], args[0], NULL);
+      close(c);
+    }
+    exit(0);
+  }
+  else{
+    wait(&i);
+    redir = 0;
+  }
 }
 
 int main(int argc, char *argv[]){

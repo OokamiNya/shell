@@ -2,8 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "execute.h"
+#include "parse.h"
 #include <errno.h>
+
+char *removespace(char *str) // remove leading space
+{
+  char *temp;
+  while(isspace(*str)) str++;
+  if(*str == 0) 
+    return str;
+  
+  temp = str + strlen(str) - 1;
+  while(temp > str && isspace(*temp)) temp--;
+  *(temp+1) = 0;
+  
+  return str;
+}
+
 
 char ** parse(char * input){
   char buf[256];
@@ -20,14 +35,15 @@ char ** parse(char * input){
     if(!prev){
       break;
     }
-    args[i] = prev;
+    args[i] = removespace(prev);
     i++;
   }
   args[i] = '\0';
-  printf("%s\n%s\n%s\n", args[0], args[1], args[2]);
+  //printf("%s\n%s\n%s\n", args[0], args[1], args[2]);
   return args;
 }
-
+/*
 int main(){
-  parse("ls -l; touch cat");
+  parse("ls -l ;   touch cat   \n");
 }
+*/

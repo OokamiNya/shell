@@ -7,4 +7,7 @@ compile: shell.c
 	gcc -o shell shell.c
 
 run:
-	./shell
+	@echo "Running..."
+	@echo ""
+	@echo ""
+	@./shell
