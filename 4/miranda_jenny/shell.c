@@ -73,7 +73,7 @@ int main() {
                 split_cmds[ strlen( split_cmds ) - 1 ] = 0;
             }
             
-            if ( strchr( split_cmds, '>' ) != 0 ) {
+            if ( strchr( split_cmds, '>' ) ) {
                 char * cmd;
                 cmd = strsep( &split_cmds, ">" ); //gets cmd from input
                 temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
@@ -83,7 +83,7 @@ int main() {
                 dup2( temp_stdout, STDOUT_FILENO ); //resets STDOUT to normal, not file
                 close( fd );
             }
-            else if ( strchr( split_cmds, '<' ) != 0 ) {
+            else if ( strchr( split_cmds, '<' ) ) {
                 char * cmd;
                 cmd = strsep( &split_cmds, "<" ); //gets cmd from input
                 temp_stdin = dup( STDIN_FILENO ); //creates copy of STDIN
@@ -93,13 +93,14 @@ int main() {
                 dup2( temp_stdin, STDIN_FILENO ); //resets STDIN to normal, not file
                 close( fd );
             }
-            else if ( strchr( split_cmds, '|' ) != 0 ) {
+            else if ( strchr( split_cmds, '|' ) ) {
                 char * cmd1;
                 char output1[500];
                 cmd1 = strsep( &split_cmds, "|" ); //gets 1st cmd from input
                 temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
+                //temp_stdin = dup( STDIN_FILENO ); //creates copy of STDOUT
                 //fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
-                //dup2( STDOUT_FILENO, STDIN_FILENO ); //redirects STDIN to STDOUT
+                dup2( STDIN_FILENO, STDOUT_FILENO ); //redirects STDOUT to STDIN
                 execute( cmd1 ); //runs cmd1
                 //fgets( output1, sizeof( output1 ), stdin ); //maybe something with this
                 dup2( temp_stdout, STDOUT_FILENO ); //resets STDOUT to normal, not STDIN
