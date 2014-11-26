@@ -10,6 +10,12 @@
 
 #define pwd pw->pw_dir
 
+static void sighandler(int signo) {
+  if (signo == SIGINT) {
+    quit();
+  }
+}
+
 char isRed(char c) {
   return c == '>' || c == '<' || c == '|';
 }
@@ -62,17 +68,19 @@ int parse(char * input) {
     //Or 2 to ignore >>, etc. but include it in final string
     commands[i] = (char *) malloc(1024);
     for (; j<strlen(ph) && !isRed(ph[j]); j++) {}
-    if (ph[j-1] == ' ') {
-      strncpy(commands[i], ph, j);
-      commands[i][j] = 0;
-      ph = ph+j;
-      j = -1;
-    }
-    else if (ph[j-2] == ' ') {
-      strncpy(commands[i], ph, j-1);
-      commands[i][j-1] = 0;
-      ph = ph+j-1;
-      j = 0;
+    if (isRed(ph[j])) {
+      if (ph[j-1] == ' ') {
+	strncpy(commands[i], ph, j);
+	commands[i][j] = 0;
+	ph = ph+j;
+	j = -1;
+      }
+      else if (ph[j-2] == ' ') {
+	strncpy(commands[i], ph, j-1);
+	commands[i][j-1] = 0;
+	ph = ph+j-1;
+	j = 0;
+      }
     }
     else { //Allows for something like cat>file without spaces
       strncpy(commands[i], ph, j);
@@ -103,8 +111,9 @@ int separate(char * input) {
 char ** sparse(char * command) {
   int c = 1;
   int i;
+  int size = strlen(command);
 
-  for (i=0; i<strlen(command); i++) {
+  for (i=0; i<size; i++) {
     if (command[i] == ' ')
       c++;
   }
@@ -112,12 +121,12 @@ char ** sparse(char * command) {
   char ** args = (char **) malloc(sizeof(char **) * (c+1)); //+1 for null
 
   for (i=0; i<c; i++) {
-    args[i] = (char *) malloc(strlen(command)+1); //+1 for nullstring
-    strncpy(args[i], strsep(&command, " "), strlen(command));
-    *(args[i] + 2) = 0;
+    args[i] = (char *) malloc(size+1); //+1 for nullstring
+    strncpy(args[i], strsep(&command, " "), size);
+    args[i][size] = 0;
   }
 
-  args[c] = (char *) malloc(sizeof(NULL));
+  args[c] = (char *) malloc(size+1); //Perhaps unnecessarily large
   args[c] = NULL;
 
   return args;
@@ -127,9 +136,19 @@ void quit() {
   exit(0);
 }
 
+void ssfree(char ** starstar, int c) {
+  int i;
+  for (i=0; i<c; i++) {
+    free(starstar[i]);
+  }
+  
+  free(starstar);
+}
+
 int run(char ** commands, int c) {
   if (!strncmp(commands[0], "cd", 2)) {
     char ** args = sparse(commands[0]);
+    ssfree(commands, c);
     if (chdir(args[1]))
       printf("%s\n", strerror(errno));
   }
@@ -141,6 +160,7 @@ int run(char ** commands, int c) {
     f = fork();
     if (f) {
       wait(&status);
+      //printf("%d\n", WTERMSIG(status));
     }
     else {
       int i, fd;
@@ -158,12 +178,15 @@ int run(char ** commands, int c) {
 	}
 	else {
 	  char ** args = sparse(commands[i]);
+	  ssfree(commands, c);
 	  if (execvp(args[0], args))
 	    printf("%s\n", strerror(errno));
 	  exit(-1);
 	}
       }
       char ** args = sparse(commands[0]); //Default
+      //Should only occur if bad input (allows for error message)
+      ssfree(commands, c);
       if (execvp(args[0], args))
 	printf("%s\n", strerror(errno));
       exit(-1);
@@ -176,6 +199,9 @@ int run(char ** commands, int c) {
       
 int main() {
   //Main program
+
+  signal(SIGINT, sighandler);
+
   printf("PID: %d\n", getpid());
   //printf("Login: %s\n", getlogin());
   char hostname[4096];
@@ -184,20 +210,18 @@ int main() {
   getcwd(cwd, 4096);
   gethostname(hostname, 4096);
   struct passwd *pw = getpwuid(getuid());
-  //printf("Home Directory: %s\n", pwd);
-  //printf("CWD: %s\n", cwd);
-  //printf("Hostname: %s\n", hostname);
+  
   while (1) {
-    getcwd(cwd, 4096);
-    gethostname(hostname, 4096);
-    getpwuid(getuid());
-    cwdp = strstr(cwd, pwd) + strlen(pwd) - 1;
-    *cwdp = '~';
-    printf("%s@%s:%s$ ", getlogin(), hostname, cwdp);
-    char * input = (char *) malloc(1024);
-    fgets(input,1024,stdin);
-    input[strlen(input)-1] = 0; //Removes newline
-    separate(input);
-    free(input);
+      getcwd(cwd, 4096);
+      gethostname(hostname, 4096);
+      getpwuid(getuid());
+      cwdp = strstr(cwd, pwd) + strlen(pwd) - 1;
+      *cwdp = '~';
+      printf("%s@%s:%s$ ", getlogin(), hostname, cwdp);
+      char * input = (char *) malloc(1024);
+      fgets(input,1024,stdin);
+      input[strlen(input)-1] = 0; //Removes newline
+      separate(input);
+      free(input);
   }
 }
