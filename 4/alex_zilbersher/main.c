@@ -12,7 +12,29 @@ static void sighandler(int signo) {
       exit(-1);
     }
   }
+  if (signo==SIGUSR1){
+    if(f){
+      wait(&f);
+      kill(getppid(),SIGKILL);
+    }else{
+      kill(getppid(),SIGUSR1);
+      exit(-1);
+    }
+  }
 }
+
+/*
+static void sighandler(int signo) {
+  if (signo==SIGINT){ // contrl-c or kill -2
+    kill(getppid(),SIGUSR1);
+    //exit(-1);
+  }
+  if (signo == SIGUSR1){ //kill -30
+    printf("\nExited Zilbash\n");
+    //exit(-1);
+  }
+}
+*/
 
 int main(){
   while(1){

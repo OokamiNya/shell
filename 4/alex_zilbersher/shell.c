@@ -29,6 +29,9 @@ int run_command(char* s){
 	}
       }
       args[i]=0;
+      if(strcmp(args[0],"exit")==0){
+	kill(getpid(),SIGUSR1);
+      }
       execvp(args[0],args);
       printf("Command not found: %s\n",args[0]);
       exit(-1);
