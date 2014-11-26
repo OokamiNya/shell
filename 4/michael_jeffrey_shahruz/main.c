@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 // Execs a function, parsing the input and running execvp
 int exec_line(char *input);
@@ -72,7 +73,32 @@ void runs_command(char *scpy) {
     }
     
     else if(strchr(s,'>')) {
-      printf("registered >\n");
+      //note: need to reconcile $: ls > foo and $: ls>foo
+
+      char *scpy2 = (char *)malloc(1024);
+      strcpy(scpy2, s);
+      char *first_cmd = (char *)malloc(1024);
+      first_cmd = strsep(&scpy2, ">");
+ 
+      char *second_cmd = (char *)malloc(1024);
+      strcpy(second_cmd, scpy2);
+
+      int f, fd, s, temp, status;
+      f = fork();
+
+      if( !fork ){
+	fd = open(second_cmd,O_CREAT | O_WRONLY, 0644);
+	temp = dup(STDIN_FILENO);
+	dup2(STDIN_FILENO, temp);
+	dup2(fd, STDIN_FILENO);
+	exec_line(first_cmd);
+	//close(fd);
+	//close(temp);
+	exit(0);
+      } else {
+	wait(NULL);
+      }
+
     }
     
     else if(strchr(s,'<')) {
