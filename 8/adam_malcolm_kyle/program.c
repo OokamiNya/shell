@@ -36,7 +36,7 @@ void execute(char * start){
   args[x -1] = strsep(&args[x-1], "\n");
   args[x]=0;
   if (redir){
-    printf("%d", redir);
+    //printf("%d", redir);
     redirect(args, redir);
   }else{
     if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
@@ -88,21 +88,34 @@ void redirect(char * args[], int redir){
   int i = fork();
   if(!i){
     if(redir-1){
-      c = open(args[2], O_CREAT | O_RDWR, 0777);
-      dup2(c, STDIN_FILENO);
+      c = open(args[2], O_RDWR, 0777);
+      printf("%d\n",c);
+      //dup2(c, STDIN_FILENO);
+      char * hey[256];
+      hey[0] = args[0];
+      read( c, hey[1], sizeof(hey));
+      printf("|%s|\n",hey[1]);
+      hey[2] = 0;
+      execvp(args[0], hey);
       close(c);
-      execlp(args[0], args[0], NULL);
     }else{
       c = open(args[2], O_CREAT | O_WRONLY, 0644);
       dup2(c, STDOUT_FILENO);
       execlp(args[0], args[0], NULL);
       close(c);
     }
+<<<<<<< HEAD
   } else {
     int *temp;
     wait(temp);
+=======
+    exit(0);
   }
-  redir = 0;
+  else{
+    wait(&i);
+    redir = 0;
+>>>>>>> dbfdcef0e4eb8ebe76abdb8c855bb9266c4ce01b
+  }
 }
 
 int main(int argc, char *argv[]){

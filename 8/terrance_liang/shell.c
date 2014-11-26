@@ -3,9 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 
-
-int countDelim(char* stringy, char delim){
+int countDelim(char *stringy, char delim){
   int argcount = 0;
   int i = 0;
   for (i;i<strlen(stringy);i++){
@@ -41,11 +41,11 @@ void execCommand(char* comm){
   free(arguments);
 }
 
-char * getHomeDir(){
+char *getHomeDir(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
-  char * cdir = currdir;
-  char * tempdir=(char *)malloc(sizeof(currdir));
+  char *cdir = currdir;
+  char *tempdir=(char *)malloc(sizeof(currdir));
   strcpy(tempdir,currdir);
   while(strstr(currdir,getlogin())){
     strcpy(tempdir,currdir);
@@ -54,6 +54,36 @@ char * getHomeDir(){
     getcwd(currdir,sizeof(currdir));
   }
   return tempdir;
+}
+
+void redirectOut(char *output, char *command ){
+  int childcom = fork();
+  if (childcom==0){
+    int filedata = open(output, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+    dup2(filedata, STDOUT_FILENO);
+    execCommand(command);
+    exit(childcom);
+  }
+  wait();
+  dup2(dup(STDOUT_FILENO),STDOUT_FILENO);
+}
+
+void redirectIn(char *input, char *command){
+  int childcom = fork();
+  if (childcom==0){
+    int filedata = open(input, O_RDONLY, 0444);
+    dup2(filedata, STDIN_FILENO);
+    execCommand(command);
+    exit(childcom);
+  }
+  wait();
+  dup2(dup(STDIN_FILENO),STDIN_FILENO);
+}
+
+void mypipe(char *incommand, char *outcommand){
+  redirectOut("TempFile",outcommand);
+  redirectIn("TempFile",incommand);
+  remove("TempFile");
 }
 
 void runCommand(char *comm){
@@ -67,7 +97,7 @@ void runCommand(char *comm){
   }
   else{
     /* code for cd */
-    char* newd= (char *)malloc(sizeof(temp));
+    char *newd= (char *)malloc(sizeof(temp));
     strcpy(newd,temp);
     char *cdcomm=strsep(&newd," ");
     if (strcmp(cdcomm,"cd")==0){
@@ -77,7 +107,7 @@ void runCommand(char *comm){
 	strcat(newdir,newd);
       }
       else{
-	char* homedir = getHomeDir();
+	char *homedir = getHomeDir();
 	strcpy(newdir,homedir);
       }
       int test= chdir(newdir);
@@ -88,12 +118,26 @@ void runCommand(char *comm){
     }
     /* code for running other commands */
     else{
-      int childcom = fork();
-      if (childcom==0){
-	execCommand(temp);
-	exit(childcom);
+      if (strchr(temp,'>')){
+	char *outcomm = strsep(&temp,">");
+	redirectOut(temp,outcomm);
       }
-      wait();
+      else if (strchr(temp,'<')){
+	char *incomm = strsep(&temp,"<");
+	redirectIn(temp,incomm);
+      }	
+      else if (strchr(temp,'|')){
+	char *inout = strsep(&temp,"|");
+	mypipe(temp,inout);
+      }	
+      else{
+	int childcom = fork();
+	if (childcom==0){
+	  execCommand(temp);
+	  exit(childcom);
+	}
+	wait();
+      }
     }
   }
 }
@@ -102,7 +146,7 @@ void shell(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
   printf("CShell: %s ",currdir);
-  char uinput[256];
+  char uinput[5000];
   fgets(uinput,sizeof(uinput),stdin);
   char *temp = uinput;
   temp=strsep(&temp,"\n");
