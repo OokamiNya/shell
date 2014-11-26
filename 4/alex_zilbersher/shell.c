@@ -32,6 +32,19 @@ int run_command(char* s){
       if(strcmp(args[0],"exit")==0){
 	kill(getpid(),SIGUSR1);
       }
+      if(strcmp(args[0],"cd")==0){
+	char path[256];
+	getcwd(path,sizeof(path));
+	printf("current working dir: %s\n",path);
+	int n=chdir(args[1]);
+	if(n==-1){
+	  printf("Directory not found: %s\n",args[1]);
+	}
+	char path2[256];
+	getcwd(path2,sizeof(path2));
+	printf("current working dir: %s\n",path2);
+	exit(-1);
+      }
       execvp(args[0],args);
       printf("Command not found: %s\n",args[0]);
       exit(-1);
