@@ -98,6 +98,9 @@ void redirect(char * args[], int redir){
       execlp(args[0], args[0], NULL);
       close(c);
     }
+  } else {
+    int *temp;
+    wait(temp);
   }
   redir = 0;
 }
