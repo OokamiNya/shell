@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
@@ -18,6 +19,7 @@
 #define USER_SIZE 128
 #define FILE_SIZE 256
 #define ESCAPE_SIZE 128
+#define TIME_SIZE 14
 
 const char *shell_name = "StD";
 

@@ -48,16 +48,37 @@ char * get_path(char *path_buf, int path_size) {
     return path_buf;
 }
 
+/* Writes current time given a buffer */
+char * get_time(char *time_buf, int time_size) {
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char *ampm;
+    int hour = tm.tm_hour;
+    if (hour < 12) {
+        ampm = "AM";
+    }
+    else {
+        ampm = "PM";
+        hour -= 12;
+    }
+    snprintf(time_buf, time_size, "[%02d:%02d:%02d %s]", hour, tm.tm_min, tm.tm_sec, ampm);
+    return time_buf;
+}
+
 /* Writes prompt given a buffer */
 char * create_prompt(char *prompt_buf, int prompt_size) {
     char path[PATH_SIZE];
     get_path(path, PATH_SIZE);
+    char time[TIME_SIZE];
+    get_time(time, TIME_SIZE);
+    const char *status;
     if (cmd_status) { // Previous command was successful
-        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+        status = fg_green;
     }
     else {
-        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_red, reset);
+        status = fg_red;
     }
+    snprintf(prompt_buf, prompt_size, "%s%s%s$ %s%s%s %s%s%s %s%s\nᐅ %s", bold_prefix, fg_pink, shell_name, bold_prefix, fg_orange, time, bold_prefix, fg_cyan, path, normal_prefix, status, reset);
     return prompt_buf;
 }
 
@@ -155,7 +176,7 @@ int main() {
         cmd_status = valid_input = 1;
         char *line = readline(prompt);
         if (line == NULL) {
-            printf("\n`EOF Sent`\n");
+            printf("\n~~~ EOF Sent :\\ ~~~\n");
             free(line);
             free(prompt);
             exit(0);
@@ -359,7 +380,6 @@ void parse_input(char *input) {
             valid_input = 0;
         }
     }
-    printf("Token Size: %d\n", tokSize);
     cleanup_argv();
 }
 
