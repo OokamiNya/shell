@@ -75,27 +75,39 @@ int main() {
             
             if ( strchr( split_cmds, '>' ) != 0 ) {
                 char * cmd;
-                cmd = strsep( &split_cmds, ">" );
-                temp_stdout = dup( STDOUT_FILENO );
-                fd = open( split_cmds, O_WRONLY|O_CREAT|O_EXCL, 0644 );
-                dup2( fd, STDOUT_FILENO );
-                execute( cmd );
-                dup2( temp_stdout, STDOUT_FILENO );
+                cmd = strsep( &split_cmds, ">" ); //gets cmd from input
+                temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
+                fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
+                dup2( fd, STDOUT_FILENO ); //redirects STDOUT to file
+                execute( cmd ); //runs cmd
+                dup2( temp_stdout, STDOUT_FILENO ); //resets STDOUT to normal, not file
+                close( fd );
             }
             else if ( strchr( split_cmds, '<' ) != 0 ) {
                 char * cmd;
-                cmd = strsep( &split_cmds, ">" );
-                temp_stdin = dup( STDIN_FILENO );
-                fd = open( split_cmds, O_WRONLY|O_CREAT|O_EXCL, 0644 );
-                dup2( fd, STDIN_FILENO );
-                execute( cmd );
-                dup2( temp_stdin, STDIN_FILENO );
+                cmd = strsep( &split_cmds, "<" ); //gets cmd from input
+                temp_stdin = dup( STDIN_FILENO ); //creates copy of STDIN
+                fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
+                dup2( fd, STDIN_FILENO ); //redirects STDIN to file
+                execute( cmd ); //runs cmd
+                dup2( temp_stdin, STDIN_FILENO ); //resets STDIN to normal, not file
+                close( fd );
+            }
+            else if ( strchr( split_cmds, '|' ) != 0 ) {
+                char * cmd1;
+                char output1[500];
+                cmd1 = strsep( &split_cmds, "|" ); //gets 1st cmd from input
+                temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
+                //fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
+                //dup2( STDOUT_FILENO, STDIN_FILENO ); //redirects STDIN to STDOUT
+                execute( cmd1 ); //runs cmd1
+                //fgets( output1, sizeof( output1 ), stdin ); //maybe something with this
+                dup2( temp_stdout, STDOUT_FILENO ); //resets STDOUT to normal, not STDIN
+                execute( split_cmds ); //runs cmd2
             }
             else {
                 execute( split_cmds );
             }
-            
-            
         }
     }
     return 0;
