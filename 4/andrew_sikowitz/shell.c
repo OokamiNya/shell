@@ -103,20 +103,28 @@ int separate(char * input) {
 char ** sparse(char * command) {
   int c = 1;
   int i;
+
   for (i=0; i<strlen(command); i++) {
     if (command[i] == ' ')
       c++;
   }
   
   char ** args = (char **) malloc(sizeof(char **) * (c+1)); //+1 for null
+
   for (i=0; i<c; i++) {
-    args[i] = (char *) malloc(strlen(command));
-    strncpy(args[i], strsep(&command, " "), strlen(command)+1);
+    args[i] = (char *) malloc(strlen(command)+1); //+1 for nullstring
+    strncpy(args[i], strsep(&command, " "), strlen(command));
+    *(args[i] + 2) = 0;
   }
-  args[c] = (char *) malloc(1);
+
+  args[c] = (char *) malloc(sizeof(NULL));
   args[c] = NULL;
 
   return args;
+}
+
+void quit() {
+  exit(0);
 }
 
 int run(char ** commands, int c) {
@@ -126,7 +134,7 @@ int run(char ** commands, int c) {
       printf("%s\n", strerror(errno));
   }
   else if (!strncmp(commands[0], "exit", 4)) {
-    //
+    quit();
   }   
   else {
     int f, status;
@@ -140,7 +148,6 @@ int run(char ** commands, int c) {
       for (i=c-1; i>=0; i--) {
 	if (commands[i][0] == '>') {
 	  file = clean(commands[i]+1); //Ignores >
-	  printf("%s\n", file);
 	  fd = open(file, O_CREAT | O_WRONLY);
 	  dup2(fd, STDOUT_FILENO);
 	}
@@ -157,9 +164,13 @@ int run(char ** commands, int c) {
 	}
       }
       char ** args = sparse(commands[0]); //Default
-      execvp(args[0], args);
+      if (execvp(args[0], args))
+	printf("%s\n", strerror(errno));
+      exit(-1);
     }
   }
+  
+  return 0;
 }
       
       
