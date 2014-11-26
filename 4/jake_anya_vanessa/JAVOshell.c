@@ -6,6 +6,8 @@
 #include <signal.h>
 #include <fcntl.h>
 
+#include "executor.h"
+
 static void sighandler(int signo){
   if (signo == SIGINT){
     printf("we stopped a thing 1?\n");
@@ -32,13 +34,7 @@ int main(){
     getcwd(cwd,256);
     cwd[strlen(cwd)] = 0;
     //substituting home with ~
-    /* char * newcwd; */
-    /* if(!strncmp(cwd,getenv("HOME"),strlen(getenv("HOME")))){ */
-    /*   newcwd = "~"; */
-    /*   strncat(newcwd, strstr(cwd,getenv("HOME")), sizeof(cwd)-sizeof(getenv("HOME"))); */
-    /* } */
-    /* else */
-    /*   newcwd = cwd; */
+    char * newcwd = replace_string(cwd,getenv("HOME"),"~");
     //
     
     printf("JAVO:%s> ",newcwd);
