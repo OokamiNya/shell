@@ -1,6 +1,5 @@
 #include "shell.h"
 
-
 static void sighandler(int signo){
   if (signo == SIGINT){
     exit(0);
@@ -10,70 +9,113 @@ static void sighandler(int signo){
 int main() {
   signal(SIGINT, sighandler);
   while(1) {
-    printprompt();
-    execute();
+    printprompt();    
+    int i;
+    char ** parsed = execute_all();
+    //runs through array of commands
+    for (i = 0; parsed[i]; i++){
+      //printf("parsed[%d]:%s\n",i, parsed[i]);
+      execute(parsed[i]);
+     }
   }
   return 0;
 }
 
-void printprompt() {
-  char* wd[256];
-  //getcwd(wd, sizeof(wd));
-  printf("owl:%s$ ", wd);
+//change to fix for all paths, use ~?
+void cd(char* path){
+  printf("%s\n", path);
+  chdir(path);
 }
 
-//I don't think this works for | calls...
-//so we can use this specifically if there is no | aka not calling two different things in one line
-void execute(){
+
+
+char** execute_all(){
   char s[256];
   fgets(s, sizeof(s), stdin);
+  
   char* s1 = s;
-  char* s2 = s;
-  char *sep1, *sep2;
-  char** args2 = NULL;
-  char** args1 = NULL;
-  
+  char *sep;
+  char** args = (char**)(malloc(sizeof(char*)));
   int i = 0;
-  int j = 0;
 
-  //parsing command on ";"
-  s1 = strsep(&s1, "\n");
-  while (sep1 = strsep(&s1, ";")){
-    j ++;
-    args1 = realloc(args1, sizeof(char*)*j);
-    args1[j - 1] = sep1;
-    //parsing command on " "
-    while (sep2 = strsep(&s2, " ")){
-      i++;
-      args2 = realloc(args2, sizeof(char*)*i);
-      args2[i-1] = sep2;
-    }
-    args2[i] = 0;
-    /*printf("%s", args1[j - 1]);
-    printf("---");
-    printf("%s\n", args2[i - 1]);*/
-  }
-  args1[j] = 0;
+  //deleting trailing newspace
+  s1 = strsep(&s1, "\n");  
+
+  //check for pipes/redirection
   
-  //printf("args2[0]:%s\n", args2[0]);
-  if (strcmp(args2[0], "exit") == 0) { //if calling exit
-    //printf("%s", args2[0]);
+  //parsing our command
+  while (sep = strsep(&s1, ";")){
+    args = (char**)realloc(args, sizeof(char*)*(i+1));
+    char * temp = (char *)malloc(sizeof(char)*256);
+    strcpy(temp, sep);
+    temp = trim(temp);
+    args[i] = temp;
+    i++;
+  }
+  args = (char**)realloc(args, sizeof(char*)*(i));
+  args[i] = NULL;
+  return args;
+}
+
+void printprompt() {
+  char* wd;
+  //getcwd(wd, sizeof(wd));
+  //printf("owl:%s$ ", wd);
+  printf("owl:$ ");
+}
+
+void execute(char a[256]){
+  char *s1 = a;
+  char *sep;
+  char** arg = NULL;
+  int i = 0;
+  s1 = strsep(&s1, "\n");  
+
+  //parsing our command
+  while (sep = strsep(&s1, " ")){
+    //printf("sep: %sh\n", sep);
+    //fix spaces
+    //printf("%d\n", *sep);
+    //printf("TF:%d\n", sep == "\0");
+    //if (strcmp(sep, " ")) {
+      i++;
+      arg = realloc(arg, sizeof(char*)*i);
+      arg[i-1] = sep;
+      //}
+  }
+  arg[i] = 0;
+  if (strcmp(arg[0], "exit") == 0) { //if calling exit
     exit(0);
   }
-  else if (strcmp(args2[0], "cd") == 0) {//if calling cd
-    
+  else if (strcmp(arg[0], "cd") == 0) {//if calling cd
+    cd(arg[1]);
   }
   else { //otherwise, we need to fork
-    //printf("%s", args2[0]);
     int f, status;
     f = fork();
     if (f == 0) {//child process
-      execvp(args2[0], args2);
+      execvp(arg[0], arg);
     }
     else {//parent process
       wait(&status);
+      //free(arg);
     } 
   }
-  free(args2);
-  free(args1);
+  //why does this cause errors for echo hello cake??
+  
+  free(arg);
+}
+
+char * trim (char * s) {
+  int l = strlen(s);
+  //trailing white space -- backwards
+  while(isspace(s[l - 1])) {
+    l--;
+  }
+  //leading white space -- forward
+  while(* s && isspace(* s)){
+    s++;
+    l--;
+  }
+  return strndup(s, l);
 }
