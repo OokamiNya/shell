@@ -37,7 +37,7 @@ char cmdarr(char** args, char* s){
 }
 
 int main(){
-  char** args;
+  char** args = (char**)malloc(sizeof(char*) * 3);
   args[0] = "ls";
   //["ls", ">", "file"];
   printf("File:%s\n", getname(args,">"));
