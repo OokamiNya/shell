@@ -298,13 +298,13 @@ void parse_input(char *input) {
                 --index; // Move back in index pointer since escape_read() goes to after escape is done, offset needed for ++index at end of while loop
             }
             else if (input[index] == '~') {
-                if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
+                ++index; // Move past '~'
+                if (input[index] == '/' || input[index] == ' ' || input[index] == '\0') { // Replace ~ with $HOME when referring to directories or nothing specified
                     char *home = getenv("HOME");
                     strcpy(tok + tokIndex, home);
                     tokIndex += strlen(home);
                 }
                 else { // Replace ~user with home directory of user
-                    ++index; // Move past '~'
                     int userSize = USER_SIZE;
                     int userIndex = 0;
                     char *user = (char *) malloc(USER_SIZE * sizeof(char));
@@ -341,8 +341,8 @@ void parse_input(char *input) {
                     }
                     strcpy(tok + tokIndex, user_home);
                     tokIndex += strlen(user_home);
-                    --index; // Offset ++index at end of while loop
                 }
+                --index; // Offset ++index at end of while loop
             }
             else {
                 tok[tokIndex] = input[index];
