@@ -25,7 +25,7 @@ const char *shell_name = "StD";
 
 void parse_input(char *);
 void execute(char **);
-node* change_directory(char*,node*);
+void change_directory(char*,node*);
 
 char * get_path(char *, int);
 char * create_prompt(char *, int);

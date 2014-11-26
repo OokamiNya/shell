@@ -399,7 +399,7 @@ void execute(char **argv) {
         exit(0);
     }
     else if (!strcmp(cmd, "cd")) {
-      path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
+      change_directory(argv[1] , path_history); // Only parse the first argument in cd
     }
     else {
         child_pid = fork();
@@ -422,22 +422,24 @@ void execute(char **argv) {
     }
 }
 
-node* change_directory(char *path , node* history) {
-    if (!path) { // When no path specified, use home
-        path = getenv("HOME");
+void change_directory(char *path , node* history) {
+  printf("PATH: %s\n",path);
+  if (!path) { // When no path specified, use home
+    path = getenv("HOME");
+  }
+  
+  else if (path[0] == '-') { // TODO: Backtracking directories
+    //printf("Previous Path: %s\n",history->arg);
+    path = get_arg(history);
+  }
+  printf("Path Var: %s\n",path);
+  errno_result = chdir(path);
+  if (errno_result == -1) {
+    printf("cd: %s: %s\n", path, strerror(errno));
+    cmd_status = 0;
+  }
+  else{
+    history = insert_node(history, path);
+    printf("Path Written: %s\n",history->arg);
     }
-    else if (path[0] == '-') { // TODO: Backtracking directories
-      printf("Previous Path: %s\n",get_prev(history)->arg);
-      path = get_arg(get_prev(history)); //How do you free this memory
-    }
-    errno_result = chdir(path);
-    if (errno_result == -1) {
-        printf("cd: %s: %s\n", path, strerror(errno));
-        cmd_status = 0;
-    }
-    else{
-      history = insert_node(history, path);
-      printf("Previous Path: %s\n",history->arg);
-    }
-    return history;
 }
