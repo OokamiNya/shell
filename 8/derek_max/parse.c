@@ -5,6 +5,8 @@
 #include "parse.h"
 #include <errno.h>
 
+#define BUF_SIZE 256
+
 char *removespace(char *str) // remove leading space
 {
   char *temp;
@@ -21,7 +23,7 @@ char *removespace(char *str) // remove leading space
 
 
 char ** parse(char * input){
-  char buf[256];
+  char buf[BUF_SIZE];
   strcpy(buf, input);
   buf[strlen(buf)] = '\0';
   char* running=malloc(sizeof(buf));

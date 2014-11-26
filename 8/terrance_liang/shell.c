@@ -3,20 +3,25 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 
-void command(char* comm){
+int countDelim(char *stringy, char delim){
   int argcount = 0;
   int i = 0;
-  char delim = ' ';
-  for (i;i<strlen(comm);i++){
-    if (comm[i]==delim){
+  for (i;i<strlen(stringy);i++){
+    if (stringy[i]==delim){
       argcount++;
     }
   }
+  return argcount;
+}
+
+void execCommand(char* comm){
+  int argcount = countDelim(comm,' ');
   argcount=argcount+2; //1 for command itself and 1 for NULL
   char **arguments=(char **)malloc((argcount)*sizeof(char *));
   char *temp = comm;
-  i = 0;
+  int i = 0;
   while (argcount){
     char *blah = strsep(&temp," ");
     arguments[i]=blah;//last index should be NULL
@@ -36,11 +41,11 @@ void command(char* comm){
   free(arguments);
 }
 
-char * getHomeDir(){
+char *getHomeDir(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
-  char * cdir = currdir;
-  char * tempdir=(char *)malloc(sizeof(currdir));
+  char *cdir = currdir;
+  char *tempdir=(char *)malloc(sizeof(currdir));
   strcpy(tempdir,currdir);
   while(strstr(currdir,getlogin())){
     strcpy(tempdir,currdir);
@@ -50,58 +55,116 @@ char * getHomeDir(){
   }
   return tempdir;
 }
-  
-  
-void shell(){
+
+void redirectOut(char *output, char *command ){
+  int childcom = fork();
+  if (childcom==0){
+    int filedata = open(output, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+    dup2(filedata, STDOUT_FILENO);
+    execCommand(command);
+    exit(childcom);
+  }
+  wait();
+  dup2(dup(STDOUT_FILENO),STDOUT_FILENO);
+}
+
+void redirectIn(char *input, char *command){
+  int childcom = fork();
+  if (childcom==0){
+    int filedata = open(input, O_RDONLY, 0444);
+    dup2(filedata, STDIN_FILENO);
+    execCommand(command);
+    exit(childcom);
+  }
+  wait();
+  dup2(dup(STDIN_FILENO),STDIN_FILENO);
+}
+
+void mypipe(char *incommand, char *outcommand){
+  redirectOut("TempFile",outcommand);
+  redirectIn("TempFile",incommand);
+  remove("TempFile");
+}
+
+void runCommand(char *comm){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
-  printf("T-SHELL: %s ",currdir);
-  char uinput[256];
-  fgets(uinput,sizeof(uinput),stdin);
-  char *temp = uinput;
-  temp=strsep(&temp,"\n");
-  /* code for exit */
-  if (strcmp(uinput,"exit")==0){
+  char *temp = comm;
+  /*code for exit*/
+  if (strcmp(temp,"exit")==0){
     printf("Bye!\n");
     exit(0);
   }
   else{
     /* code for cd */
-    char* newd= (char *)malloc(sizeof(temp));
+    char *newd= (char *)malloc(sizeof(temp));
     strcpy(newd,temp);
     char *cdcomm=strsep(&newd," ");
     if (strcmp(cdcomm,"cd")==0){
       char *newdir = currdir;
-      if (newd){
+      if (newd && strcmp(newd,"~")!=0 && strcmp(newd," ")!=0){
 	strcat(newdir,"/");
 	strcat(newdir,newd);
       }
       else{
-	char* homedir = getHomeDir();
+	char *homedir = getHomeDir();
 	strcpy(newdir,homedir);
       }
-      chdir(newdir);
-      if (errno){
+      int test= chdir(newdir);
+      if (errno && test){
 	printf("'cd' error: %s \n", strerror(errno));
 	errno=0;
       }
     }
     /* code for running other commands */
     else{
-      int childcom = fork();
-      if (childcom==0){
-	command(temp);
-	exit(childcom);
+      if (strchr(temp,'>')){
+	char *outcomm = strsep(&temp,">");
+	redirectOut(temp,outcomm);
       }
-      wait();
+      else if (strchr(temp,'<')){
+	char *incomm = strsep(&temp,"<");
+	redirectIn(temp,incomm);
+      }	
+      else if (strchr(temp,'|')){
+	char *inout = strsep(&temp,"|");
+	mypipe(temp,inout);
+      }	
+      else{
+	int childcom = fork();
+	if (childcom==0){
+	  execCommand(temp);
+	  exit(childcom);
+	}
+	wait();
+      }
     }
-    shell();
-    exit(0);
   }
+}
+  
+void shell(){
+  char currdir[500];
+  getcwd(currdir,sizeof(currdir));
+  char hostname[500];
+  gethostname(hostname,sizeof(hostname));
+  printf("<CShell> %s@%s: %s $",getlogin(),hostname,currdir);
+  char uinput[5000];
+  fgets(uinput,sizeof(uinput),stdin);
+  char *temp = uinput;
+  temp=strsep(&temp,"\n");
+  int numcomm=countDelim(temp,';');
+  numcomm++;
+  while (numcomm){
+    char *blah = strsep(&temp,";");
+    runCommand(blah);
+    numcomm--;
+  }
+  shell();
+  exit(0);
 }
 
 int main(){
-  printf("User: %s\n", getlogin());
+  printf("Welcome %s!\n", getlogin());
   shell();
   return 0;
 }

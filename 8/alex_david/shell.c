@@ -15,35 +15,62 @@ static void sighandler(int signo){
 
 int main(){
   signal(SIGUSR1,sighandler);
-  printf("-- _ SHELL --\n\n"); //fill _ with name or change]
+  printf("-- Alex L. and David B. SHELL --\n\n"); 
   shell();
   return 0;
 }
 
 int cd (char* s) {
+  if (!strcmp(s,"/")) return chdir(s);
+  if (!strcmp(s,"~")) return chdir(getenv("HOME"));
   char path[1000];
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
-  printf ("%s", cwd);
+<<<<<<< HEAD
  
   strcat (cwd, "/");
   strcat (cwd, s);
-  printf ("%s", cwd);
   
   //strcat (cwd, "/0");
   int ret = chdir(cwd);
-  printf("\n%d\n", ret);
+=======
+  strcat (cwd, "/");
+  strcat (cwd, s);
+  return chdir(cwd);
+>>>>>>> da8b537d4d48013305f8317000ed20736fd5453e
 }
 
 
 int shell(){
-  printf("_$ "); //fill _ with something (maybe cwd)
+  char cwd[256];
+  getcwd(cwd,sizeof(cwd));
+  int r = 0;
+  char *t = cwd;
+  while (*t){
+    if (*t == '/'){
+      r++;
+    }
+    t++;
+  }
+  if (r <= 3){
+    printf("%s$ ",cwd);
+  }else{
+    t = cwd;
+    while (r > 2){
+      if (*t == '/'){
+	r--;
+      }
+      t++;
+    }
+    printf(".../%s$ ",t); //lists top 3 directory levels
+  }
+  
   char s[1024];
   fgets(s,sizeof(s),stdin);
   int n = 1;
   char *p = s;
-  while (*p){ //now splits on ';' and runs commands in succession
+  while (*p){ //splits on ';' and runs commands in succession
     if (*p == ';'){
       n++;
     }
@@ -59,22 +86,8 @@ int shell(){
     n++;
   }
   int i = 0;
-  int j = 0;
-  int m = 0;
   for (; i < n; i++){
-    //checks if | in input
-    if (strchr (commands[i], '|')){
-      while (k = strsep(&command[i],"|")){
-	command [i][j] = k;
-	if (strcmp(k,"")){ //if any blanks from multiple |
-	  execute(k[0]);//execute only first command
-	  break;
-	}
-	for (inti 
-    }
-    else{
-      execute(commands[i]);
-    }
+    execute(commands[i]);
   }
   free(commands);
   shell();
@@ -93,6 +106,31 @@ int execute(char *s){
   p = s;
   n = 0;
   char *k;
+  //checks if | in input
+  if (strchr (p, '|')){
+      while (k = strsep(&p,"|")){
+	if (strcmp(k,"")){ //if any blanks from multiple |
+	  params [n] = k;
+	  n++;
+	}
+	else {
+	  execute(params [0]);//execute only first command if there are multiple |'s
+	  break;
+	}
+      }
+      params [n] ='\0';
+
+      int fd [2];
+      pipe (fd);
+      int f = fork();
+      if (!f){
+	dup2(fd[0], 0);
+	execvp (params[0]);
+      }
+  
+      
+   //temporary, still working on piping
+  }
   while (k = strsep(&p," ")){
     if (strcmp(k,"")){ //removes blanks from multiple spaces
       params[n] = k;
@@ -101,9 +139,12 @@ int execute(char *s){
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
-    int i = 1;
-    cd (params [i]); // note to self ~ and / don't work
-    //inputting just 'cd' causes a seg fault
+    if (params[1]){
+      int i = 1;
+      if (cd (params [i])) printf("No such directory\n");
+    }else{
+      cd("~");
+    }
   }else if (!strcmp(params[0],"exit")){
     printf("Bye!\n\n");
     exit(0);
@@ -119,6 +160,10 @@ int execute(char *s){
 	}else if (!strcmp(params[y],">>")){
 	  int fd = open(params[y+1],O_CREAT | O_APPEND | O_WRONLY,0644);
 	  dup2(fd,STDOUT_FILENO);
+	  params[y] = NULL;
+	}else if (!strcmp(params[y],"<")){
+	  int fd = open(params[y+1],O_RDONLY);
+	  dup2(fd,STDIN_FILENO);
 	  params[y] = NULL;
 	}
       }

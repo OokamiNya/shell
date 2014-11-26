@@ -6,43 +6,48 @@
 
 #include "shell.h"
 
+#define TRUE 1
+#define FALSE 0
+
 #define BUFFER_LEN 256
 #define HOME getenv("HOME")
 
-/* TODO:
+/* TODO==========
    konami easter eggs?? scrolling fish idk..
    ^ on exit maybe:  http://www.ascii-art.de/ascii/def/fish.txt
    
    REAL TODO:
-   bug: prompt ~ replacing $HOME when at $HOME or a path with fewer chars
    redirecting
    pipes
 
    add color to prompt, customize, bold
    sighandler - catch sigint, ctrl d for eof
    command history, up arrow (or ctrl p) for previous command
-   'cd -' goes to previous directory
+   directory stack/linked list
+   'cd - n' goes to nth previous dir ; dir stack/linklist
+   tab completion!!
    method abstraction, utils.c file maybe (for parsing, trim, etc)
-   tab completion
+
    better errors?
-       syntax errors (cmd:";;;;")
+     errno's from getcwd
+     syntax errors (cmd:";;;;")
+     no such file or dir (redirecting)
    final checks to optimize code + memory usage
-       perhaps ignore white space rather than trim?
-       excessive looping (strlen, other str fxns)
-       unnecessarily large buffer allocations
-       memory leaks
+     perhaps ignore white space rather than trim?
+     excessive looping (strlen, other str fxns)
    design.txt, edit header file, readme
 
-   NOTES: (to be moved to README)
-   trim excess white space and ';'
-   ignores multiple ;'s rather than give syntax error (as in bash)
+   NOTES========== 
+   trims excess white space and ';'
    does not print all errors (ex: error from getcwd, syntax error)
+     ignores multiple ;'s rather than give syntax error (as in bash)
  */
 
+int isRedirect = FALSE;
+char *redirect_symbol;
 
 void printPrompt(){
   char *cwd = getcwd(cwd,0); // Dynamically allocated
-
   // If path includes $HOME
   if (strstr(cwd,HOME)){
     int homeLen = strlen(HOME);
@@ -55,7 +60,6 @@ void printPrompt(){
   }
   printf("%s$\n", cwd);
   printf("><((((º> ");
-
   free(cwd);
 }
 
@@ -64,13 +68,12 @@ void changeDir(char *arg){
   if (arg){
     // Replace '~' with $HOME
     if (arg[0]=='~'){
-      char *tmp = (char *)malloc(BUFFER_LEN);
+      char *tmp = malloc(strlen(HOME) + strlen(arg));
       strcpy(tmp,HOME);
       strcat(tmp,arg+1);
       strcpy(arg,tmp);
       free(tmp);
     }
-
     // If error
     if (chdir(arg) < 0)
       printf("cd: %s: %s\n", arg, strerror(errno));
@@ -79,9 +82,15 @@ void changeDir(char *arg){
     chdir(HOME);
 }
 
+void redirect(char **argv){
+
+}
+
 void execute(char **argv){
   // Handle "exit" command
-  if (!strcmp(argv[0], "exit")){
+  if (isRedirect)
+    redirect(argv);
+  else if (!strcmp(argv[0], "exit")){
     printf("Sea ya next time\n");
     free(argv);
     exit(EXIT_SUCCESS);
@@ -111,18 +120,16 @@ void execute(char **argv){
 char ** parseInput(char *input, char *delim){
   int maxSize = 4; // Limit of the number of tokens in argv
   int size = 0; // Index counter
-  char **argv = (char **)malloc(sizeof(char *));
+  char **argv = malloc(sizeof *argv);
   char *arg = strsep(&input, delim);
   char *tmp; // Used to trim whitespace
-
   // Separate input by `delim` into arg tokens
   for (; arg; arg = strsep(&input, delim)){
     // Reallocate when out of memory
     if (size == maxSize-2){
       maxSize *= 2;
-      argv = (char **)realloc(argv, sizeof(char *)*maxSize);
+      argv = realloc(argv, maxSize*sizeof *argv);
     }
-
     // Trim leading white space and ';' from arg
     while (isspace(*arg) || *arg==';')
       arg++;
@@ -132,38 +139,38 @@ char ** parseInput(char *input, char *delim){
       tmp = arg + strlen(arg) - 1;
       while (tmp > arg && (isspace(*tmp) || *arg==';'))
 	tmp--;
-      *(tmp+1) = 0;
-
+      *(tmp+1) = '\0';
       // Instantiate the array
+      if (!strcmp(arg,"<<") || !strcmp(arg,"<") || !strcmp(arg,">>") || \
+	  !strcmp(arg,">") || !strcmp(arg,"|") || !strcmp(arg,"<") || !strcmp(arg,"tee")){
+	isRedirect = TRUE;
+	redirect_symbol = arg;
+      }
       argv[size] = arg;
       size++;
     }
   }
   // Append NULL to follow execvp() syntax
   argv[size] = NULL;
-
   return argv;
 }
 
 void shell(){
   char *input;
-  char **argv = (char **)malloc(sizeof(char *));
+  char **argv = malloc(sizeof *argv);
   int count;
-
   while (1){
     printPrompt();
     fgets(input, BUFFER_LEN, stdin);
-
     // Separate commands (with ;) from input
     argv = parseInput(input, ";");
-
     // Execute each command
     count = 0;
     while (argv[count]){
+      isRedirect = FALSE;
       execute(parseInput(argv[count], " "));
       count++;
     }
-    
     free(argv);
   }
 }

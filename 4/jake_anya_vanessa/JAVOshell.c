@@ -4,47 +4,48 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <fcntl.h>
 
-static void child_sighandler(int signo){
+#include "executor.h"
+
+static void sighandler(int signo){
   if (signo == SIGINT){
-    kill(getpid(), SIGKILL);
+    printf("we stopped a thing 1?\n");
   }
 }
 
-static void parent_sighandler(int signo){
-  printf("buttsbuttsbuttsbutts\n");
-}
-
 int main(){
-
+  
+  /* piping things
+  int fd;
+  fd = open("loop.c", O_WRONLY | O_TRUNC);
+  dup2(fd, STDOUT_FILENO);
+  printf("Woo! This is working!");
+  */
 
   printf("\n");
   chdir(getenv("HOME"));
-  //  signal(SIGINT, parent_sighandler);
+  signal(SIGINT, sighandler);
   
   while(1){
 
     char input[256];
     char cwd[256];
     getcwd(cwd,256);
-    printf("JAVO:>%s ",cwd);
+    cwd[strlen(cwd)] = 0;
+
+    char * newcwd = replace_string(cwd,getenv("HOME"),"~");
+    
+    printf("JAVO:%s> ",newcwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
-    printf("input: %s\n", input);
 
-    if(!strcmp(input,"exit")){
-      exit(-1);
-    }
-    else if(strncmp(input,"cd",2)){
+    if(!strcmp(input,"exit\n") || !strncmp(input,"cd",2)){
       execute(input);
     }
     else{
-      int f = fork();
-      wait();
-      if (!f){ //child process stuff
-	//	signal(SIGINT, child_sighandler);
-	execute(input);
-      }
+      signal(SIGINT,sighandler);
+      executef(input);
     }
   }
   

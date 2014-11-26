@@ -1,4 +1,5 @@
-FILES = shell.c
+FILES = shell.c directorystack.c
+OBJECTS = shell.o directorystack.o
 LIBS = -lreadline
 
 all: clean build run
@@ -8,10 +9,10 @@ clean:
 
 build:
 	@gcc -Wall -c -g $(FILES)
-	@gcc -o shell shell.o $(LIBS)
+	@gcc -o shell $(OBJECTS) $(LIBS)
 
 run:
-	@rm -f shell.o
+	@rm -f *.o
 	@./shell
 
 test:

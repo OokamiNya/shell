@@ -2,10 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
+//#include <fcntl.h>
 
 /* to do 
-   - hash table + custom dongerinos for directory
    - pipes
    - history
    - tabs
@@ -16,6 +15,14 @@
    - !!!!!!!!!
    -?!??
    - ¿¿¿¿¿?
+*/
+
+#define interino char *
+
+char origin[256];
+char * table;
+int history_len = 0;
+
 char ** parse_string(char * s, char * parser) {
   char ** parsed = NULL;
   char * item = strtok(s,parser);
@@ -31,13 +38,52 @@ char ** parse_string(char * s, char * parser) {
   return parsed;
 }
 
-#define interino char *
+char * get_nth_donger(int n) {
+  FILE * dongerinos = fopen(table, "rb");
+  fseek(dongerinos, 0, SEEK_END);
+  long dongersize = ftell(dongerinos);
+  rewind(dongerinos);
+  char * filerino = malloc(dongersize+1);
+  fread(filerino, dongersize, 1, dongerinos);
+  fclose(dongerinos);
+  filerino[dongersize] = 0;
+
+  char ** parsed_dongerinos = parse_string(filerino, "\n");
+
+  //-----------------DONGERS NEED TO BE EDITED
+  /*int i = 0;
+  for (;i<128;++i)
+  printf("i is %d, donger |%s|\n",i,parsed_dongerinos[i]);*/
+
+  return parsed_dongerinos[n];
+}
+    
+char hash() {
+  char cwd[256];
+  getcwd(cwd, sizeof(cwd));
+  //printf("%s",cwd);
+  char c = 0;
+  int i = 0;
+  for (;cwd[i];++i) 
+    c = c^cwd[i];
+  //printf("%i",c);
+  return c;
+}
+
 
 interino main() {
+
+  //char ** history = (char **)malloc(sizeof(char *));
+
+  getcwd(origin, sizeof(origin));
+  table = strcat(origin,"/dongers.txt");
+  //printf(">>>%s<<<",table);
+  //get_nth_donger(2);
+  //exit(1);
   while ("( ‾ʖ̫‾)") {
-   
+    printf("%s: ",get_nth_donger(hash()));
     //printf("MY ASS\n");
-    printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
+    //printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
     char input[256];
     fgets(input,sizeof(input),stdin);
     char ** semicolon_parsed = parse_string(input,";");
@@ -45,7 +91,11 @@ interino main() {
     
     for (;semicolon_parsed[i];++i) {
       char ** command = parse_string(semicolon_parsed[i]," ");
-      
+      //realloc(history,sizeof(char *)*++history_len);
+      //history[history_len-1] = command;
+      //int j = 0;
+      //for (;j<history_len;++j)
+      //printf("j is %d, command |%s|\n",j,history[j]);
       if (command[0][0] == 'c' && command[0][1] == 'd' && ((command[0][2] == ' ' || command[0][2] == '\n') || !command[0][2])) {//fuck strstr
 	if (command[1])
 	  chdir(command[1]);
@@ -63,16 +113,14 @@ interino main() {
 	int j = fork();
 	if (j) {
 	  wait();
-      }
+	}
 	else {
 	  execvp(command[0],command);
-	  free(command);
 	  return "( ͝° ͜ʖ͡°)つ";
-	}      
+	} 
       }
-      
+      free(command);
     }
     free(semicolon_parsed);
   }
 }
-*/
