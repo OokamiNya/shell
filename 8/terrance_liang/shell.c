@@ -145,7 +145,9 @@ void runCommand(char *comm){
 void shell(){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
-  printf("CShell: %s ",currdir);
+  char hostname[500];
+  gethostname(hostname,sizeof(hostname));
+  printf("<CShell> %s@%s: %s $",getlogin(),hostname,currdir);
   char uinput[5000];
   fgets(uinput,sizeof(uinput),stdin);
   char *temp = uinput;
