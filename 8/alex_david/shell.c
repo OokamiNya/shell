@@ -22,14 +22,23 @@ int main(){
 
 int cd (char* s) {
   if (!strcmp(s,"/")) return chdir(s);
-  if (!strcmp(s,"~")) return chdir("/home"); //needs to be fixed
+  if (!strcmp(s,"~")) return chdir(getenv("HOME"));
   char path[1000];
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
+<<<<<<< HEAD
+ 
+  strcat (cwd, "/");
+  strcat (cwd, s);
+  
+  //strcat (cwd, "/0");
+  int ret = chdir(cwd);
+=======
   strcat (cwd, "/");
   strcat (cwd, s);
   return chdir(cwd);
+>>>>>>> da8b537d4d48013305f8317000ed20736fd5453e
 }
 
 
@@ -54,14 +63,14 @@ int shell(){
       }
       t++;
     }
-    printf(".../%s$ ",t); //now lists top 3 directory levels
+    printf(".../%s$ ",t); //lists top 3 directory levels
   }
   
   char s[1024];
   fgets(s,sizeof(s),stdin);
   int n = 1;
   char *p = s;
-  while (*p){ //now splits on ';' and runs commands in succession
+  while (*p){ //splits on ';' and runs commands in succession
     if (*p == ';'){
       n++;
     }
@@ -110,10 +119,17 @@ int execute(char *s){
 	}
       }
       params [n] ='\0';
+
+      int fd [2];
+      pipe (fd);
+      int f = fork();
+      if (!f){
+	dup2(fd[0], 0);
+	execvp (params[0]);
+      }
+  
       
-      n = n - 1;
-      while (params [n]) {
-	execute (params [n]); //temporary, still working on piping
+   //temporary, still working on piping
   }
   while (k = strsep(&p," ")){
     if (strcmp(k,"")){ //removes blanks from multiple spaces
@@ -125,11 +141,10 @@ int execute(char *s){
   if (!strcmp(params[0],"cd")){
     if (params[1]){
       int i = 1;
-      if (cd (params [i])) printf("No such directory\n"); // note to self ~ and / don't work
+      if (cd (params [i])) printf("No such directory\n");
     }else{
       cd("~");
     }
-    //inputting just 'cd' causes a seg fault
   }else if (!strcmp(params[0],"exit")){
     printf("Bye!\n\n");
     exit(0);

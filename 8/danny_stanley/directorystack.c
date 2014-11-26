@@ -1,4 +1,4 @@
-#include "link_list.h"
+#include "directorystack.h"
 
 char * get_arg(node * current_node){
   char * path;
@@ -9,7 +9,6 @@ char * get_arg(node * current_node){
 node * get_prev(node * current_node){
   if(current_node->prev != NULL){
     node * previous_node = current_node->prev;
-    free(current_node);
     printf("TEST: %s\n",get_arg(previous_node));
     return previous_node;
   }

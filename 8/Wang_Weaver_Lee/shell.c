@@ -40,17 +40,22 @@ void mycd (char** commands, int numargs) {
 void redirect(char *input){
   int stdouttmp = dup(STDOUT_FILENO);
   int stdintmp = dup(STDIN_FILENO);
+  int closeInput = 0;
+  int closeOutput = 0;
+  int fdin, fdout;
   if (strchr(input, '>')){
+    
     char *p = strstr(input, ">");
     if (strlen(p) <= 1) {
       return;
     }
+    closeOutput = 1;
     int pend = strcspn(p + 2, " \n");
     char fileoutput[64];
     strncpy(fileoutput, p + 2, pend);
     fileoutput[pend] = 0;
     umask(0);
-    int fdout = open(fileoutput, O_WRONLY |  O_CREAT | O_TRUNC);
+    fdout = open(fileoutput, O_WRONLY |  O_CREAT | O_TRUNC);
     fchmod(fdout, 0644);
     dup2(fdout, STDOUT_FILENO);
     char input2[64];
@@ -65,12 +70,13 @@ void redirect(char *input){
     if (strlen(p) <= 1) {
       return;
     }
+    closeInput = 1;
     int pend = strcspn(p + 2, " \n");
     char fileoutput[64];
     strncpy(fileoutput, p + 2, pend);
     fileoutput[pend] = 0;
-    printf("%s", fileoutput);
-    int fdin = open(fileoutput, O_RDWR |  O_CREAT | O_TRUNC);
+    //printf("%s", fileoutput);
+    fdin = open(fileoutput, O_RDONLY);
     dup2(fdin, STDIN_FILENO);
     char input3[64];
     int g = p - input;
@@ -80,11 +86,16 @@ void redirect(char *input){
     strcpy(input, input3);
   }
   parse(input);
+  if (closeInput){
+    close(fdin);
+  }
+  if (closeOutput){
+    close(fdout);
+  }
   dup2(stdintmp, STDIN_FILENO);
   dup2(stdouttmp, STDOUT_FILENO);
 
 }
-<<<<<<< HEAD
 void process(char *input){
   if (strchr(input, '|')){
     int numArgs;
@@ -106,13 +117,6 @@ void process(char *input){
   }
 }
 void parse(char * input){
-=======
-
-
-
-void parse(char* input){
->>>>>>> c87d14d10e50fe03a63822fe667910337a17d319
- 
   char **commands = (char **) calloc(64, sizeof(char *));
   int i ;
   int numArgs = 0;

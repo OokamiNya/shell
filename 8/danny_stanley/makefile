@@ -1,5 +1,5 @@
-FILES = shell.c link_list.c
-OBJECTS = shell.o link_list.o
+FILES = shell.c directorystack.c
+OBJECTS = shell.o directorystack.o
 LIBS = -lreadline
 
 all: clean build run
