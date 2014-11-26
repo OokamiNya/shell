@@ -86,11 +86,6 @@ void runs_command(char *scpy) {
       int f, fd, s, temp, status;
       f = fork();
 
-      if( !fork ){
-	fd = open(second_cmd,O_CREAT | O_WRONLY, 0644);
-	temp = dup(STDIN_FILENO);
-	dup2(STDIN_FILENO, temp);
-	dup2(fd, STDIN_FILENO);
 	exec_line(first_cmd);
 	//close(fd);
 	//close(temp);
