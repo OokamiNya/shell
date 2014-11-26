@@ -40,19 +40,12 @@ int main(){
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
 
-    if(!strcmp(input,"exit\n")){
-      exit(-1);
-    }
-    else if(!strncmp(input,"cd",2)){
+    if(!strcmp(input,"exit\n") || !strncmp(input,"cd",2)){
       execute(input);
     }
     else{
-      int f = fork();
-      wait();
-      if (!f){
-	signal(SIGINT, sighandler);
-	execute(input);
-      }
+      signal(SIGINT,sighandler);
+      executef(input);
     }
   }
   
