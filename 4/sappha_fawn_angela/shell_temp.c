@@ -40,6 +40,8 @@ char** execute_all(){
 
   //deleting trailing newspace
   s1 = strsep(&s1, "\n");  
+
+  //check for pipes/redirection
   
   //parsing our command
   while (sep = strsep(&s1, ";")){

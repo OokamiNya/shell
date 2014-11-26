@@ -4,7 +4,7 @@
 #include <string.h>
 
 void execute();
-void parse();
+char * parse();
 
 int main(){
   while(1){
@@ -15,24 +15,9 @@ int main(){
 }
 
 void execute(){
+  char a[256] = parse();
+
   pid_t pid;
-  char command[256];
-  fgets(command, 256, stdin);
-
-  command[strlen(command)-1] = 0;
-
-  char * s1 = command;
-  char * s2;
-  char * a[256];
-  int i = 0;
-
-  while (s2 = strsep(&s1, " ")){
-    a[i] = s2;
-    i++;
-  }
-
-  command[i] = 0;
-
   pid = fork();
   int status, w;
   
@@ -58,6 +43,22 @@ void execute(){
   printf ("fjaw\n");
 }
 
-void parse(){
+char * parse(){
+  char command[256];
+  fgets(command, 256, stdin);
 
+  command[strlen(command)-1] = 0;
+
+  char * s1 = command;
+  char * s2;
+  char * a[256];
+  int i = 0;
+
+  while (s2 = strsep(&s1, ";")){
+    a[i] = s2;
+    i++;
+  }
+
+  command[i] = 0;
+  return a;
 }
