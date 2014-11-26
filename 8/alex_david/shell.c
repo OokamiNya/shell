@@ -21,16 +21,24 @@ int main(){
 }
 
 int cd (char* s) {
+  if (!strcmp(s,"/")) return chdir(s);
+  if (!strcmp(s,"~")) return chdir(getenv("HOME"));
   char path[1000];
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
+<<<<<<< HEAD
  
   strcat (cwd, "/");
   strcat (cwd, s);
   
   //strcat (cwd, "/0");
   int ret = chdir(cwd);
+=======
+  strcat (cwd, "/");
+  strcat (cwd, s);
+  return chdir(cwd);
+>>>>>>> da8b537d4d48013305f8317000ed20736fd5453e
 }
 
 
@@ -55,14 +63,14 @@ int shell(){
       }
       t++;
     }
-    printf(".../%s$ ",t); //now lists top 3 directory levels
+    printf(".../%s$ ",t); //lists top 3 directory levels
   }
   
   char s[1024];
   fgets(s,sizeof(s),stdin);
   int n = 1;
   char *p = s;
-  while (*p){ //now splits on ';' and runs commands in succession
+  while (*p){ //splits on ';' and runs commands in succession
     if (*p == ';'){
       n++;
     }
@@ -98,6 +106,25 @@ int execute(char *s){
   p = s;
   n = 0;
   char *k;
+  //checks if | in input
+  if (strchr (p, '|')){
+      while (k = strsep(&p,"|")){
+	if (strcmp(k,"")){ //if any blanks from multiple |
+	  params [n] = k;
+	  n++;
+	}
+	else {
+	  execute(params [0]);//execute only first command if there are multiple |'s
+	  break;
+	}
+      }
+      params [n] ='\0';
+      
+      n = n - 1;
+      while (params [n]) {
+	execute (params [n]); //temporary, still working on piping
+      }
+  }
   while (k = strsep(&p," ")){
     if (strcmp(k,"")){ //removes blanks from multiple spaces
       params[n] = k;
@@ -106,9 +133,12 @@ int execute(char *s){
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
-    int i = 1;
-    cd (params [i]); // note to self ~ and / don't work
-    //inputting just 'cd' causes a seg fault
+    if (params[1]){
+      int i = 1;
+      if (cd (params [i])) printf("No such directory\n");
+    }else{
+      cd("~");
+    }
   }else if (!strcmp(params[0],"exit")){
     printf("Bye!\n\n");
     exit(0);

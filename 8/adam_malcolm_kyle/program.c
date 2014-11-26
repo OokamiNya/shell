@@ -104,11 +104,17 @@ void redirect(char * args[], int redir){
       execlp(args[0], args[0], NULL);
       close(c);
     }
+<<<<<<< HEAD
+  } else {
+    int *temp;
+    wait(temp);
+=======
     exit(0);
   }
   else{
     wait(&i);
     redir = 0;
+>>>>>>> dbfdcef0e4eb8ebe76abdb8c855bb9266c4ce01b
   }
 }
 
