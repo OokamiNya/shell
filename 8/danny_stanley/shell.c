@@ -2,7 +2,7 @@
 #include "colors.h"
 
 int errno_result; // Used in collaboration with errno if function fails
-pid_t child_pid;
+pid_t child_pid = -111111; // Hack to initialize child_pid as a value that does not disrupt the system
 char *prompt;
 
 int args;
@@ -25,8 +25,8 @@ static void signalhandler(int signal) {
             kill(child_pid, SIGINT);
             int status;
             waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
+            cmd_status = 0;
             create_prompt(prompt, PROMPT_SIZE);
-            valid_input = 1;
             printf("\n%s", prompt); // Printout a new prompt
             fflush(stdout);
         }
@@ -146,10 +146,6 @@ int escape_read(char *input, int index) {
 
 int main() {
     signal(SIGINT, signalhandler);
-    child_pid = fork(); // Hack to initialize child_pid as a value that does not disrupt the system
-    if (!child_pid) {
-        exit(0);
-    }
     prompt = (char *) malloc(PROMPT_SIZE);
     char current_path[PATH_SIZE];
     path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
