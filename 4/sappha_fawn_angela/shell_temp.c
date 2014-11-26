@@ -20,6 +20,13 @@ int main() {
   }
   return 0;
 }
+
+void cd(char* path){
+  chdir(path);
+}
+
+
+
 char** execute_all(){
   char s[256];
   fgets(s, sizeof(s), stdin);
@@ -77,7 +84,7 @@ void execute(char a[256]){
     exit(0);
   }
   else if (strcmp(arg[0], "cd") == 0) {//if calling cd
-  
+    cd(arg[1]);
   }
   else { //otherwise, we need to fork
     int f, status;
