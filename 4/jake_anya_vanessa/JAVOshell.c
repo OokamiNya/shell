@@ -15,9 +15,17 @@ static void sighandler(int signo){
 }
 
 int main(){
+  
+  /* piping things
+  int fd;
+  fd = open("loop.c", O_WRONLY | O_TRUNC);
+  dup2(fd, STDOUT_FILENO);
+  printf("Woo! This is working!");
+  */
+
   printf("\n");
   chdir(getenv("HOME"));
-  //signal(SIGINT, sighandler);
+  signal(SIGINT, sighandler);
   
   while(1){
 
@@ -25,11 +33,10 @@ int main(){
     char cwd[256];
     getcwd(cwd,256);
     cwd[strlen(cwd)] = 0;
-    //substituting home with ~
+
     char * newcwd = replace_string(cwd,getenv("HOME"),"~");
-    //
     
-    printf("JAVO:%s> ",cwd);
+    printf("JAVO:%s> ",newcwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
 
@@ -43,7 +50,7 @@ int main(){
       int f = fork();
       wait();
       if (!f){
-	//signal(SIGINT, sighandler);
+	signal(SIGINT, sighandler);
 	execute(input);
       }
     }
