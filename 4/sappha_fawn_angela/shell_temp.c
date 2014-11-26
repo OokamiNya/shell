@@ -21,6 +21,7 @@ int main() {
   return 0;
 }
 
+//change to fix for all paths, use ~?
 void cd(char* path){
   chdir(path);
 }
