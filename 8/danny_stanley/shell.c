@@ -9,6 +9,9 @@ char **argv;
 int tokIndex;
 int tokSize;
 char *tok;
+int escapeIndex;
+int escapeSize;
+char *escape_buf;
 
 int cmd_status = 1;
 int valid_input = 0;
@@ -55,6 +58,10 @@ void cleanup_argv() {
     }
     free(argv);
     free(tok);
+    if (escape_buf) { // Frees escape_buf if it is already defined
+        free(escape_buf);
+        escape_buf = NULL;
+    }
 }
 
 void setup_argv() {
@@ -63,6 +70,76 @@ void setup_argv() {
     tokSize = TOK_INIT_SIZE;
     tokIndex = 0;
     tok = (char *) malloc(TOK_INIT_SIZE);
+}
+
+/* Given the input from user, and index in input
+ * Returns number of characters read
+ * NOTE: This only handles one escape sequence!
+ * REMEMBER TO FREE escape_buf after usage! */
+int escape_read(char *input, int index) {
+    int initIndex = index;
+    escapeIndex = 0;
+    escapeSize = ESCAPE_SIZE;
+    escape_buf = (char *) malloc(ESCAPE_SIZE);
+    char isEscaping = 0;
+    int done = 0;
+    while (input[index] && !done) {
+        if (input[index] == '\\') {
+            if (isEscaping == '\\') { // Escape any character after '\'
+                ++index;
+                escape_buf[escapeIndex] = input[index];
+                ++escapeIndex;
+                isEscaping = 0;
+                done = 1;
+            }
+            else if (isEscaping) { // Move past '\' to escape next character
+                ++index;
+                escape_buf[escapeIndex] = input[index];
+                ++escapeIndex;
+            }
+            else {
+                isEscaping = '\\';
+            }
+        }
+        else if (input[index] == '\'') {
+            if (isEscaping == '\'') { // If already escaping '\'', then stop it
+                isEscaping = 0;
+                done = 1;
+            }
+            else if (isEscaping) { // Escape the '\''
+                escape_buf[escapeIndex] = input[index];
+                ++escapeIndex;
+            }
+            else { // Set escaping if no current escape
+                isEscaping = '\'';
+            }
+        }
+        else if (input[index] == '\"') {
+            if (isEscaping == '\"') { // If already escaping '\"', then stop it
+                isEscaping = 0;
+                done = 1;
+            }
+            else if (isEscaping) { // Escape the '\"'
+                escape_buf[escapeIndex] = input[index];
+                ++escapeIndex;
+            }
+            else { // Set escaping if no current escape
+                isEscaping = '\"';
+            }
+        }
+        else { // If not escape character, do normal escaping
+            escape_buf[escapeIndex] = input[index];
+            ++escapeIndex;
+        }
+        ++index;
+
+        if (escapeIndex >= escapeSize-2) { // Subtract 2 to be safe in expanding escape_buf
+            escapeSize += ESCAPE_SIZE;
+            escape_buf = (char *) realloc(escape_buf, escapeSize * sizeof(char));
+        }
+    }
+    escape_buf[escapeIndex] = '\0';
+    return index - initIndex;
 }
 
 int main() {
@@ -118,8 +195,9 @@ void parse_input(char *input) {
                 argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
                 argv[args] = NULL;
 
+                ++index;
                 int mode; // Selecting whether to append or write
-                if (input[index+1] == '>') {
+                if (input[index] == '>') {
                     ++index;
                     mode = O_APPEND;
                 }
@@ -127,15 +205,31 @@ void parse_input(char *input) {
                     mode = O_TRUNC;
                 }
 
-                while (input[index+1] == ' ') { // Remove prepending whitespace from filename
+                while (input[index] == ' ') { // Remove prepending whitespace from filename
                     ++index;
                 }
-                char filename[OUTPUT_FILENAME_SIZE];
+                int fileSize = FILE_SIZE;
                 int fileIndex = 0;
-                while (input[index+1] && input[index+1] != ' ' && input[index+1] != ';') { // Takes string literal as filename
-                    filename[fileIndex] = input[index+1];
-                    ++fileIndex;
-                    ++index;
+                char *filename = (char *) malloc(FILE_SIZE * sizeof(char));
+                while (input[index] && input[index] != ' ' && input[index] != ';') {
+                    if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in filename
+                        index += escape_read(input, index);
+                        if (fileIndex + escapeIndex + 2 >= fileSize) { // Expand filename to fit escaped characters
+                            fileSize += escapeIndex + FILE_SIZE;
+                            filename = (char *) realloc(filename, fileSize * sizeof(char));
+                        }
+                        strcpy(filename + fileIndex, escape_buf);
+                        fileIndex += escapeIndex;
+                    }
+                    else {
+                        filename[fileIndex] = input[index];
+                        ++fileIndex;
+                        ++index;
+                    }
+                    if (fileIndex + 2 > fileSize) {
+                        fileSize += FILE_SIZE;
+                        filename = (char *) realloc(filename, fileSize * sizeof(char));
+                    }
                 }
                 filename[fileIndex] = '\0';
                 int output = open(filename, O_CREAT | O_WRONLY | mode, 0644); // Open file for redirection
@@ -151,6 +245,8 @@ void parse_input(char *input) {
                 }
                 cleanup_argv(); // Clean up redirection commands, so that they don't run again later on
                 setup_argv();
+                --index; // Offset ++index at the end of this while loop
+                valid_input = 2; // Saves into history
             }
             else if (input[index] == ';') {
                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
@@ -166,19 +262,17 @@ void parse_input(char *input) {
                     cleanup_argv();
                     setup_argv();
                 }
+                valid_input = 2; // Saves into history
             }
-            else if (input[index] == '\\') {
-                ++index; // Move on to add next character right after '\'
-                tok[tokIndex] = input[index];
-                ++tokIndex;
-            }
-            else if (input[index] == '"') {
-                ++index; // Go past "
-                while (input[index] && input[index] != '"') { // Continues interpreting as string literal until next '"'
-                    tok[tokIndex] = input[index];
-                    ++tokIndex;
-                    ++index;
+            else if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') {
+                index += escape_read(input, index); // Increase index by number of characters read in escape_read()
+                --index; // Move back in index pointer since escape_read() goes to after escape is done, offset needed for ++index at end of while loop
+                if (tokIndex + escapeIndex + 2 >= tokSize) {
+                    tokSize += escapeIndex + TOK_INIT_SIZE;
+                    tok = (char *) realloc(tok, tokSize * sizeof(char)); // Expand tok to fit escape_buf
                 }
+                strcpy(tok + tokIndex, escape_buf); // Copies escape_buf to end of tok
+                tokIndex += escapeIndex;
             }
             else if (input[index] == '~') {
                 if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
@@ -213,7 +307,7 @@ void parse_input(char *input) {
             }
             if (tokIndex >= tokSize) { // Expand buffer for tok
                 tokSize += TOK_INIT_SIZE;
-                tok = realloc(tok, tokSize);
+                tok = realloc(tok, tokSize * sizeof(char));
             }
         }
         else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
@@ -239,7 +333,9 @@ void parse_input(char *input) {
         execute(argv);
     }
     else {
-        valid_input = 0;
+        if (valid_input != 2) { // 2 is for bypass
+            valid_input = 0;
+        }
     }
     printf("Token Size: %d\n", tokSize);
     cleanup_argv();
@@ -285,20 +381,21 @@ void execute(char **argv) {
 }
 
 node* change_directory(char *path , node* history) {
-  if (!path) { // When no path specified, use home
-    path = getenv("HOME");
-  }
-  else if (path[0] == '-') { // TODO: Backtracking directories
-    path = get_arg(get_prev(history));
-  }
-  errno_result = chdir(path);
-  if (errno_result == -1) {
-    printf("cd: %s: %s\n", path, strerror(errno));
+    if (!path) { // When no path specified, use home
+        path = getenv("HOME");
+    }
+    else if (path[0] == '-') { // TODO: Backtracking directories
+      printf("Previous Path: %s\n",get_prev(history)->arg);
+      path = get_arg(get_prev(history)); //How do you free this memory
+    }
+    errno_result = chdir(path);
+    if (errno_result == -1) {
+        printf("cd: %s: %s\n", path, strerror(errno));
         cmd_status = 0;
-  }
-  else{
-    history = insert_node(history, path);
-    printf("Previous Path: %s\n",history->arg);
-  }
-  return history;
+    }
+    else{
+      history = insert_node(history, path);
+      printf("Previous Path: %s\n",history->arg);
+    }
+    return history;
 }

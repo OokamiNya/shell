@@ -16,7 +16,8 @@
 #define PATH_SIZE 1024
 #define TOK_INIT_SIZE 512
 #define USER_SIZE 128
-#define OUTPUT_FILENAME_SIZE 256
+#define FILE_SIZE 256
+#define ESCAPE_SIZE 128
 
 const char *shell_name = "StD";
 
