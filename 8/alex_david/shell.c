@@ -22,7 +22,7 @@ int main(){
 
 int cd (char* s) {
   if (!strcmp(s,"/")) return chdir(s);
-  if (!strcmp(s,"~")) return chdir("/home"); //needs to be fixed
+  if (!strcmp(s,"~")) return chdir(getenv("HOME")); //needs to be fixed
   char path[1000];
   strcpy (path, s);
   char cwd [256];
@@ -114,6 +114,7 @@ int execute(char *s){
       n = n - 1;
       while (params [n]) {
 	execute (params [n]); //temporary, still working on piping
+      }
   }
   while (k = strsep(&p," ")){
     if (strcmp(k,"")){ //removes blanks from multiple spaces
