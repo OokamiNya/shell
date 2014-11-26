@@ -2,6 +2,7 @@
 #include "colors.h"
 
 int errno_result; // Used in collaboration with errno if function fails
+pid_t child_pid;
 char *prompt;
 
 int args;
@@ -19,7 +20,16 @@ int valid_input = 0;
 node* path_history; //For cd history
 
 static void signalhandler(int signal) {
-    switch(signal) {
+    if (signal == SIGINT) {
+        if (child_pid) {
+            kill(child_pid, SIGINT);
+            int status;
+            waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
+            create_prompt(prompt, PROMPT_SIZE);
+            valid_input = 1;
+            printf("\n%s", prompt); // Printout a new prompt
+            fflush(stdout);
+        }
     }
 }
 
@@ -136,6 +146,10 @@ int escape_read(char *input, int index) {
 
 int main() {
     signal(SIGINT, signalhandler);
+    child_pid = fork(); // Hack to initialize child_pid as a value that does not disrupt the system
+    if (!child_pid) {
+        exit(0);
+    }
     prompt = (char *) malloc(PROMPT_SIZE);
     char current_path[PATH_SIZE];
     path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
@@ -352,8 +366,8 @@ void execute(char **argv) {
       path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
     }
     else {
-        pid_t pid = fork();
-        if (pid) { // Parent process to wait for child to finish
+        child_pid = fork();
+        if (child_pid) { // Parent process to wait for child to finish
             int status;
             wait(&status);
             if (WIFEXITED(status)) {
