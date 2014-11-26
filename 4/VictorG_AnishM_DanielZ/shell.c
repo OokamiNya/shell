@@ -8,18 +8,37 @@
 #include <sys/stat.h>
 #include <errno.h>
 //more includes
+void semisep(char *s){
+  char *pos;
+  int i=0;
+  //printf("%s\n",s);
+  if ((pos=strchr(s, '\n')) != NULL)
+    *pos = '\0';
+  char *s1=s;
+  char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
+  //printf("yo\n");
+  //printf("%s\n",s);
 
-void semirun(char *input){
-  char * j=input;
-  printf("%s",j);
-  //while(strtok(j,";")){
-  //j=strtok(j,";");
-  //printf("%s",j);
-    //run
-    //j=strtok(j,";");
-    //rintf("%s",j);
-  //}
-  
+  for (i=0;s[i];i++){
+    s2[i] = (char *)(malloc(strlen(s)*sizeof(char)));
+    //printf("s2 :%p:\n", s2[i]);
+
+    s2[i]=strsep(&s1, ";");
+    //printf("%s\n",s2[i]);
+  }
+  int b;
+  for(b=0;s2[b];b++){
+    int f;
+    f=fork();
+    if(!f){
+      run(s2[b]);
+    }
+  }
+  //s2[i-1]=
+  //s2[i]=(char *)malloc(25*sizeof(char));
+  //s2[i]=NULL;
+  //printf("hey\n");
+  //return s2;
 }
 
 char ** separate(char *s){
@@ -123,7 +142,7 @@ int main(){
     wait(NULL);
   }
   */
-  semirun("ls;w;ls");
+  semisep("ls;w;ls");
   return 0;
 }
  
