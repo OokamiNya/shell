@@ -23,6 +23,7 @@ int main() {
 
 //change to fix for all paths, use ~?
 void cd(char* path){
+  printf("%s\n", path);
   chdir(path);
 }
 
@@ -39,6 +40,8 @@ char** execute_all(){
 
   //deleting trailing newspace
   s1 = strsep(&s1, "\n");  
+
+  //check for pipes/redirection
   
   //parsing our command
   while (sep = strsep(&s1, ";")){
@@ -95,8 +98,11 @@ void execute(char a[256]){
     }
     else {//parent process
       wait(&status);
+      //free(arg);
     } 
   }
+  //why does this cause errors for echo hello cake??
+  
   free(arg);
 }
 

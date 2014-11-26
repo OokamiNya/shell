@@ -10,9 +10,14 @@ int execute(char s[256]) {
   char *arg[256];
   
   int i = 0;
+  int pipe = 0;
   while(s1) {
     s2 = strsep(&s1, " ");
     arg[i] = s2;
+    if (!strcmp(arg[i], "|")){
+      pipe = i;
+      printf("%d\n", pipe);
+    }
     i++;
   }
   arg[i] = 0;
@@ -26,6 +31,19 @@ int execute(char s[256]) {
     else
       chdir(getenv("HOME"));
   }
+
+  if (pipe){
+    int fd;
+    printf("PIPING DOESNT WORK YET\n");
+  }
+
+  /* piping things
+  int fd;
+  fd = open("loop.c", O_WRONLY | O_TRUNC);
+  dup2(fd, STDOUT_FILENO);
+  printf("Woo! This is working!");
+  */
+
   else{
     execvp(arg[0], arg);
   }
