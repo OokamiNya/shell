@@ -6,7 +6,6 @@
 #include <errno.h>
 
 
-
 void parse(char *input);
 
 
@@ -84,7 +83,8 @@ void redirect(char *input){
   dup2(stdouttmp, STDOUT_FILENO);
 
 }
-<<<<<<< HEAD
+
+
 void process(char *input){
   if (strchr(input, '|')){
     int numArgs;
@@ -105,13 +105,9 @@ void process(char *input){
     redirect(input);
   }
 }
-void parse(char * input){
-=======
-
-
 
 void parse(char* input){
->>>>>>> c87d14d10e50fe03a63822fe667910337a17d319
+  
  
   char **commands = (char **) calloc(64, sizeof(char *));
   int i ;
@@ -137,11 +133,12 @@ void parse(char* input){
     free(commands);
   }
   else if(strcmp(commands[0], "exit") == 0){
-    for (i= 0; i < numArgs; i++){
-      free(commands[i]);
-    }
-    free(commands);
-    exit(-1);
+    printf("exiting\n");
+    //for (i= 0; i < numArgs; i++){
+    // free(commands[i]);
+    //}
+    //free(commands);
+    exit(0);
   }
 
   
@@ -156,7 +153,11 @@ void parse(char* input){
       free(commands);
     }
     else{
-      execvp(commands[0], commands);
+      int i = execvp(commands[0], commands);
+      if (i == -1){
+	printf("%s\n", strerror(errno));
+      }
+      exit(-1);
     }
     
   }
@@ -165,6 +166,7 @@ void parse(char* input){
 
 int main(){
   while(1){
+    errno = 0;
     char path[256];
     getcwd(path,sizeof(path));
     
@@ -205,4 +207,7 @@ int main(){
     }
     free(commands);
   }
+ 
 }
+
+
