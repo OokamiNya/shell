@@ -36,3 +36,9 @@ char cmdarr(char** args, char* s){
   return 0;
 }
 
+int main(){
+  char** args;
+  args[0] = "ls";
+  //["ls", ">", "file"];
+  printf("File:%s\n", getname(args,">"));
+}
