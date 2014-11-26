@@ -68,6 +68,18 @@ void redirectOut(char* output, char* command ){
   dup2(dup(STDOUT_FILENO),STDOUT_FILENO);
 }
 
+void redirectIn(char* input, char* command ){
+  int childcom = fork();
+  if (childcom==0){
+    int filedata = open(input, O_RDONLY, 0444);
+    dup2(filedata, STDIN_FILENO);
+    execCommand(command);
+    exit(childcom);
+  }
+  wait();
+  dup2(dup(STDIN_FILENO),STDIN_FILENO);
+}
+
 void runCommand(char *comm){
   char currdir[500];
   getcwd(currdir,sizeof(currdir));
@@ -104,6 +116,10 @@ void runCommand(char *comm){
 	char *outcomm = strsep(&temp,">");
 	redirectOut(temp,outcomm);
       }
+      else if (strchr(temp,'<')){
+	char *outcomm = strsep(&temp,"<");
+	redirectIn(temp,outcomm);
+      }	
       else{
 	int childcom = fork();
 	if (childcom==0){
