@@ -224,7 +224,7 @@ void parse_input(char *input) {
                             fileSize += escapeIndex + FILE_SIZE;
                             filename = (char *) realloc(filename, fileSize * sizeof(char));
                         }
-                        strcpy(filename + fileIndex, escape_buf);
+                        strcpy(filename + fileIndex, escape_buf); // Copy escape_buf to end of filename
                         fileIndex += escapeIndex;
                     }
                     else {
@@ -272,13 +272,13 @@ void parse_input(char *input) {
             }
             else if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') {
                 index += escape_read(input, index); // Increase index by number of characters read in escape_read()
-                --index; // Move back in index pointer since escape_read() goes to after escape is done, offset needed for ++index at end of while loop
                 if (tokIndex + escapeIndex + 2 >= tokSize) {
                     tokSize += escapeIndex + TOK_INIT_SIZE;
                     tok = (char *) realloc(tok, tokSize * sizeof(char)); // Expand tok to fit escape_buf
                 }
                 strcpy(tok + tokIndex, escape_buf); // Copies escape_buf to end of tok
                 tokIndex += escapeIndex;
+                --index; // Move back in index pointer since escape_read() goes to after escape is done, offset needed for ++index at end of while loop
             }
             else if (input[index] == '~') {
                 if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
@@ -287,24 +287,44 @@ void parse_input(char *input) {
                     tokIndex += strlen(home);
                 }
                 else { // Replace ~user with home directory of user
-                    char user[USER_SIZE];
+                    ++index; // Move past '~'
+                    int userSize = USER_SIZE;
                     int userIndex = 0;
-                    while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/' && input[index+1] != ';' && input[index+1] != '>' && input[index+1] != '|') { // +1 to index since we are "looking ahead"
-                        user[userIndex] = input[index+1];
-                        ++userIndex;
-                        ++index;
+                    char *user = (char *) malloc(USER_SIZE * sizeof(char));
+                    while (input[index] && input[index] != ' ' && input[index] != ';' && input[index] != '>' && input[index] != '|') {
+                        if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in user
+                            index += escape_read(input, index);
+                            if (userIndex + escapeIndex + 2 >= userSize) { // Expand user to fit escaped characters
+                                userSize += escapeIndex + FILE_SIZE;
+                                user = (char *) realloc(user, userSize * sizeof(char));
+                            }
+                            strcpy(user + userIndex, escape_buf); // Copy escape_buf to end of user
+                            userIndex += escapeIndex;
+                        }
+                        else {
+                            user[userIndex] = input[index];
+                            ++userIndex;
+                            ++index;
+                        }
+                        if (userIndex + 2 > userSize) {
+                            userSize += FILE_SIZE;
+                            user = (char *) realloc(user, userSize * sizeof(char));
+                        }
                     }
                     user[userIndex] = '\0';
                     struct passwd *found_user = getpwnam(user);
                     char *user_home;
                     if (found_user) {
-                        user_home = found_user->pw_dir; // Retrieves user home directory, otherwise defaults to user input
+                        user_home = found_user->pw_dir; // Retrieves user home directory
                     }
-                    else {
+                    else { // Defaults to printing out user input
                         user_home = user;
+                        tok[tokIndex] = '~';
+                        ++tokIndex;
                     }
                     strcpy(tok + tokIndex, user_home);
                     tokIndex += strlen(user_home);
+                    --index; // Offset ++index at end of while loop
                 }
             }
             else {
