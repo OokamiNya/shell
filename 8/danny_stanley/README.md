@@ -7,9 +7,10 @@ A shell built by Stanley Lok and Danny Qiu for Mr. DW's 8th Period Systems Class
 
 - Colorful prompt
 - Home directory recognition: `~`
-- Character escapes: `"` & `\`
+- Character escapes: `"` & `\` & `'`
 - Multiple commands: `;`
 - File redirection: `>`
+- Handler: `SIGINT`
 - Readline library features: Tab Completion & History
 
 ## TODO:
@@ -17,8 +18,6 @@ A shell built by Stanley Lok and Danny Qiu for Mr. DW's 8th Period Systems Class
 - File redirection: `<`
 - Piping: `|`
 - Backtracking: `cd -`
-- Handler: `^C` (Known as SIGINT)
-- Escape for single quotes: `'`
 - Math
 - Prevent buffer overflow attacks by dynamically allocating memory
 - More information on prompt

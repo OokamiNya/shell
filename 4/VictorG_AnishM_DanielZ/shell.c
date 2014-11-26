@@ -8,18 +8,52 @@
 #include <sys/stat.h>
 #include <errno.h>
 //more includes
+void run(char * input);
+void semisep(char *s){
+  char *pos;
+  int i=0;
+  //printf("%s\n",s);
+  if ((pos=strchr(s, '\n')) != NULL)
+    *pos = '\0';
+  //printf("%s\n",s);
+  char *s1=s;
+  char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
+  //printf("yo\n");
+  printf("%s\n",s1);
 
-void semirun(char *input){
-  char * j=input;
-  printf("%s",j);
-  //while(strtok(j,";")){
-  //j=strtok(j,";");
-  //printf("%s",j);
-    //run
-    //j=strtok(j,";");
-    //rintf("%s",j);
-  //}
-  
+  for (i=0;s1[i];i++){
+    s2[i] = (char *)(malloc(strlen(s)*sizeof(char)));
+    //printf("s2 :%s:\n", s2[i]);
+    //printf("hey\n");
+    s2[i]=strsep(&s1, ";");
+    //strsep(&s1,";");
+    printf("%s\n",s2[i]);
+  }
+  //printf("s1:%s\n",s1);
+  //s2[i]=(char *)malloc(25*sizeof(char));
+  //s2[i]=s1;
+  //i++;
+  s2[i]=(char *)malloc(25*sizeof(char));
+  s2[i]=NULL;
+  int b;
+  for(b=0;s2[b];b++){
+    //int f;
+    printf("%s\n",s2[b]);
+    //f=fork();
+    if(!fork()){
+      run(s2[b]);
+      return;
+    }
+    printf("%d\n",b);
+    //free(s2);
+  }
+  printf("out\n");
+  //free(s2);
+  return;
+  //s2[i-1]=
+
+  //printf("hey\n");
+  //return s2;
 }
 
 char ** separate(char *s){
@@ -123,7 +157,8 @@ int main(){
     wait(NULL);
   }
   */
-  semirun("ls;w;ls");
+  char damn[256]="ls;w;ls\n";
+  semisep(damn);
   return 0;
 }
  

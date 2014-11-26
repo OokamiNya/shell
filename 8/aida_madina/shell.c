@@ -15,32 +15,40 @@ int main() {
   int *status;
   siginfo_t *infop;
   char cwd[256];
+  int num_commands;
   
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(input, sizeof(input), stdin);
     input[strlen(input)-1]='\0';
-    
+ 
     char *count_commands = input;
-    int num_commands;
-
+    num_commands = 1;
     while(*count_commands) {
-      if (*count_commands == ';')
+      if (*count_commands == ';'){
 	num_commands++;
+      }
+      //printf("..");
       count_commands++;
     }
+    printf("%d\n", num_commands);
 
     comm_array[0] = strtok(input, ";");
+
     int i = 1;
     while (i < num_commands) {
       comm_array[i] = strtok(NULL, ";");
+      printf("%d: %s, num_commands: %d, size of input: %lu\n",i,comm_array[i], num_commands, sizeof(input));
+      if(i > num_commands)
+	return;
       i++;
     }
-    
+
     for( i = 0; i < num_commands; i++)
     {
       
       command = comm_array[i];
+      printf("command: %s\n",command);
       char *p = command;
 
       while (*p){
@@ -53,7 +61,6 @@ int main() {
       char *comm = strtok(command, " ");
     
       if (!strcmp(comm,"exit")) {
-	//printf(":%s:", comm);
 	exit(0);
       }
     
@@ -77,7 +84,6 @@ int main() {
 	  chdir(getenv("HOME"));
 	}
 	chdir(args_array[1]);
-	//execvp(args_array[0], args_array);
       }
       else {
 	pid = fork();
@@ -90,6 +96,7 @@ int main() {
       }
     }
   }
+    
   return 0;
 }
 

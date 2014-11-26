@@ -22,7 +22,7 @@ int main(){
 
 int cd (char* s) {
   if (!strcmp(s,"/")) return chdir(s);
-  if (!strcmp(s,"~")) return chdir("/home"); //needs to be fixed
+  if (!strcmp(s,"~")) return chdir(getenv("HOME")); //needs to be fixed
   char path[1000];
   strcpy (path, s);
   char cwd [256];
@@ -106,6 +106,25 @@ int execute(char *s){
   p = s;
   n = 0;
   char *k;
+  //checks if | in input
+  if (strchr (p, '|')){
+      while (k = strsep(&p,"|")){
+	if (strcmp(k,"")){ //if any blanks from multiple |
+	  params [n] = k;
+	  n++;
+	}
+	else {
+	  execute(params [0]);//execute only first command if there are multiple |'s
+	  break;
+	}
+      }
+      params [n] ='\0';
+      
+      n = n - 1;
+      while (params [n]) {
+	execute (params [n]); //temporary, still working on piping
+      }
+  }
   while (k = strsep(&p," ")){
     if (strcmp(k,"")){ //removes blanks from multiple spaces
       params[n] = k;
