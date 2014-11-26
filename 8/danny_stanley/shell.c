@@ -84,22 +84,14 @@ int escape_read(char *input, int index) {
     char isEscaping = 0;
     int done = 0;
     while (input[index] && !done) {
-        if (input[index] == '\\') {
-            if (isEscaping == '\\') { // Escape any character after '\'
-                ++index;
-                escape_buf[escapeIndex] = input[index];
-                ++escapeIndex;
-                isEscaping = 0;
+        if (input[index] == '\\') { // Escape any character after '\'
+            ++index;
+            escape_buf[escapeIndex] = input[index];
+            ++escapeIndex;
+            if (!isEscaping) {
                 done = 1;
             }
-            else if (isEscaping) { // Move past '\' to escape next character
-                ++index;
-                escape_buf[escapeIndex] = input[index];
-                ++escapeIndex;
-            }
-            else {
-                isEscaping = '\\';
-            }
+            isEscaping = 0;
         }
         else if (input[index] == '\'') {
             if (isEscaping == '\'') { // If already escaping '\'', then stop it
