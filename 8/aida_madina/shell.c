@@ -23,28 +23,27 @@ int main() {
     input[strlen(input)-1]='\0';
  
     char *count_commands = input;
-
+    num_commands = 1;
     while(*count_commands) {
       if (*count_commands == ';'){
 	num_commands++;
       }
-      //printf("teehee%s\n",count_commands);
+      //printf("..");
       count_commands++;
     }
-    printf("%d\n",num_commands);
+    printf("%d\n", num_commands);
 
     comm_array[0] = strtok(input, ";");
-    //printf("%s\n",comm_array[0]);
+
     int i = 1;
     while (i < num_commands) {
       comm_array[i] = strtok(NULL, ";");
-      printf("%d: %s\n",i,comm_array[i]);
+      printf("%d: %s, num_commands: %d, size of input: %lu\n",i,comm_array[i], num_commands, sizeof(input));
       if(i > num_commands)
 	return;
       i++;
     }
-    printf("num_commands: %d\n",num_commands);
-    exit(0);
+
     for( i = 0; i < num_commands; i++)
     {
       
@@ -62,7 +61,6 @@ int main() {
       char *comm = strtok(command, " ");
     
       if (!strcmp(comm,"exit")) {
-	//printf(":%s:", comm);
 	exit(0);
       }
     
@@ -86,7 +84,6 @@ int main() {
 	  chdir(getenv("HOME"));
 	}
 	chdir(args_array[1]);
-	//execvp(args_array[0], args_array);
       }
       else {
 	pid = fork();

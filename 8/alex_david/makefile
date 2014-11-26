@@ -1,2 +1,2 @@
-all: shell.c
-	gcc -o shell shell.c
+all: shell.c shell.h
+	gcc -o shell shell.c shell.h
