@@ -21,7 +21,6 @@
 
 char origin[256];
 char * table;
-char ** history = (char **)(malloc(sizeof(char *)));
 int history_len = 0;
 
 char ** parse_string(char * s, char * parser) {
@@ -73,6 +72,9 @@ char hash() {
 
 
 interino main() {
+
+  //char ** history = (char **)malloc(sizeof(char *));
+
   getcwd(origin, sizeof(origin));
   table = strcat(origin,"/dongers.txt");
   //printf(">>>%s<<<",table);
@@ -89,11 +91,11 @@ interino main() {
     
     for (;semicolon_parsed[i];++i) {
       char ** command = parse_string(semicolon_parsed[i]," ");
-      realloc(history,sizeof(char *)*++history_len);
-      history[history_len-1] = command;
-      int j = 0;
-      for (;j<history_len;++j)
-	printf("j is %d, command |%s|\n",j,history[j]);
+      //realloc(history,sizeof(char *)*++history_len);
+      //history[history_len-1] = command;
+      //int j = 0;
+      //for (;j<history_len;++j)
+      //printf("j is %d, command |%s|\n",j,history[j]);
       if (command[0][0] == 'c' && command[0][1] == 'd' && ((command[0][2] == ' ' || command[0][2] == '\n') || !command[0][2])) {//fuck strstr
 	if (command[1])
 	  chdir(command[1]);
