@@ -1,0 +1,20 @@
+Assignment (MUST DO):
+1. implement cd
+2. Implement simple redirection using > (redirecting stdout) and < (redirecting stdin). 
+3. Implement simple pipes, that is: ls | wc would run ls and use the output from ls as the input for wc.
+
+Features:
+
+
+Attempted:
+
+
+Bugs:
+
+
+Function Headers:
+	 In shell.h:
+	    void printprompt(); //prints the prompt owl$
+	    void execute(); //executes one command from shell
+	    char** execute_all(); //executes all commands from the shell (separated by semi-colons)
+	    char* trim(char *); //trims the leading and trailing white space

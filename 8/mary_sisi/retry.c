@@ -52,15 +52,97 @@ int execute(char ** args){
   }
 
   if((i = contains(args,"<")) != -1){
+    int f = fork();
+    int status;
+    if (!f){
+      int fd = open(args[i + 1], O_RDWR, O_CREAT);
+      dup2(STDIN_FILENO , fd);
+    
+      char ** part1;   
+      allocate_array_mem(part1, i);
+    
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      j=0;
+      while(j<=i){
+	free(args[i]);
+	j++;
+      }
+
+      execvp(part1[0] , part1);
+      //close, and restting stdout not nessecarry b/c its a child
+    }else{
+      wait(&status);
+    }
+
     //redirects [command(s) in a] file to stdin
   }else if((i = contains(args,">")) != -1){
+    int f = fork();
+    int status;
+    if (!f){
+      int fd = open(args[i + 1], O_RDWR, O_CREAT);
+      dup2(fd, STDOUT_FILENO);
+    
+      char ** part1;   
+      allocate_array_mem(part1, i);
+    
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      j=0;
+      while(j<=i){
+	free(args[i]);
+	j++;
+      }
+
+      execvp(part1[0] , part1);
+      //close, and restting stdout not nessecarry b/c its a child
+    }else{
+      wait(&status);
+    }
+
     //redirects stdout to a file
   }else if((i = contains(args,"|")) != -1){
+    int f = fork();
+    int status;
+    if (!f){
+      
+      char ** part1;   
+      allocate_array_mem(part1, i+2);
+    
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+      
+      j=0;
+      while(j<=i){
+	free(args[i]);
+	j++;
+      }
+
+      args += 1;
+
+      part1[i] = ">";
+      part1[i+1] = "buffer.txt";
+
+
+      
+    }
+
     //output of 1st to input of 2nd
   }else if((i = contains(args,"cd")) != -1){
-    //covered
+    chdir(args[1]);
   }else if((i = contains(args,"exit")) != -1){
-    //covered
+    exit(-1);
   }else{
 
     //fork and exec

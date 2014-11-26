@@ -2,6 +2,7 @@
 #include "colors.h"
 
 int errno_result; // Used in collaboration with errno if function fails
+pid_t child_pid = -111111; // Hack to initialize child_pid as a value that does not disrupt the system
 char *prompt;
 
 int args;
@@ -9,6 +10,9 @@ char **argv;
 int tokIndex;
 int tokSize;
 char *tok;
+int escapeIndex;
+int escapeSize;
+char *escape_buf;
 
 int cmd_status = 1;
 int valid_input = 0;
@@ -16,7 +20,16 @@ int valid_input = 0;
 node* path_history; //For cd history
 
 static void signalhandler(int signal) {
-    switch(signal) {
+    if (signal == SIGINT) {
+        if (child_pid) {
+            kill(child_pid, SIGINT);
+            int status;
+            waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
+            cmd_status = 0;
+            create_prompt(prompt, PROMPT_SIZE);
+            printf("\n%s", prompt); // Printout a new prompt
+            fflush(stdout);
+        }
     }
 }
 
@@ -35,16 +48,37 @@ char * get_path(char *path_buf, int path_size) {
     return path_buf;
 }
 
+/* Writes current time given a buffer */
+char * get_time(char *time_buf, int time_size) {
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char *ampm;
+    int hour = tm.tm_hour;
+    if (hour < 12) {
+        ampm = "AM";
+    }
+    else {
+        ampm = "PM";
+        hour -= 12;
+    }
+    snprintf(time_buf, time_size, "[%02d:%02d:%02d %s]", hour, tm.tm_min, tm.tm_sec, ampm);
+    return time_buf;
+}
+
 /* Writes prompt given a buffer */
 char * create_prompt(char *prompt_buf, int prompt_size) {
     char path[PATH_SIZE];
     get_path(path, PATH_SIZE);
+    char time[TIME_SIZE];
+    get_time(time, TIME_SIZE);
+    const char *status;
     if (cmd_status) { // Previous command was successful
-        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_green, reset);
+        status = fg_green;
     }
     else {
-        snprintf(prompt_buf, prompt_size, "%s%s%s: %s%s%s %s%s\nᐅ %s", bold_prefix, fg_gray, shell_name, bold_prefix, fg_cyan, path, bold_prefix, fg_red, reset);
+        status = fg_red;
     }
+    snprintf(prompt_buf, prompt_size, "%s%s%s$ %s%s%s %s%s%s %s%s\nᐅ %s", bold_prefix, fg_pink, shell_name, bold_prefix, fg_orange, time, bold_prefix, fg_cyan, path, normal_prefix, status, reset);
     return prompt_buf;
 }
 
@@ -55,6 +89,10 @@ void cleanup_argv() {
     }
     free(argv);
     free(tok);
+    if (escape_buf) { // Frees escape_buf if it is already defined
+        free(escape_buf);
+        escape_buf = NULL;
+    }
 }
 
 void setup_argv() {
@@ -63,6 +101,68 @@ void setup_argv() {
     tokSize = TOK_INIT_SIZE;
     tokIndex = 0;
     tok = (char *) malloc(TOK_INIT_SIZE);
+}
+
+/* Given the input from user, and index in input
+ * Returns number of characters read
+ * NOTE: This only handles one escape sequence!
+ * REMEMBER TO FREE escape_buf after usage! */
+int escape_read(char *input, int index) {
+    int initIndex = index;
+    escapeIndex = 0;
+    escapeSize = ESCAPE_SIZE;
+    escape_buf = (char *) malloc(ESCAPE_SIZE);
+    char isEscaping = 0;
+    int done = 0;
+    while (input[index] && !done) {
+        if (input[index] == '\\') { // Escape any character after '\'
+            ++index;
+            escape_buf[escapeIndex] = input[index];
+            ++escapeIndex;
+            if (!isEscaping) {
+                done = 1;
+            }
+            isEscaping = 0;
+        }
+        else if (input[index] == '\'') {
+            if (isEscaping == '\'') { // If already escaping '\'', then stop it
+                isEscaping = 0;
+                done = 1;
+            }
+            else if (isEscaping) { // Escape the '\''
+                escape_buf[escapeIndex] = input[index];
+                ++escapeIndex;
+            }
+            else { // Set escaping if no current escape
+                isEscaping = '\'';
+            }
+        }
+        else if (input[index] == '\"') {
+            if (isEscaping == '\"') { // If already escaping '\"', then stop it
+                isEscaping = 0;
+                done = 1;
+            }
+            else if (isEscaping) { // Escape the '\"'
+                escape_buf[escapeIndex] = input[index];
+                ++escapeIndex;
+            }
+            else { // Set escaping if no current escape
+                isEscaping = '\"';
+            }
+        }
+        else { // If not escape character, do normal escaping
+            escape_buf[escapeIndex] = input[index];
+            ++escapeIndex;
+        }
+        ++index;
+
+        if (escapeIndex >= escapeSize-2) { // Subtract 2 to be safe in expanding escape_buf
+            escapeSize += ESCAPE_SIZE;
+            escape_buf = (char *) realloc(escape_buf, escapeSize * sizeof(char));
+        }
+    }
+    escape_buf[escapeIndex] = '\0';
+    return index - initIndex;
 }
 
 int main() {
@@ -76,7 +176,7 @@ int main() {
         cmd_status = valid_input = 1;
         char *line = readline(prompt);
         if (line == NULL) {
-            printf("\n`EOF Sent`\n");
+            printf("\n~~~ EOF Sent :\\ ~~~\n");
             free(line);
             free(prompt);
             exit(0);
@@ -118,8 +218,9 @@ void parse_input(char *input) {
                 argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
                 argv[args] = NULL;
 
+                ++index;
                 int mode; // Selecting whether to append or write
-                if (input[index+1] == '>') {
+                if (input[index] == '>') {
                     ++index;
                     mode = O_APPEND;
                 }
@@ -127,15 +228,31 @@ void parse_input(char *input) {
                     mode = O_TRUNC;
                 }
 
-                while (input[index+1] == ' ') { // Remove prepending whitespace from filename
+                while (input[index] == ' ') { // Remove prepending whitespace from filename
                     ++index;
                 }
-                char filename[OUTPUT_FILENAME_SIZE];
+                int fileSize = FILE_SIZE;
                 int fileIndex = 0;
-                while (input[index+1] && input[index+1] != ' ' && input[index+1] != ';') { // Takes string literal as filename
-                    filename[fileIndex] = input[index+1];
-                    ++fileIndex;
-                    ++index;
+                char *filename = (char *) malloc(FILE_SIZE * sizeof(char));
+                while (input[index] && input[index] != ' ' && input[index] != ';') {
+                    if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in filename
+                        index += escape_read(input, index);
+                        if (fileIndex + escapeIndex + 2 >= fileSize) { // Expand filename to fit escaped characters
+                            fileSize += escapeIndex + FILE_SIZE;
+                            filename = (char *) realloc(filename, fileSize * sizeof(char));
+                        }
+                        strcpy(filename + fileIndex, escape_buf); // Copy escape_buf to end of filename
+                        fileIndex += escapeIndex;
+                    }
+                    else {
+                        filename[fileIndex] = input[index];
+                        ++fileIndex;
+                        ++index;
+                    }
+                    if (fileIndex + 2 > fileSize) {
+                        fileSize += FILE_SIZE;
+                        filename = (char *) realloc(filename, fileSize * sizeof(char));
+                    }
                 }
                 filename[fileIndex] = '\0';
                 int output = open(filename, O_CREAT | O_WRONLY | mode, 0644); // Open file for redirection
@@ -151,6 +268,8 @@ void parse_input(char *input) {
                 }
                 cleanup_argv(); // Clean up redirection commands, so that they don't run again later on
                 setup_argv();
+                --index; // Offset ++index at the end of this while loop
+                valid_input = 2; // Saves into history
             }
             else if (input[index] == ';') {
                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
@@ -166,19 +285,17 @@ void parse_input(char *input) {
                     cleanup_argv();
                     setup_argv();
                 }
+                valid_input = 2; // Saves into history
             }
-            else if (input[index] == '\\') {
-                ++index; // Move on to add next character right after '\'
-                tok[tokIndex] = input[index];
-                ++tokIndex;
-            }
-            else if (input[index] == '"') {
-                ++index; // Go past "
-                while (input[index] && input[index] != '"') { // Continues interpreting as string literal until next '"'
-                    tok[tokIndex] = input[index];
-                    ++tokIndex;
-                    ++index;
+            else if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') {
+                index += escape_read(input, index); // Increase index by number of characters read in escape_read()
+                if (tokIndex + escapeIndex + 2 >= tokSize) {
+                    tokSize += escapeIndex + TOK_INIT_SIZE;
+                    tok = (char *) realloc(tok, tokSize * sizeof(char)); // Expand tok to fit escape_buf
                 }
+                strcpy(tok + tokIndex, escape_buf); // Copies escape_buf to end of tok
+                tokIndex += escapeIndex;
+                --index; // Move back in index pointer since escape_read() goes to after escape is done, offset needed for ++index at end of while loop
             }
             else if (input[index] == '~') {
                 if (input[index+1] == '/') { // Replace ~ with $HOME when referring to directories
@@ -187,24 +304,44 @@ void parse_input(char *input) {
                     tokIndex += strlen(home);
                 }
                 else { // Replace ~user with home directory of user
-                    char user[USER_SIZE];
+                    ++index; // Move past '~'
+                    int userSize = USER_SIZE;
                     int userIndex = 0;
-                    while (input[index+1] && input[index+1] != ' ' && input[index+1] != '/' && input[index+1] != ';' && input[index+1] != '>' && input[index+1] != '|') { // +1 to index since we are "looking ahead"
-                        user[userIndex] = input[index+1];
-                        ++userIndex;
-                        ++index;
+                    char *user = (char *) malloc(USER_SIZE * sizeof(char));
+                    while (input[index] && input[index] != ' ' && input[index] != ';' && input[index] != '>' && input[index] != '|') {
+                        if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in user
+                            index += escape_read(input, index);
+                            if (userIndex + escapeIndex + 2 >= userSize) { // Expand user to fit escaped characters
+                                userSize += escapeIndex + FILE_SIZE;
+                                user = (char *) realloc(user, userSize * sizeof(char));
+                            }
+                            strcpy(user + userIndex, escape_buf); // Copy escape_buf to end of user
+                            userIndex += escapeIndex;
+                        }
+                        else {
+                            user[userIndex] = input[index];
+                            ++userIndex;
+                            ++index;
+                        }
+                        if (userIndex + 2 > userSize) {
+                            userSize += FILE_SIZE;
+                            user = (char *) realloc(user, userSize * sizeof(char));
+                        }
                     }
                     user[userIndex] = '\0';
                     struct passwd *found_user = getpwnam(user);
                     char *user_home;
                     if (found_user) {
-                        user_home = found_user->pw_dir; // Retrieves user home directory, otherwise defaults to user input
+                        user_home = found_user->pw_dir; // Retrieves user home directory
                     }
-                    else {
+                    else { // Defaults to printing out user input
                         user_home = user;
+                        tok[tokIndex] = '~';
+                        ++tokIndex;
                     }
                     strcpy(tok + tokIndex, user_home);
                     tokIndex += strlen(user_home);
+                    --index; // Offset ++index at end of while loop
                 }
             }
             else {
@@ -213,7 +350,7 @@ void parse_input(char *input) {
             }
             if (tokIndex >= tokSize) { // Expand buffer for tok
                 tokSize += TOK_INIT_SIZE;
-                tok = realloc(tok, tokSize);
+                tok = realloc(tok, tokSize * sizeof(char));
             }
         }
         else if (input[index] == ' ' && tokIndex != 0) { // When a tok is terminated by a ' ', checks to make sure there is actually something to terminate first
@@ -239,9 +376,10 @@ void parse_input(char *input) {
         execute(argv);
     }
     else {
-        valid_input = 0;
+        if (valid_input != 2) { // 2 is for bypass
+            valid_input = 0;
+        }
     }
-    printf("Token Size: %d\n", tokSize);
     cleanup_argv();
 }
 
@@ -264,8 +402,8 @@ void execute(char **argv) {
       path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
     }
     else {
-        pid_t pid = fork();
-        if (pid) { // Parent process to wait for child to finish
+        child_pid = fork();
+        if (child_pid) { // Parent process to wait for child to finish
             int status;
             wait(&status);
             if (WIFEXITED(status)) {

@@ -40,6 +40,22 @@ char* getinput(char* input){
   return input;
 }
 
+void redirect(char* file,char** args){
+  int fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
+  dup2(fd,STDOUT_FILENO);
+  close(fd);
+  execvp(args[0],args);
+}
+
+char** getinfo(char** args){
+  int i = 0;
+  while(args[i]){
+    if(strcmp(args[i],">")){
+      
+    }
+    i++;
+  }
+}
 int main(){
   char a = 0;
   while(1){
@@ -47,7 +63,7 @@ int main(){
     char input[4096];
     getinput(input);
     //attempt at semicolon
-    char ** superargs = parse(input,";"); 
+    char ** superargs = parse(input,";");
     int j = 0;
     while(superargs[j]){
       
@@ -58,18 +74,23 @@ int main(){
 	exit(0);
       }else if(strcmp(args[0],"cd") == 0){
 	chdir(args[1]);
+      }else if(strchr(superargs[j],">")){
+	//redirect(
       }else{
 	int f = fork();
 	if(!f){
 	  execvp(args[0],args);
 	  free(args);
 	  printf("Command not found\n");
-	  exit(0);
+	  break; 
+	  //exit(0);
 	}
+	
       }
-      
+      //free(args);
       j++;
     }
+    //free(superargs);
     
   }
   

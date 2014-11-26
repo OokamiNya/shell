@@ -20,6 +20,15 @@ int main() {
   }
   return 0;
 }
+
+//change to fix for all paths, use ~?
+void cd(char* path){
+  printf("%s\n", path);
+  chdir(path);
+}
+
+
+
 char** execute_all(){
   char s[256];
   fgets(s, sizeof(s), stdin);
@@ -31,6 +40,8 @@ char** execute_all(){
 
   //deleting trailing newspace
   s1 = strsep(&s1, "\n");  
+
+  //check for pipes/redirection
   
   //parsing our command
   while (sep = strsep(&s1, ";")){
@@ -77,7 +88,7 @@ void execute(char a[256]){
     exit(0);
   }
   else if (strcmp(arg[0], "cd") == 0) {//if calling cd
-  
+    cd(arg[1]);
   }
   else { //otherwise, we need to fork
     int f, status;
@@ -87,8 +98,11 @@ void execute(char a[256]){
     }
     else {//parent process
       wait(&status);
+      //free(arg);
     } 
   }
+  //why does this cause errors for echo hello cake??
+  
   free(arg);
 }
 

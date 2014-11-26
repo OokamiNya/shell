@@ -2,7 +2,8 @@ seashell
 by Aida Piccato and Madina Radjabova
 
 Features:
-	Forks and executes commands!
+	Forks and executes commands! Accounts for 'cd' and 'exit'
+	Parses multiple commands on one line and executes each one 
 	Can summon a winged unicorn for fast & magical transit!
 
 Attempted:

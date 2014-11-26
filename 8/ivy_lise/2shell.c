@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <fcntl.h>
+#include "shell.h"
 
 //takes out leading and trailing spaces / new lines
 char *strip (char *p){
@@ -19,10 +11,11 @@ char *strip (char *p){
 
 void parse_string(char *s){
   //TODO: char**token;
-
+  char *token = (char *)(malloc(sizeof(char *)*256));
+  int alen = 1;
   s = strip(s);
   // count how many args 
-  token = s;
+  strcpy(token,s);
   while (token){
     token=strchr(token+1,' ');
     alen++;
@@ -33,7 +26,7 @@ void parse_string(char *s){
   int i=0;
   token = strsep(&s," ");
   argarray[i] = (char*)malloc(256*sizeof(char));
-  argarray[i] = token;
+  strcpy(argarray[i],token);
   while (token){
     //getting rid of empty tokens btwnXS arguments
     if (strlen(token)==0){
@@ -44,9 +37,15 @@ void parse_string(char *s){
       argarray[i] = (char*)malloc(256*sizeof(char));
       argarray[i] = token;
       token = strsep(&s, " ");
+      //   printf("token[%d]:___%s___",i,token);
       i++;
     }
   }
+  argarray[i] = NULL;
+  printf("token[%d]:%s\n\n",i,token);
+  exec(argarray,i);
+  free(token);
+  free(argarray);
 }
 
 void exec(char ** argarray, int len){
@@ -71,7 +70,7 @@ void exec(char ** argarray, int len){
       printf("WEIRD ERROR\n");
     }
     else if(f == 0){
-      //printf("TEST\n");
+      //  printf("TEST\n");
       execvp(argarray[0],argarray);
     }
     else{
@@ -89,7 +88,7 @@ void shell(){
   
   //printf("mallocs here\n");
   char *s = (char *)(malloc(10*sizeof(char)));
-  char *token = (char *)(malloc(10*sizeof(char)));
+  //char *token = (char *)(malloc(10*sizeof(char)));
   int alen = 1; //+1 for NULL
   
   //prompt
@@ -103,9 +102,14 @@ void shell(){
     printf("%s:%s$ ",user,cwd);
   }
   fgets(s,100,stdin);
+  char *cmd = (char *)(malloc(10*sizeof(char)));
+  while (cmd = strsep(&s,";")){
+    cmd = strip(cmd);
+    printf("cmd:%s  \n\n",cmd);
+    parse_string(cmd);
+  }
 
-  s = strip(s);
-  // count how many args 
+  /* // count how many args 
   token = s;
   while (token){
     token=strchr(token+1,' ');
@@ -141,7 +145,7 @@ void shell(){
   free(s);
   free(token);
   free(argarray);
-
+  */
 }
 
 void redirect(char * s){
