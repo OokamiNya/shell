@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "link_list.h"
+#include "directorystack.h"
 
 #define PROMPT_SIZE 2014
 #define PATH_SIZE 1024
