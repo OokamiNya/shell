@@ -10,6 +10,7 @@ int exec_line(char *input);
 void runs_command(char *scpy);
 void trim(char *str);
 
+
 int main() {
   int status;
   char s[1024];
@@ -47,7 +48,9 @@ int main() {
 
       }
       runs_command(scpy);
-    }
+    } 
+
+   
   }
 }
 
@@ -135,6 +138,30 @@ void runs_command(char *scpy) {
     
     else if(strchr(s,'|')) {
       printf("registered |\n");
+
+      char *s1;
+      char *s2;
+      char *commands[1024];
+      char *jscpy = malloc(1024);
+      int i;
+      s1 = s;
+      for(i=0;s1;i++){
+	s2 = strsep(&s1,"|");
+	trim(s2);
+	commands[i]=s2;
+      }
+      commands[i] = NULL;
+
+      for(i=0;jscpy;i++) {
+	jscpy = commands[i];
+	if(!jscpy) {
+	  break;
+	}
+	dup2(STDOUT_FILENO, STDIN_FILENO);
+	exec_line(jscpy);
+      } 
+
+      
     }
     
     else {
@@ -152,6 +179,7 @@ void runs_command(char *scpy) {
 }
 
 int exec_line(char *s) {
+  printf("exec line: %s\n",s);
   trim(s);
   char* string2;
   char *array[256];
