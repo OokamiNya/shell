@@ -57,6 +57,21 @@ int execute(char* input){
       i++;
     }
   }
+
+  if(strcmp(args[0], "cd") == 0){
+    if(!(args[1])){
+      printf("No directory specified.\n");
+    }
+    else{
+      printf("chdring to %s\n", args[1]);
+      if(chdir(args[1]) == -1){
+	printf("%s\n", strerror(errno));
+	return -1;
+      }
+    }
+    return 5; //chdir'd instead.
+  }
+  
   pid_t f = fork();
   int status;
   int w;
@@ -70,9 +85,9 @@ int execute(char* input){
     exit(EXIT_FAILURE);
   }
   else{
-    printf("redir=%d\n", redir);
+    //printf("redir=%d\n", redir);
     if (redir){
-      printf("---- Redirecting ----\n\n");
+      //  printf("---- Redirecting ----\n\n");
       if (strcmp(args2[0], ">") == 0){
 	redir_out(args,args2[1]);
       } else if (strcmp(args2[0], "<") == 0){

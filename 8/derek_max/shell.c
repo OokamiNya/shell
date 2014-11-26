@@ -42,16 +42,6 @@ int main(){
 	  printf("Exiting.\n");
 	  exit(EXIT_SUCCESS);
 	}
-	else if (strcmp(commands[i], "cd") == 0){
-	  printf("cd not yet supported\n");
-	  break;
-	}
-	//special_parse = strstr(commands[i], "cd");
-	//if(special_parse){
-	//if(strlen(special_parse) == 2){
-	//  
-	//}
-	//}
 	else{	
 	  //add an if for cd later
 	  fflush(stdout);
