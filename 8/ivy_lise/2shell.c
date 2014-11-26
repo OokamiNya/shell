@@ -32,6 +32,7 @@ void parse_string(char *s){
     if (strlen(token)==0){
       alen--;
       argarray=realloc(argarray,alen*sizeof(char *));
+      token = strsep(&s, " ");
     }
     else{
       argarray[i] = (char*)malloc(256*sizeof(char));
