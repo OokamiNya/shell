@@ -18,11 +18,11 @@ char *strip (char *p){
 }
 
 void parse_string(char *s){
-  //TODO: char**token;
-
+  char *token = (char *)(malloc(sizeof(char)*256));
+  int alen = 1;
   s = strip(s);
   // count how many args 
-  token = s;
+  strcpy(token,s);
   while (token){
     token=strchr(token+1,' ');
     alen++;
@@ -33,7 +33,7 @@ void parse_string(char *s){
   int i=0;
   token = strsep(&s," ");
   argarray[i] = (char*)malloc(256*sizeof(char));
-  argarray[i] = token;
+  strcpy(argarray[i],token);
   while (token){
     //getting rid of empty tokens btwnXS arguments
     if (strlen(token)==0){
@@ -44,9 +44,15 @@ void parse_string(char *s){
       argarray[i] = (char*)malloc(256*sizeof(char));
       argarray[i] = token;
       token = strsep(&s, " ");
+      //   printf("token[%d]:___%s___",i,token);
       i++;
     }
   }
+  argarray[i] = NULL;
+  printf("token[%d]:%s\n\n",i,token);
+  exec(argarray,i);
+  free(token);
+  free(argarray);
 }
 
 void exec(char ** argarray, int len){
@@ -103,7 +109,17 @@ void shell(){
     printf("%s:%s$ ",user,cwd);
   }
   fgets(s,100,stdin);
-
+  char *cmd = (char *)(malloc(10*sizeof(char)));
+  while (cmd = strsep(&s,";")){
+    cmd = strip(cmd);
+    printf("cmd:%s  \n\n",cmd);
+    if(strchr(cmd, '>') || strchr(cmd, '<')){
+      parse_redirect(cmd);
+    }
+    parse_string(cmd);
+  }
+  
+  /*
   s = strip(s);
   // count how many args 
   token = s;
@@ -141,29 +157,38 @@ void shell(){
   free(s);
   free(token);
   free(argarray);
-
+  */
 }
 
-void redirect(char * s){
+void parse_redirect(char * s){
   char * tok;
-  int len = 1;
-  if(strchr(s, '>') || strchr(s, '<')){
-    len = 2;
-  }
+  int len = 2;
+  int i = 0;
+  printf("toparrmalloc\n");
   char ** top_arr = (char**)malloc(len*sizeof(char*));
-  
-  
-  if(strchr(s,'>')){
-    //do redir in stuff
+  printf("strip\n");
+  strip(s);
+  //printf("input: %s\n",s);
+  printf("sc: %d",strchr(&s, '>'));
+  if(strchr(&s,'>')){
+    printf("> detected!");
+    while(tok = strsep(&s,'>')){
+      tok = strip(tok);
+      printf("Redir 1:%s\n",tok);
+      top_arr[i] = tok;
+      i++;
+    }
+    printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
+    //CHECK FOR VALIDITY
     int fd, tmp_out, status;
-    fd = open("who.txt", O_WRONLY | O_CREAT | O_TRUNC);
+    fd = open(top_arr[1], O_WRONLY | O_CREAT | O_TRUNC);
     tmp_out = dup(STDOUT_FILENO);
     dup2(fd, STDOUT_FILENO);
     int f = fork();
     //if child, execute who cmd
     //else, change stdout back
     if( !f ){
-      execlp("who","who",NULL);
+      parse_string(top_arr[0]);
     } else {
       int w = wait( &status );
       dup2(tmp_out, STDOUT_FILENO);
@@ -172,6 +197,7 @@ void redirect(char * s){
   } else if(strchr(s, '<')){
     //redirin
   }
+  printf("ended\n");
 }
 
 
