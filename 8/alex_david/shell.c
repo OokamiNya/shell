@@ -119,11 +119,17 @@ int execute(char *s){
 	}
       }
       params [n] ='\0';
-      
-      n = n - 1;
-      while (params [n]) {
-	execute (params [n]); //temporary, still working on piping
+
+      int fd [2];
+      pipe (fd);
+      int f = fork();
+      if (!f){
+	dup2(fd[0], 0);
+	execvp (params[0]);
       }
+  
+      
+   //temporary, still working on piping
   }
   while (k = strsep(&p," ")){
     if (strcmp(k,"")){ //removes blanks from multiple spaces
