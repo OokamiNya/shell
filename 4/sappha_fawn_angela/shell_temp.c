@@ -23,6 +23,7 @@ int main() {
 
 //change to fix for all paths, use ~?
 void cd(char* path){
+  printf("%s\n", path);
   chdir(path);
 }
 
@@ -97,8 +98,11 @@ void execute(char a[256]){
     }
     else {//parent process
       wait(&status);
+      //free(arg);
     } 
   }
+  //why does this cause errors for echo hello cake??
+  
   free(arg);
 }
 

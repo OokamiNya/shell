@@ -13,17 +13,9 @@ static void sighandler(int signo){
 }
 
 int main(){
-  
-  /* piping things
-  int fd;
-  fd = open("loop.c", O_WRONLY | O_TRUNC);
-  dup2(fd, STDOUT_FILENO);
-  printf("Woo! This is working!");
-  */
-
   printf("\n");
   chdir(getenv("HOME"));
-  signal(SIGINT, sighandler);
+  //signal(SIGINT, sighandler);
   
   while(1){
 
@@ -41,7 +33,7 @@ int main(){
     /*   newcwd = cwd; */
     //
     
-    printf("JAVO:%s> ",newcwd);
+    printf("JAVO:%s> ",cwd);
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
 
@@ -55,7 +47,7 @@ int main(){
       int f = fork();
       wait();
       if (!f){
-	signal(SIGINT, sighandler);
+	//signal(SIGINT, sighandler);
 	execute(input);
       }
     }
