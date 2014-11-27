@@ -19,7 +19,7 @@
 
 void parse_input(char *);
 void execute(char **);
-void change_directory(char *,node *);
+void change_directory(char *, node *);
 
 void cleanup_argv();
 void setup_argv();

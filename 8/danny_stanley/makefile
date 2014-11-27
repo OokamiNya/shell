@@ -1,11 +1,11 @@
-FILES = *.c
+FILES = shell.c shellutil.c prompt.c directorystack.c
 OBJECTS = *.o
 LIBS = -lreadline
 
 all: clean build run
 
 clean:
-	@rm -f shell
+	@rm -f shell *.o
 
 build:
 	@gcc -Wall -c -g $(FILES)
@@ -15,5 +15,5 @@ run:
 	@rm -f *.o
 	@./shell
 
-test:
+test:	clean build
 	@./shell < test.txt
