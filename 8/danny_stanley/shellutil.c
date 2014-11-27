@@ -76,7 +76,7 @@ int handle_tilde(char *input, int index) {
     int initIndex = index;
     tildeIndex = 0;
     ++index; // Move past '~'
-    if (input[index] == '/' || input[index] == ' ' || input[index] == '\0') { // Replace ~ with $HOME when referring to directories or nothing specified
+    if (!(input[index] && input[index] != ' ' && input[index] != '/' && input[index] != ';' && input[index] != '>' && input[index] != '|')) { // Replace ~ with $HOME when referring to directories or nothing specified
         tilde_buf = strdup(getenv("HOME"));
         tildeIndex += strlen(tilde_buf);
     }
