@@ -26,7 +26,6 @@ int escape_read(char *input, int index) {
             if (!isEscaping) {
                 done = 1;
             }
-            isEscaping = 0;
         }
         else if (input[index] == '\'') {
             if (isEscaping == '\'') { // If already escaping '\'', then stop it
