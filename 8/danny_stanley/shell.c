@@ -1,5 +1,6 @@
 #include "shell.h"
-#include "colors.h"
+#include "shellutil.h"
+#include "prompt.h"
 
 int errno_result; // Used in collaboration with errno if function fails
 pid_t child_pid = -111111; // Hack to initialize child_pid as a value that does not disrupt the system
@@ -10,15 +11,6 @@ char **argv;
 int tokIndex;
 int tokSize;
 char *tok;
-int escapeIndex;
-int escapeSize;
-char *escape_buf;
-int tildeIndex;
-int tildeSize;
-char *tilde_buf;
-
-int cmd_status = 1;
-int valid_input = 0;
 
 node* path_history; //For cd history
 
@@ -34,55 +26,6 @@ static void signalhandler(int signal) {
             fflush(stdout);
         }
     }
-}
-
-/* Writes directory path given a buffer */
-char * get_path(char *path_buf, int path_size) {
-    char *home = getenv("HOME");
-    char cwd_buf[path_size];
-    getcwd(cwd_buf, path_size);
-    char *cwd = cwd_buf;
-    char *home_in_cwd = strstr(cwd, home);
-    if (home_in_cwd) {
-        cwd = cwd + strlen(home) - 1; // Move pointer of path_buf to point to the character right before $HOME ends
-        cwd[0] = '~'; // Replace character with ~
-    }
-    snprintf(path_buf, path_size, "%s", cwd);
-    return path_buf;
-}
-
-/* Writes current time given a buffer */
-char * get_time(char *time_buf, int time_size) {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    char *ampm;
-    int hour = tm.tm_hour;
-    if (hour < 12) {
-        ampm = "AM";
-    }
-    else {
-        ampm = "PM";
-        hour -= 12;
-    }
-    snprintf(time_buf, time_size, "[%02d:%02d:%02d %s]", hour, tm.tm_min, tm.tm_sec, ampm);
-    return time_buf;
-}
-
-/* Writes prompt given a buffer */
-char * create_prompt(char *prompt_buf, int prompt_size) {
-    char path[PATH_SIZE];
-    get_path(path, PATH_SIZE);
-    char time[TIME_SIZE];
-    get_time(time, TIME_SIZE);
-    const char *status;
-    if (cmd_status) { // Previous command was successful
-        status = fg_green;
-    }
-    else {
-        status = fg_red;
-    }
-    snprintf(prompt_buf, prompt_size, "%s%s%s$ %s%s%s %s%s%s %s%s\nᐅ %s", bold_prefix, fg_pink, shell_name, bold_prefix, fg_orange, time, bold_prefix, fg_cyan, path, normal_prefix, status, reset);
-    return prompt_buf;
 }
 
 void cleanup_argv() {
@@ -108,127 +51,6 @@ void setup_argv() {
     tokSize = TOK_INIT_SIZE;
     tokIndex = 0;
     tok = (char *) malloc(TOK_INIT_SIZE);
-}
-
-/* Given the input from user, and index in input
- * Returns number of characters read
- * NOTE: This only handles one escape sequence!
- * REMEMBER TO FREE escape_buf after usage! */
-int escape_read(char *input, int index) {
-    int initIndex = index;
-    escapeIndex = 0;
-    escapeSize = ESCAPE_SIZE;
-    escape_buf = (char *) malloc(ESCAPE_SIZE);
-    char isEscaping = 0;
-    int done = 0;
-    while (input[index] && !done) {
-        if (input[index] == '\\') { // Escape any character after '\'
-            ++index;
-            escape_buf[escapeIndex] = input[index];
-            ++escapeIndex;
-            if (!isEscaping) {
-                done = 1;
-            }
-            isEscaping = 0;
-        }
-        else if (input[index] == '\'') {
-            if (isEscaping == '\'') { // If already escaping '\'', then stop it
-                isEscaping = 0;
-                done = 1;
-            }
-            else if (isEscaping) { // Escape the '\''
-                escape_buf[escapeIndex] = input[index];
-                ++escapeIndex;
-            }
-            else { // Set escaping if no current escape
-                isEscaping = '\'';
-            }
-        }
-        else if (input[index] == '\"') {
-            if (isEscaping == '\"') { // If already escaping '\"', then stop it
-                isEscaping = 0;
-                done = 1;
-            }
-            else if (isEscaping) { // Escape the '\"'
-                escape_buf[escapeIndex] = input[index];
-                ++escapeIndex;
-            }
-            else { // Set escaping if no current escape
-                isEscaping = '\"';
-            }
-        }
-        else { // If not escape character, do normal escaping
-            escape_buf[escapeIndex] = input[index];
-            ++escapeIndex;
-        }
-        ++index;
-
-        if (escapeIndex >= escapeSize-2) { // Subtract 2 to be safe in expanding escape_buf
-            escapeSize += ESCAPE_SIZE;
-            escape_buf = (char *) realloc(escape_buf, escapeSize * sizeof(char));
-        }
-    }
-    escape_buf[escapeIndex] = '\0';
-    return index - initIndex;
-}
-
-/* Given the input from user, and index in input
- * Returns number of characters read
- * tilde_buf must be FREED! */
-int handle_tilde(char *input, int index) {
-    int initIndex = index;
-    tildeIndex = 0;
-    ++index; // Move past '~'
-    if (input[index] == '/' || input[index] == ' ' || input[index] == '\0') { // Replace ~ with $HOME when referring to directories or nothing specified
-        tilde_buf = strdup(getenv("HOME"));
-        tildeIndex += strlen(tilde_buf);
-    }
-    else { // Replace ~user with home directory of user
-        tildeSize = TILDE_SIZE;
-        tilde_buf = (char *) malloc(TILDE_SIZE);
-        int userSize = USER_SIZE;
-        int userIndex = 0;
-        char *user = (char *) malloc(USER_SIZE * sizeof(char));
-        while (input[index] && input[index] != ' ' && input[index] != '/' && input[index] != ';' && input[index] != '>' && input[index] != '|') {
-            if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in user
-                index += escape_read(input, index);
-                if (userIndex + escapeIndex + 2 >= userSize) { // Expand user to fit escaped characters
-                    userSize += escapeIndex + FILE_SIZE;
-                    user = (char *) realloc(user, userSize * sizeof(char));
-                }
-                strcpy(user + userIndex, escape_buf); // Copy escape_buf to end of user
-                userIndex += escapeIndex;
-            }
-            else {
-                user[userIndex] = input[index];
-                ++userIndex;
-                ++index;
-            }
-            if (userIndex + 2 > userSize) {
-                userSize += FILE_SIZE;
-                user = (char *) realloc(user, userSize * sizeof(char));
-            }
-        }
-        user[userIndex] = '\0';
-        struct passwd *found_user = getpwnam(user);
-        char *user_home;
-        if (found_user) {
-            user_home = found_user->pw_dir; // Retrieves user home directory
-        }
-        else { // Defaults to printing out user input
-            user_home = user;
-            tok[tildeIndex] = '~';
-            ++tildeIndex;
-        }
-        int home_length = strlen(user_home);
-        if (home_length + 2 >= tildeSize) {
-            tildeSize += home_length;
-            tilde_buf = (char *) realloc(tilde_buf, tildeSize * sizeof(char));
-        }
-        strcpy(tilde_buf + tildeIndex, user_home);
-        tildeIndex += home_length;
-    }
-    return index - initIndex;
 }
 
 int main() {

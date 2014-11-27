@@ -1,5 +1,5 @@
-FILES = shell.c directorystack.c
-OBJECTS = shell.o directorystack.o
+FILES = *.c
+OBJECTS = *.o
 LIBS = -lreadline
 
 all: clean build run
