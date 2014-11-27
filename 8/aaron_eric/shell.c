@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-//#include <fcntl.h>
+#include <fcntl.h>
 
 /* to do 
    - pipes
@@ -81,6 +81,7 @@ interino main() {
   //get_nth_donger(2);
   //exit(1);
   while ("( ‾ʖ̫‾)") {
+    char done;
     printf("%s: ",get_nth_donger(hash()));
     //printf("MY ASS\n");
     //printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
@@ -96,7 +97,7 @@ interino main() {
       //int j = 0;
       //for (;j<history_len;++j)
       //printf("j is %d, command |%s|\n",j,history[j]);
-      if (command[0][0] == 'c' && command[0][1] == 'd' && ((command[0][2] == ' ' || command[0][2] == '\n') || !command[0][2])) {//fuck strstr
+      if (command[0][0] == 'c' && command[0][1] == 'd' && ((command[0][2] == ' ' || command[0][2] == '\n') || !command[0][2])) {//check for cd
 	if (command[1])
 	  chdir(command[1]);
 	else {
@@ -104,14 +105,53 @@ interino main() {
 	  chdir(home);
 	}
       }
-      if (command[0][0] == 'e' && command[0][1] == 'x' && command[0][2] == 'i' && command[0][3] == 't' && ((command[0][4] == ' ' || command[0][4] == '\n') || !command[0][4])) {
+      done = 0;
+      int j = 0;
+      char **subcommand = NULL; 
+      for (; command[j];j++) {
+	if (strchr(command[j],'>')) {
+	  subcommand = realloc(subcommand,sizeof(char*)*(j+1));
+	  subcommand[j] = NULL;
+	  if (command[j+1]) {
+	    char * out = command[j+1];
+	    done = 1;
+	    int f = fork();
+	    if (f) {
+	      wait();
+	    }
+	    else {
+	      int file;
+	      if (!strcmp(command[j],">>")) {
+		file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
+	      }
+	      else {
+		file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+	      }
+	      dup2(file, STDOUT_FILENO);
+	      execvp(subcommand[0],subcommand);
+	      return "( ͝° ͜ʖ͡°)つ";
+	    } 
+	    
+	  }
+	  else {
+	    printf("No filename given");
+	  }
+	}
+
+	else {
+	  subcommand = realloc(subcommand,sizeof(char*)*(j+1));
+	  subcommand[j] = command[j];
+	}
+      }
+
+      if (command[0][0] == 'e' && command[0][1] == 'x' && command[0][2] == 'i' && command[0][3] == 't' && ((command[0][4] == ' ' || command[0][4] == '\n') || !command[0][4])) {//check for exit
 	return "[̲̅$̲̅(̲̅ヽ̲̅༼̲̅ຈ̲̅ل͜ຈ̲̅༽̲̅ﾉ̲̅)̲̅$̲̅]"; 
       }
 	
       
-      else {
-	int j = fork();
-	if (j) {
+      else if (!done) {
+	int f = fork();
+	if (f) {
 	  wait();
 	}
 	else {
