@@ -15,7 +15,7 @@ static void sighandler(int signo){
 
 int main(){
   signal(SIGUSR1,sighandler);
-  printf("-- Alex L. and David B. SHELL --\n\n"); 
+  printf("-- BALD SHELL --\n\n"); 
   shell();
   return 0;
 }
@@ -27,18 +27,9 @@ int cd (char* s) {
   strcpy (path, s);
   char cwd [256];
   getcwd (cwd, sizeof(cwd));
-<<<<<<< HEAD
- 
-  strcat (cwd, "/");
-  strcat (cwd, s);
-  
-  //strcat (cwd, "/0");
-  int ret = chdir(cwd);
-=======
   strcat (cwd, "/");
   strcat (cwd, s);
   return chdir(cwd);
->>>>>>> da8b537d4d48013305f8317000ed20736fd5453e
 }
 
 
@@ -124,8 +115,8 @@ int execute(char *s){
       pipe (fd);
       int f = fork();
       if (!f){
-	dup2(fd[0], 0);
-	execvp (params[0]);
+		dup2(fd[0], 0);
+		execvp (params[0],params);
       }
   
       
@@ -153,19 +144,19 @@ int execute(char *s){
     if (!f){
       int y = 0;
       for (;y < n; y++){ //redirection
-	if (!strcmp(params[y],">")){
-	  int fd = open(params[y+1],O_CREAT | O_TRUNC | O_WRONLY,0644);
-	  dup2(fd,STDOUT_FILENO);
-	  params[y] = NULL;
-	}else if (!strcmp(params[y],">>")){
-	  int fd = open(params[y+1],O_CREAT | O_APPEND | O_WRONLY,0644);
-	  dup2(fd,STDOUT_FILENO);
-	  params[y] = NULL;
-	}else if (!strcmp(params[y],"<")){
-	  int fd = open(params[y+1],O_RDONLY);
-	  dup2(fd,STDIN_FILENO);
-	  params[y] = NULL;
-	}
+		if (!strcmp(params[y],">")){
+		  int fd = open(params[y+1],O_CREAT | O_TRUNC | O_WRONLY,0644);
+		  dup2(fd,STDOUT_FILENO);
+		  params[y] = NULL;
+		}else if (!strcmp(params[y],">>")){
+		  int fd = open(params[y+1],O_CREAT | O_APPEND | O_WRONLY,0644);
+		  dup2(fd,STDOUT_FILENO);
+		  params[y] = NULL;
+		}else if (!strcmp(params[y],"<")){
+		  int fd = open(params[y+1],O_RDONLY);
+		  dup2(fd,STDIN_FILENO);
+		  params[y] = NULL;
+		}
       }
       execvp(params[0],params);    
     }else{
