@@ -1,0 +1,3 @@
+    ls -l ~/Desktop > ~danny/Desktop/wowtest;cat ~/Desktop/wowtest
+cd /
+                                        rm ~/Desktop/wowtest

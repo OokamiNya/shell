@@ -13,6 +13,9 @@ char *tok;
 int escapeIndex;
 int escapeSize;
 char *escape_buf;
+int tildeIndex;
+int tildeSize;
+char *tilde_buf;
 
 int cmd_status = 1;
 int valid_input = 0;
@@ -89,9 +92,13 @@ void cleanup_argv() {
     }
     free(argv);
     free(tok);
-    if (escape_buf) { // Frees escape_buf if it is already defined
+    if (escape_buf) { // Frees escape_buf if it is defined
         free(escape_buf);
         escape_buf = NULL;
+    }
+    if (tilde_buf) { // Frees tilde_buf if it is defined
+        free(tilde_buf);
+        tilde_buf = NULL;
     }
 }
 
@@ -162,6 +169,65 @@ int escape_read(char *input, int index) {
         }
     }
     escape_buf[escapeIndex] = '\0';
+    return index - initIndex;
+}
+
+/* Given the input from user, and index in input
+ * Returns number of characters read
+ * tilde_buf must be FREED! */
+int handle_tilde(char *input, int index) {
+    int initIndex = index;
+    tildeIndex = 0;
+    ++index; // Move past '~'
+    if (input[index] == '/' || input[index] == ' ' || input[index] == '\0') { // Replace ~ with $HOME when referring to directories or nothing specified
+        tilde_buf = strdup(getenv("HOME"));
+        tildeIndex += strlen(tilde_buf);
+    }
+    else { // Replace ~user with home directory of user
+        tildeSize = TILDE_SIZE;
+        tilde_buf = (char *) malloc(TILDE_SIZE);
+        int userSize = USER_SIZE;
+        int userIndex = 0;
+        char *user = (char *) malloc(USER_SIZE * sizeof(char));
+        while (input[index] && input[index] != ' ' && input[index] != '/' && input[index] != ';' && input[index] != '>' && input[index] != '|') {
+            if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in user
+                index += escape_read(input, index);
+                if (userIndex + escapeIndex + 2 >= userSize) { // Expand user to fit escaped characters
+                    userSize += escapeIndex + FILE_SIZE;
+                    user = (char *) realloc(user, userSize * sizeof(char));
+                }
+                strcpy(user + userIndex, escape_buf); // Copy escape_buf to end of user
+                userIndex += escapeIndex;
+            }
+            else {
+                user[userIndex] = input[index];
+                ++userIndex;
+                ++index;
+            }
+            if (userIndex + 2 > userSize) {
+                userSize += FILE_SIZE;
+                user = (char *) realloc(user, userSize * sizeof(char));
+            }
+        }
+        user[userIndex] = '\0';
+        struct passwd *found_user = getpwnam(user);
+        char *user_home;
+        if (found_user) {
+            user_home = found_user->pw_dir; // Retrieves user home directory
+        }
+        else { // Defaults to printing out user input
+            user_home = user;
+            tok[tildeIndex] = '~';
+            ++tildeIndex;
+        }
+        int home_length = strlen(user_home);
+        if (home_length + 2 >= tildeSize) {
+            tildeSize += home_length;
+            tilde_buf = (char *) realloc(tilde_buf, tildeSize * sizeof(char));
+        }
+        strcpy(tilde_buf + tildeIndex, user_home);
+        tildeIndex += home_length;
+    }
     return index - initIndex;
 }
 
@@ -238,11 +304,20 @@ void parse_input(char *input) {
                     if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in filename
                         index += escape_read(input, index);
                         if (fileIndex + escapeIndex + 2 >= fileSize) { // Expand filename to fit escaped characters
-                            fileSize += escapeIndex + FILE_SIZE;
+                            fileSize += escapeIndex;
                             filename = (char *) realloc(filename, fileSize * sizeof(char));
                         }
                         strcpy(filename + fileIndex, escape_buf); // Copy escape_buf to end of filename
                         fileIndex += escapeIndex;
+                    }
+                    else if (input[index] == '~') {
+                        index += handle_tilde(input, index);
+                        if (fileIndex + tildeIndex + 2 >= fileSize) { // Expand filename to fit tilde expansion
+                            fileSize += tildeIndex;
+                            filename = (char *) realloc(filename, fileSize * sizeof(char));
+                        }
+                        strcpy(filename + fileIndex, tilde_buf); // Copy tilde_buf to where '~' would be
+                        fileIndex += tildeIndex;
                     }
                     else {
                         filename[fileIndex] = input[index];
@@ -257,7 +332,7 @@ void parse_input(char *input) {
                 filename[fileIndex] = '\0';
                 int output = open(filename, O_CREAT | O_WRONLY | mode, 0644); // Open file for redirection
                 if (output == -1) {
-                    printf("Redirecting to file failed: %s\n", strerror(errno));
+                    printf("Redirecting to file `%s` failed: %s\n", filename, strerror(errno));
                 }
                 else {
                     int stdout_backup = dup(STDOUT_FILENO);
@@ -298,50 +373,13 @@ void parse_input(char *input) {
                 --index; // Move back in index pointer since escape_read() goes to after escape is done, offset needed for ++index at end of while loop
             }
             else if (input[index] == '~') {
-                ++index; // Move past '~'
-                if (input[index] == '/' || input[index] == ' ' || input[index] == '\0') { // Replace ~ with $HOME when referring to directories or nothing specified
-                    char *home = getenv("HOME");
-                    strcpy(tok + tokIndex, home);
-                    tokIndex += strlen(home);
+                index += handle_tilde(input, index);
+                if (tokIndex + tildeIndex + 2 >= tildeSize) { // Expand filename to fit tilde expansion
+                    tokSize += tildeIndex;
+                    tok = (char *) realloc(tok, tokSize * sizeof(char));
                 }
-                else { // Replace ~user with home directory of user
-                    int userSize = USER_SIZE;
-                    int userIndex = 0;
-                    char *user = (char *) malloc(USER_SIZE * sizeof(char));
-                    while (input[index] && input[index] != ' ' && input[index] != ';' && input[index] != '>' && input[index] != '|') {
-                        if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in user
-                            index += escape_read(input, index);
-                            if (userIndex + escapeIndex + 2 >= userSize) { // Expand user to fit escaped characters
-                                userSize += escapeIndex + FILE_SIZE;
-                                user = (char *) realloc(user, userSize * sizeof(char));
-                            }
-                            strcpy(user + userIndex, escape_buf); // Copy escape_buf to end of user
-                            userIndex += escapeIndex;
-                        }
-                        else {
-                            user[userIndex] = input[index];
-                            ++userIndex;
-                            ++index;
-                        }
-                        if (userIndex + 2 > userSize) {
-                            userSize += FILE_SIZE;
-                            user = (char *) realloc(user, userSize * sizeof(char));
-                        }
-                    }
-                    user[userIndex] = '\0';
-                    struct passwd *found_user = getpwnam(user);
-                    char *user_home;
-                    if (found_user) {
-                        user_home = found_user->pw_dir; // Retrieves user home directory
-                    }
-                    else { // Defaults to printing out user input
-                        user_home = user;
-                        tok[tokIndex] = '~';
-                        ++tokIndex;
-                    }
-                    strcpy(tok + tokIndex, user_home);
-                    tokIndex += strlen(user_home);
-                }
+                strcpy(tok + tokIndex, tilde_buf); // Copy tilde_buf to where '~' would be
+                tokIndex += tildeIndex;
                 --index; // Offset ++index at end of while loop
             }
             else {

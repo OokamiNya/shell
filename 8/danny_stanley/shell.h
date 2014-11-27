@@ -19,6 +19,7 @@
 #define USER_SIZE 128
 #define FILE_SIZE 256
 #define ESCAPE_SIZE 128
+#define TILDE_SIZE 256
 #define TIME_SIZE 14
 
 const char *shell_name = "StD";
@@ -32,3 +33,4 @@ char * create_prompt(char *, int);
 void cleanup_argv();
 void setup_argv();
 int escape_read(char *, int);
+int handle_tilde(char *, int);
