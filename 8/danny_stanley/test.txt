@@ -3,6 +3,7 @@ echo "Testing: Whitespace control";                 which          -a           
 echo "Testing: Output Redirection"; ls   -l   ~/Desktop   >   ~/Desktop/superawesome\!wowtest\;
 echo "Testing: Input Redirection"; cat<colors.h;echo "Successful redirection!" < prompt.h
 echo "Testing: Semicolon"; cd /;cat ~/Desktop/"superawesome!wowtest;";rm ~/Desktop'/superawesome!wowtest;';
+echo "Testing: Piping" | grep "Testing"
 
 echo "Testing: oddjobs"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

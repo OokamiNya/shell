@@ -89,6 +89,39 @@ void parse_input(char *input) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
             }
+            else if (input[index] == '|') {
+                if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                }
+                else { // Stops if there is nothing to pipe
+                    printf("There is nothing to pipe from!\n");
+                    break;
+                }
+                argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+                argv[args] = NULL;
+
+                int pipes[2];
+                if (pipe(pipes) == -1) { // If pipe creation fails, print error
+                    printf("Error with piping: %s\n", strerror(errno));
+                }
+                else {
+                    int stdout_backup = dup(STDOUT_FILENO);
+                    dup2(pipes[1], STDOUT_FILENO); // Redirects stdout to write end of pipe
+                    execute(argv);
+                    cleanup_argv(); // Clean up after execution
+                    setup_argv();
+                    close(pipes[1]);
+                    dup2(stdout_backup, STDOUT_FILENO); // Restores stdout
+
+                    global_stdin_backup = dup(STDIN_FILENO); // Saves original stdin
+                    dup2(pipes[0], STDIN_FILENO); // Redirects read end of pipe to stdin
+                }
+            }
             else if (input[index] == '<') {
                 ++index; // Advance past '<'
                 while (input[index] == ' ') { // Skip whitespace between '<' and filename
@@ -132,9 +165,11 @@ void parse_input(char *input) {
                     printf("Input redirection from file `%s` failed: %s\n", filename, strerror(errno));
                 }
                 else {
-                    global_stdin_backup = dup(STDIN_FILENO);
-                    dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
-                    close(inputFile);
+                    if (global_stdin_backup == STDIN_FILENO) { // Only if stdin is not already changed (from piping)
+                        global_stdin_backup = dup(STDIN_FILENO);
+                        dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
+                        close(inputFile);
+                    }
                 }
                 --index; // Offset ++index at the end of the while loop
             }
