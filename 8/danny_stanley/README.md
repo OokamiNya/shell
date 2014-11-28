@@ -9,16 +9,21 @@ A shell built by Stanley Lok and Danny Qiu for Mr. DW's 8th Period Systems Class
 - Home directory recognition: `~`
 - Character escapes: `"` & `\` & `'`
 - Multiple commands: `;`
-- File redirection: `>`
+- File redirection: `>` & `<`
 - Handler: `SIGINT`
 - Readline library features: Tab Completion & History
 
 ## TODO:
 
-- File redirection: `<`
+- Replace !! with previous function
+- Clear input buffer when handling SIGINT
 - Piping: `|`
 - Backtracking: `cd -`
+- Wildcard handling: `*`
+- Smarter tab completion
+- Setting variable values
 - Math
+- Background Processes
 - Prevent buffer overflow attacks by dynamically allocating memory
 - More information on prompt
 - Refactor functions into multiple files
