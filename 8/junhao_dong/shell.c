@@ -1,30 +1,9 @@
-/* TODO==========
-   redirecting - handle multiple (sort < file.txt > sortedfiles.txt)
-
-   pipes
-   feature: ls ~ (~ for all commands)
-   add color to prompt, customize, bold
-   sighandler - catch sigint, ctrl d for eof
-   command history, up arrow (or ctrl p) for previous command
-   directory stack/linked list
-   'cd - n' goes to nth previous dir ; dir stack/linklist
-   tab completion
-   <<< here string; << here doc
-   header file, readme
-
-   NOTES========== 
-   ignores everything after first token after redir symbol
-   trims excess white space and ';'
-   ignores multiple ;'s rather than give syntax error (as in bash)
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-
 #include "shell.h"
 
 #define TRUE 1
@@ -38,7 +17,6 @@
 int isRedirect = FALSE;
 char *redirect_symbol;
 char *redirect_file;
-
 
 void printPrompt(){
   char *cwd = 0;
