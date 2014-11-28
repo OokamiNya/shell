@@ -90,78 +90,53 @@ void parse_input(char *input) {
             if (0) { // Handler for other cases
             }
             else if (input[index] == '<') {
-                if (args > 1 || (args == 1 && tokIndex != 0)) { // If there is a command and arguments
-                    break; // Exit out of while loop and execute it
+                ++index; // Advance past '<'
+                while (input[index] == ' ') { // Skip whitespace between '<' and filename
+                    ++index;
                 }
-                else {
-                    if (args == 0 && tokIndex == 0) { // No command, default to cat
-                        ++args;
-                        argv = (char **) realloc(argv, args * sizeof(char *));
-                        argv[args-1] = strdup("cat");
-                    }
-                    else if (tokIndex != 0) { // Complete token to use as command
-                        tok[tokIndex] = '\0';
-                        ++args;
-                        argv = (char **) realloc(argv, args * sizeof(char *));
-                        argv[args-1] = strdup(tok);
-                    }
-                    argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
-                    argv[args] = NULL;
-
-                    ++index; // Advance past '<'
-                    while (input[index] == ' ') { // Skip whitespace between '<' and filename
-                        ++index;
-                    }
-
-                    int fileSize = FILE_SIZE;
-                    int fileIndex = 0;
-                    char *filename = (char *) malloc(FILE_SIZE * sizeof(char));
-                    while (input[index] && input[index] != ' ' && input[index] != ';') {
-                        if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in filename
-                            index += escape_read(input, index);
-                            if (fileIndex + escapeIndex + 2 >= fileSize) { // Expand filename to fit escaped characters
-                                fileSize += escapeIndex;
-                                filename = (char *) realloc(filename, fileSize * sizeof(char));
-                            }
-                            strcpy(filename + fileIndex, escape_buf); // Copy escape_buf to end of filename
-                            fileIndex += escapeIndex;
-                        }
-                        else if (input[index] == '~') {
-                            index += handle_tilde(input, index);
-                            if (fileIndex + tildeIndex + 2 >= fileSize) { // Expand filename to fit tilde expansion
-                                fileSize += tildeIndex;
-                                filename = (char *) realloc(filename, fileSize * sizeof(char));
-                            }
-                            strcpy(filename + fileIndex, tilde_buf); // Copy tilde_buf to where '~' would be
-                            fileIndex += tildeIndex;
-                        }
-                        else {
-                            filename[fileIndex] = input[index];
-                            ++fileIndex;
-                            ++index;
-                        }
-                        if (fileIndex + 2 > fileSize) {
-                            fileSize += FILE_SIZE;
+                int fileSize = FILE_SIZE;
+                int fileIndex = 0;
+                char *filename = (char *) malloc(FILE_SIZE * sizeof(char));
+                while (input[index] && input[index] != ' ' && input[index] != ';') {
+                    if (input[index] == '\\' || input[index] == '\'' || input[index] == '\"') { // Handle escapes in filename
+                        index += escape_read(input, index);
+                        if (fileIndex + escapeIndex + 2 >= fileSize) { // Expand filename to fit escaped characters
+                            fileSize += escapeIndex;
                             filename = (char *) realloc(filename, fileSize * sizeof(char));
                         }
+                        strcpy(filename + fileIndex, escape_buf); // Copy escape_buf to end of filename
+                        fileIndex += escapeIndex;
                     }
-                    filename[fileIndex] = '\0';
-                    int inputFile = open(filename, O_RDONLY); // Open file for redirection
-                    if (inputFile == -1) {
-                        printf("Reading from file `%s` failed: %s\n", filename, strerror(errno));
+                    else if (input[index] == '~') {
+                        index += handle_tilde(input, index);
+                        if (fileIndex + tildeIndex + 2 >= fileSize) { // Expand filename to fit tilde expansion
+                            fileSize += tildeIndex;
+                            filename = (char *) realloc(filename, fileSize * sizeof(char));
+                        }
+                        strcpy(filename + fileIndex, tilde_buf); // Copy tilde_buf to where '~' would be
+                        fileIndex += tildeIndex;
                     }
                     else {
-                        int stdinbackup = dup(STDIN_FILENO);
-                        dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
-                        execute(argv);
-                        close(inputFile);
-                        dup2(stdinbackup, STDIN_FILENO); // Restores stdin
+                        filename[fileIndex] = input[index];
+                        ++fileIndex;
+                        ++index;
                     }
-                    cleanup_argv(); // Clean up redirection commands, so that they don't run again later on
-                    setup_argv();
-                    --index; // Offset ++index at the end of the while loop
-                    valid_input = 2; // Saves into history
+                    if (fileIndex + 2 > fileSize) {
+                        fileSize += FILE_SIZE;
+                        filename = (char *) realloc(filename, fileSize * sizeof(char));
+                    }
                 }
+                filename[fileIndex] = '\0';
+                int inputFile = open(filename, O_RDONLY); // Open file for redirection
+                if (inputFile == -1) {
+                    printf("Input redirection from file `%s` failed: %s\n", filename, strerror(errno));
+                }
+                else {
+                    global_stdin_backup = dup(STDIN_FILENO);
+                    dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
+                    close(inputFile);
+                }
+                --index; // Offset ++index at the end of the while loop
             }
             else if (input[index] == '>') {
                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
@@ -255,6 +230,8 @@ void parse_input(char *input) {
                     execute(argv);
                     cleanup_argv();
                     setup_argv();
+                    dup2(global_stdin_backup, STDIN_FILENO); // Always restore stdin
+                    dup2(global_stdout_backup, STDOUT_FILENO); // Always restore stdout
                 }
                 valid_input = 2; // Saves into history
             }
@@ -314,6 +291,9 @@ void parse_input(char *input) {
             valid_input = 0;
         }
     }
+    dup2(global_stdin_backup, STDIN_FILENO); // Restores stdin regardless
+    dup2(global_stdout_backup, STDOUT_FILENO); // Restores stdout regardless
+    piping_state = 0; // Terminates any pipes
     cleanup_argv();
 }
 

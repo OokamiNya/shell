@@ -1,6 +1,7 @@
 echo "T\e\s\ting\:" 'escapin\g \'characters\'
-echo "Testing: Whitespace control";           cd            ..                  
-echo "Testing: Redirection output"; ls   -l   ~/Desktop   >   ~/Desktop/superawesome\!wowtest\;
+echo "Testing: Whitespace control";                 which          -a           ls                               
+echo "Testing: Output Redirection"; ls   -l   ~/Desktop   >   ~/Desktop/superawesome\!wowtest\;
+echo "Testing: Input Redirection"; cat<colors.h;echo "Successful redirection!" < prompt.h
 echo "Testing: Semicolon"; cd /;cat ~/Desktop/"superawesome!wowtest;";rm ~/Desktop'/superawesome!wowtest;';
 
 echo "Testing: oddjobs"
