@@ -60,24 +60,6 @@ void printPrompt(){
   free(cwd);
 }
 
-void changeDir(char *arg){
-  if (arg){
-    // Replace '~' with $HOME
-    if (arg[0]=='~'){
-      char *tmp = malloc(strlen(HOME) + strlen(arg));
-      strcpy(tmp,HOME);
-      strcat(tmp,arg+1);
-      strcpy(arg,tmp);
-      free(tmp);
-    }
-  }
-  else{
-    arg = HOME;
-  }
-  if (chdir(arg) < 0)
-    printf("cd: %s: %s\n", arg, strerror(errno));
-}
-
 void redirect(){
   int fd;
   if (!strcmp(redirect_symbol, ">")){
@@ -112,13 +94,17 @@ void execute(char **argv){
   }
   // `cd`
   else if (!strcmp(argv[0], "cd")){
-    changeDir(argv[1]);
+    if (!argv[1])
+      argv[1] = HOME;
+    if (chdir(argv[1]) < 0)
+      printf("cd: %s: %s\n", argv[1], strerror(errno));
   }
   else{
     int f, status;
     f = fork();
-    if (f < 0)
+    if (f < 0){
       printError();
+    }
     else if (!f){
       if (isRedirect){
  	redirect();
@@ -136,13 +122,14 @@ void execute(char **argv){
 
 // Returns dynamically allocated memory
 char ** parseInput(char *input, char *delim){
-  int size, maxSize = 4; // Limit of the number of tokens in argv
+  int maxSize = 1; // Limit of the number of tokens in argv
+  int size = 0;
   char **argv = malloc(maxSize * sizeof *argv);
   char *arg = strsep(&input, delim);
   char *tmp; // Used to trim whitespace
-  for (size = 0; arg; arg = strsep(&input, delim)){
+  for (; arg; arg = strsep(&input, delim)){
     // Reallocate if out of memory
-    if (size == maxSize-2){
+    if (size == maxSize){
       maxSize *= 2;
       argv = realloc(argv, maxSize * sizeof *argv);
     }
@@ -165,6 +152,14 @@ char ** parseInput(char *input, char *delim){
 	isRedirect = TRUE;
       }
       else{
+	// Replace '~' with $HOME
+	if (arg[0]=='~'){
+	  char *tmp = malloc(strlen(HOME) + strlen(arg));
+	  strcpy(tmp,HOME);
+	  strcat(tmp,arg+1);
+	  strcpy(arg,tmp);
+	  free(tmp);
+	}
 	argv[size] = arg;
 	size++;
       }

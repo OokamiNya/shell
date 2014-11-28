@@ -1,5 +1,4 @@
 void printPrompt();
-void changeDir();
 void redirect();
 void execute(char **argv);
 // Free dynamically allocated memory after use
