@@ -39,27 +39,31 @@ void printPrompt(){
 }
 
 void redirect(){
-  int fd;
-  if (!strcmp(redirect_symbol, ">")){
-    fd = open(redirect_file, O_WRONLY|O_CREAT|O_TRUNC, 0666);
-    if (fd < 0)
-      printError();
-    else{
-      if (dup2(fd, STDOUT_FILENO) < 0)
-	printError();
-      close(fd);
-    }
+  int fd, oldfd;
+  if (redirect_symbol[0] == '>'){
+    oldfd = STDOUT_FILENO;
+    if (redirect_symbol[1]) // ">>"
+      fd = open(redirect_file, O_WRONLY|O_CREAT|O_APPEND, 0644);
+    else // ">"
+      fd = open(redirect_file, O_WRONLY|O_CREAT|O_TRUNC, 0644);
   }
-  else if (!strcmp(redirect_symbol,">>")){
-  }
-  else if (!strcmp(redirect_symbol,"<")){
-  }
-  else if (!strcmp(redirect_symbol,"<<")){
+  else if (redirect_symbol[0] == '<'){
+    oldfd = STDIN_FILENO;
+    fd = open(redirect_file, O_RDONLY, 0644);
   }
   else if (!strcmp(redirect_symbol,"|")){
   }
   else{
     printf("This should never happen.. See redirect(argv)\n"); // DEBUGGING
+  }
+
+  if (fd < 0)
+    printError();
+  else{
+    if (dup2(fd, oldfd) < 0)
+      printError();
+    if (close(fd) < 0)
+      printError();
   }
 }
 
@@ -84,9 +88,8 @@ void execute(char **argv){
       printError();
     }
     else if (!f){
-      if (isRedirect){
- 	redirect();
-      }
+      if (isRedirect)
+	redirect();
       if (execvp(argv[0], argv) < 0){
 	printf("%s: command not found\n", argv[0]);
 	exit(EXIT_FAILURE);
@@ -125,7 +128,7 @@ char ** parseInput(char *input, char *delim){
 	break; // Finish after storing the token after the redirect symbol
       }
       else if (!strcmp(arg,">") || !strcmp(arg,">>") || \
-	       !strcmp(arg,"<") || !strcmp(arg,"<<") || !strcmp(arg,"|")){
+	       !strcmp(arg,"<") || !strcmp(arg,"|")){
 	redirect_symbol = arg;
 	isRedirect = TRUE;
       }
@@ -160,10 +163,11 @@ void shell(){
 
     count = 0;
     while (commands[count]){
-      if (isRedirect) isRedirect = FALSE;
       argv = parseInput(commands[count], " ");
       execute(argv);
       free(argv);
+      if (isRedirect)
+	isRedirect = FALSE;
       count++;
     }
     free(commands);

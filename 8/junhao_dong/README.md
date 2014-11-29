@@ -5,16 +5,17 @@ Systems Period 8
 
 Rudimentary shell program
 
-## Features
-- [x] Tilde expansion: `~` is replaced by user's $HOME directory
-- [x] Executes multiple commands per line, separated by `;`
-  - [x] Trims excess white space and semicolons
-  - [x] Ignores consecutive semicolons rather than returning a syntax error
+## Basic Features
+- [x] Execute multiple commands per line, separated by `;`
+  - [x] Trim excess white space
+  - [x] Ignore consecutive semicolons rather than returning a syntax error
 - [x] Basic file redirection: `>` & `<`
-  - [x] All args following a redirect symbol, excluding the first, are ignored
+  - [x] All args following a redirect symbol, excluding the first, are ignored (subject to change)
 - [x] Pipes: `|`
+- [x] No memory leaks (Valgrind)
 
 ## TODO (in no particular order)
+- [x] Tilde expansion: `~` is replaced by user's $HOME directory
 - [ ] Colorful prompt
 - [ ] Signal handling: `SIGINT` & `EOF`
 - [ ] Wildcard `*`
@@ -22,7 +23,8 @@ Rudimentary shell program
 - [ ] Command history & navigation
 - [ ] Directory history & navigation (`cd -`)
 - [ ] More complex redirection
-  - [ ] `>>`, `<<`, `<<<`
+  - [x] `>>`
+  - [ ] `<<`, `<<<`
   - [ ] `cmd < infile > outfile`
   - [ ] Redirection for `STDERR` and other file descriptors 
 - [ ] Background processes
