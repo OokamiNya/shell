@@ -1,5 +1,3 @@
-//JUST USING THIS AS A HOLDING PLACE FOR THE EXECUTE() AND ALLOCATE_ARRAY_MEM() FUNCTIONS; will copy into shell.c once things seem to be working
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,164 +6,53 @@
 #include <errno.h>
 #include <string.h>
 
-int execute(char ** a);
-void allocate_array_mem(char ** a, int i);
 
-
-//note: MAKE SURE EVERYTHING GETS FREED, but also THAT THINGS WHICH SHOULDN'T BE FREED DON'T GET FREED
-int execute(char ** args){
-
-  //i is to be used as a location marker in args
-  //note: after i is assigned to a return statement from contains(), i==(# of elements for which memory has to be allocated), and (i+1)==(index of args whereupon the remainder of the arguments begins)
-  int i;
-
-  if((i = contains(args,";")) != -1){
-    //part1 will contain the first line of command to be run
-    char ** part1;
-    
-    //allocate space for its contents
-    allocate_array_mem(part1, i);
-    
-    //copy over the aforementioned first line of command from args into part1
-    int j = 0;
-    while(j < i){
-      part1[j] = args[j];
-      j++;
-    }
-
-    //free the memory of args in which the copied values and the semicolon had been stored
-    j=0;
-    while(j<=i){
-      free(args[i]);
-      j++;
-    }
-    
-    //make args point to the remainder of the array (_exclusive_ of the semicolon)
-    args += (i + 1);
-
-    //recurse first set of commands
-    execute(part1);
-
-    //recurse everything else
-    execute(args);
-
+void allocate_array_mem(char ** buffer, int i){
+  //allocate space for pointers
+  printf("about to allocate the pointers");
+  printf("\n");
+  buffer = (char **)malloc(i * sizeof(char *));
+  //allocate space for strings at the end of each of those pointers
+  printf("about to allocate the strings");
+  printf("\n");
+  int j = 0;
+  while(j < i){
+    printf("inside the allocate() loop");
+    printf("\n");
+    buffer[j] = (char *)malloc(64 * sizeof(char));
+    printf("buffer[%d]: %d\n",j,buffer[j]);
+    j++;
   }
-
-  if((i = contains(args,"<")) != -1){
-    int f = fork();
-    int status;
-    if (!f){
-      int fd = open(args[i + 1], O_RDWR, O_CREAT);
-      dup2(STDIN_FILENO , fd);
-    
-      char ** part1;   
-      allocate_array_mem(part1, i);
-    
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-
-      j=0;
-      while(j<=i){
-	free(args[i]);
-	j++;
-      }
-
-      execvp(part1[0] , part1);
-      //close, and restting stdout not nessecarry b/c its a child
-    }else{
-      wait(&status);
-    }
-
-    //redirects [command(s) in a] file to stdin
-  }else if((i = contains(args,">")) != -1){
-    int f = fork();
-    int status;
-    if (!f){
-      int fd = open(args[i + 1], O_RDWR, O_CREAT);
-      dup2(fd, STDOUT_FILENO);
-    
-      char ** part1;   
-      allocate_array_mem(part1, i);
-    
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-
-      j=0;
-      while(j<=i){
-	free(args[i]);
-	j++;
-      }
-
-      execvp(part1[0] , part1);
-      //close, and restting stdout not nessecarry b/c its a child
-    }else{
-      wait(&status);
-    }
-
-    //redirects stdout to a file
-  }else if((i = contains(args,"|")) != -1){
-    int f = fork();
-    int status;
-    if (!f){
-      
-      char ** part1;   
-      allocate_array_mem(part1, i+2);
-    
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-      
-      j=0;
-      while(j<=i){
-	free(args[i]);
-	j++;
-      }
-
-      args += 1;
-
-      part1[i] = ">";
-      part1[i+1] = "buffer.txt";
-
-
-      
-    }
-
-    //output of 1st to input of 2nd
-  }else if((i = contains(args,"cd")) != -1){
-    chdir(args[1]);
-  }else if((i = contains(args,"exit")) != -1){
-    exit(-1);
-  }else{
-
-    //fork and exec
-    int f = fork();
-    int status;
-    if(!f){
-      execvp(args[0], args);
-    }else{
-      //the parent will wait until the child has finished running
-      wait(&status);
-    }
-
-  }
-
 }
 
 
-//allocates memory for a string of 64 characters for each element in the array, the number of elements being indicated by i
-void allocate_array_mem(char ** buffer, int i){
+void print_array(char ** args){
+  printf("about to print...");
+  printf("\n");
+  int i = 0;
+  while(i<5){ //args[i]){
+    printf("inside the print() loop");
+    printf("\n");
+    //printf("args[%d]: %s\t", i, args[i]);
+    printf("\n");
+    i++;
+  }
+  printf("\n");
+}
 
-  while(i > 0){
-    buffer[i] = (char *)malloc(64, sizeof(char));
-    i--;
+
+int main(){
+  char ** test;
+  printf("not allocated yet!");
+  printf("\n");
+  allocate_array_mem(test,5);
+  printf("allocated!");
+  printf("\n");
+  printf("\n");
+  int i;
+  for(i=0;i<5;i++){
+    printf("args[%d]: %d\n",i,test[i]);
   }
 
+  //print_array(test);
 }

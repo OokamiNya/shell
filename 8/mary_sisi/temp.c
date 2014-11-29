@@ -12,7 +12,6 @@ void print_array(char** args); //for testing purposes
 void parse(char ** a); //parses user input
 int contains(char ** a, char * c); //helper
 int execute(char ** a); //hanldes user input
-void allocate_array_mem(char ** a, int i);
 
 
 void print_array(char ** args){
@@ -30,6 +29,26 @@ void print_prompt(){
   printf("%s$ ", path);
 }
 
+/* int count_args(char * input){ */
+
+/*   if(input[0] == 0){ */
+/*     return 0; */
+/*   } */
+
+/*   int num_args = 1; */
+/*   int counter = 0; */
+/*   char prev = 0; */
+/*   while(input[counter]){ */
+/*     if(input[counter] == ' ' && prev != ' '){ */
+/*       num_args++; */
+/*     } */
+/*     prev = input[counter]; */
+/*     counter++; */
+/*   } */
+/*   return num_args; */
+
+/* } */
+
 
 void parse(char ** args){
 
@@ -42,13 +61,21 @@ void parse(char ** args){
 
   int i=0;
   while(i<64){
-    args[i] = (char*)calloc(64,sizeof(char));
+    args[i] = (char*)malloc(64 * sizeof(char));
     i++;
   }
 
+  /* int i=0; */
+  /* int num_args = count_args(s); */
+  /* args = (char **)malloc(num_args * sizeof(char *)); */
+  /* while(i<num_args){ */
+  /*   args[i] = (char *)malloc(64 * sizeof(char)); */
+  /*   i++; */
+  /* } */
+
   i=0;
   while(temp){
-        if(strcmp(temp,"") != 0){
+    if(strcmp(temp,"") != 0){
       strcpy(args[i],temp);
       i++;   
     }
@@ -59,14 +86,6 @@ void parse(char ** args){
   args[i] = 0;
 }
 
-void allocate_array_mem(char ** buffer, int i){
-  int j = 0;
-  while(j > i){
-    buffer[j] = (char *)malloc(64 * sizeof(char));
-    j++;
-  }
-
-}
 
 int contains(char ** args, char * c){
   //printf("IN CONTAINS: %s\n", c);
@@ -83,16 +102,14 @@ int contains(char ** args, char * c){
 int execute(char ** args){
   int i;
   if( (i = contains(args,";")) != -1){
-    printf("COMMAND WITH ;;;;;;; %d\n", i);
+    printf("COMMAND WITH ';' AT INDEX %d\n", i);
 
     char ** part1 = (char**)malloc(sizeof(char*) * i);
-    //allocate_array_mem(part1, i+1);
     
     int j = 0;
     while(j < i){
       printf("in loop\n");
       part1[j] = args[j];
-      printf("broken\n");
       j++;
     }
     
@@ -111,7 +128,7 @@ int execute(char ** args){
   }
 
   else if( (i = contains(args,"<")) != -1  ){
-    printf("COMMAND WITH <<<<<\n");
+    printf("COMMAND WITH '<' AT INDEX %d\n",i);
     int f = fork();
     int status;
     if (!f){
@@ -119,15 +136,12 @@ int execute(char ** args){
 
       int fd = open("foo.txt", O_RDWR | O_CREAT, 0644);
       //dup2(STDIN_FILENO , fd);
-      printf("WORKING????");
-
 
       char * s = (char *) malloc(sizeof(char*));
       int r = read(fd,s , sizeof(s));
       close(fd);
 
       char ** part1 = (char**)malloc(sizeof(char*) * i);   
-      //allocate_array_mem(part1, i);
     
       int j = 0;
       while(j < i){
@@ -151,20 +165,17 @@ int execute(char ** args){
     }else{
       wait(&status);
     }
-  }
-
-  else if((i = contains(args,"cd")) != -1){
+  }else if((i = contains(args,"cd")) != -1){
     chdir(args[1]);
     //~ doesn't  work
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
   }else{
-    //printf("REGULAR COMMAND\n");
-
-    //fork and exec
+    //fork
     int f = fork();
     int status;
     if(!f){
+      //child will execute command
       print_array(args);
       execvp(args[0], args);
     }else{
