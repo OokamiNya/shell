@@ -1,7 +1,6 @@
 #include"heads.h"
 #include"helper.c"
 
-char * ultimatepath;
 
 //DOES NOT WORK
 static void sighandler(int signo){
@@ -19,6 +18,7 @@ static void sighandler(int signo){
   }
   exit(-1);
   */
+  main();
   exit(-1);
 }
 
@@ -29,10 +29,8 @@ char dumb_exceptions(char arg[]){
   if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){
     strsep(&arg," ");
     if (!arg || strcmp(arg,"~")==0){
-      chdir(getenv("HOME"));//WE WIN 10/10
+      chdir(getenv("HOME"));
     }
-    //else if (!strcmp(arg,".")){
-    //}
     else{
       chdir(arg);
     }
@@ -62,7 +60,6 @@ void normal_stuff(char arg[]){
       exit(-1);
     }
   }
-  //printf("I WORK :D\n");
   wait(&pid);
 }
 
@@ -94,7 +91,6 @@ char pipe_it(char arg[]){
 //REDIRECTION > < >>
 //WILL CALL PIPE_IT
 char redirection(char arg[]){
-  //Multiple pipes and redirects?
   if (strchr(arg,'>') || strchr(arg,'<')){
     int pid = fork();
     if (!pid){
@@ -131,9 +127,7 @@ char redirection(char arg[]){
 
 
 int main(){
-  getcwd(ultimatepath,1024);
   signal(SIGINT,sighandler);
-  //semicolon now works.
   while (1){
     char input[256];
     char direct[256];
