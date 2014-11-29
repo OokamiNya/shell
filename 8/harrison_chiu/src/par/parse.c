@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <string.h>
 
@@ -14,6 +14,18 @@ int parse(char **in, command_t *cmds[], int num_cmds)
 
       cmds[count] = (command_t *)malloc(1 * sizeof(command_t));
       cmds[count]->execstr = strsep_save(in, DELIMS, delim);
+
+      cmds[count]->f_in = strchr(cmds[count]->execstr, F_IN);
+      cmds[count]->f_out = strchr(cmds[count]->execstr, F_OUT);
+
+      if (cmds[count]->f_in)
+	{
+	  cmds[count]->f_in++[0] = 0;
+	}
+      if (cmds[count]->f_out)
+	{
+	  cmds[count]->f_out++[0] = 0;
+	}
 
       free(delim);
     }
