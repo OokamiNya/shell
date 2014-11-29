@@ -58,18 +58,22 @@ int main() {
     prompt = (char *) malloc(PROMPT_SIZE);
     char current_path[PATH_SIZE];
     path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
-    printf("LL:%s\n", get_arg(path_history));
+    printf("Starting Directory: %s\n", get_arg(path_history));
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
         cmd_status = valid_input = 1;
         char *line = readline(prompt);
         if (line == NULL) {
+# ifdef DEBUG
             printf("\n~~~ EOF Sent :\\ ~~~\n");
+# endif
             free(line);
             free(prompt);
             exit(0);
         }
+#ifdef DEBUG
         printf("$input: `%s`\n", line);
+# endif
         parse_input(line);
         if (valid_input) { // Inputs that contain non-whitespace characters
             add_history(line);
@@ -77,7 +81,6 @@ int main() {
         free(line);
     }
     free(prompt);
-    printf("Thanks for using %s!\n", shell_name);
     return 0;
 }
 
@@ -335,16 +338,16 @@ void parse_input(char *input) {
 }
 
 void execute(char **argv) {
-    /* DEBUG */
+# ifdef DEBUG
     int i = 0;
     for (; i <= args; ++i) {
         printf("$argv[%d]: `%s`\n", i, argv[i]);
     }
     printf("--------------------------------------------------\n");
+# endif
 
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
-        printf("I'm sad to see you go... :(\n");
         cleanup_argv();
         free(prompt);
         exit(0);
@@ -374,7 +377,9 @@ void execute(char **argv) {
 }
 
 void change_directory(char *path , node* history) {
+# ifdef DEBUG
   printf("PATH: %s\n",path);
+# endif
   if (!path) { // When no path specified, use home
     path = getenv("HOME");
   }
@@ -383,7 +388,9 @@ void change_directory(char *path , node* history) {
     //printf("Previous Path: %s\n",history->arg);
     path = get_arg(history);
   }
+# ifdef DEBUG
   printf("Path Var: %s\n",path);
+# endif
   errno_result = chdir(path);
   if (errno_result == -1) {
     printf("cd: %s: %s\n", path, strerror(errno));
@@ -391,6 +398,8 @@ void change_directory(char *path , node* history) {
   }
   else{
     history = insert_node(history, path);
+# ifdef DEBUG
     printf("Path Written: %s\n",history->arg);
-    }
+# endif
+  }
 }
