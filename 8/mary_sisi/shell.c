@@ -1,3 +1,14 @@
+/*
+
+have to fix:
+
+- freeing (in main)
+- redirection
+- cd (sometimes the child process(?) will take over; e.g. if you "cd .." and then "exit", it won't actually exit, but instead it'll put you back into your original directory (before "cd .."))
+- special characters or something (when I tried git commiting from this shell only certain comments were acceptable, sorry I didn't test it more thoroughly yet)
+
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -5,49 +16,52 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
 
 void print_prompt();
-void print_array(); //for testing purposes
+void print_array(char** args); //for testing purposes
 void parse(char ** a); //parses user input
 int contains(char ** a, char * c); //helper
 int execute(char ** a); //hanldes user input
 
 
-/*
-
-POTENTIAL IMPROVEMENTS:
-
-- write a function to count the number of elements which will be necessary for an array based on user input
-
-- make parse recognize characters such as '<', '>', '|', ';', etc. so as to separate them into separate strings, and handle cases with spaces on one side (e.g. "ls;wc", "ls; wc", and "ls ;wc")
-
-- in execute: consider multiple redirections on the same line (e.g. "ls | wc retry.c > commands.txt")
-
- */
-
-
 int main(){
 
   print_prompt();
-  //int run = 1;
+  int run = 1;
+  while(run){
 
-  while(1){
+    char ** args; //allocate space for up to 64 strings of up to 32 characters each
+    args = (char**)malloc(sizeof(char)*64);
+    char ** temp = args;
 
-    char ** args;
+    int i=0;
+    while(i<32){
+      args[i] = (char*)malloc(sizeof(char)*32);
+      i++;
+    }
+
     parse(args);
     execute(args);
+
+    //freeing doesn't work, gotta fix that
+    /* while(i<32){ */
+    /*   free(temp[i]); */
+    /*   i++; */
+    /* } */
+    /* free(temp); */
+
     print_prompt();
-
   }
-  
-  return 0;
 
+  return 0;
 }
 
 
 void print_prompt(){
   char path[256];
   getcwd(path, 256);  
+  
   printf("%s$ ", path);
 }
 
@@ -55,68 +69,35 @@ void print_prompt(){
 void print_array(char ** args){
   int i = 0;
   while(args[i]){
-    printf("args[%d]: %s\t", i, args[i]);
+    printf("args[%d]:  %s\t",i,args[i]);
     i++;
   }
-  printf("\n");
 }
 
 
-//args is a buffer
-//call parse(args) to take user input from stdin and parse it into an array of strings which will become accessible from args
 void parse(char ** args){
 
-  //make char array, s1, to hold user input
   char s1[256];
-  //put the user input in s1
   fgets(s1, sizeof(s1), stdin);
-  //and get rid of the newline at the end
-  s1[strlen(s1)-1] = '\0';
+  s1[strlen(s1)-1]='\0';
 
-  //make a char pointer, s, to the beginning of s1, which will later be used to iterate through s1
   char * s = s1;
-  //make a char pointer, temp, which will aid s in iterating through s1
   char * temp = strsep(&s, " ");
 
-  //after using strsep:
-  //s now points to the first argument provided by the user, which is now be followed by a terminating null
-  //temp points to the remainder of the user input (starting at the second argument, if it exists, and terminating after the end of the user input)
-
-  //make an array of char pointers, args, which will hold the parsed values as separate entities
-  //allocate memory for each element in args using a while loop
-  int i = 0;
-  while(i < 64){
-    args[i] = (char *)malloc(64 * sizeof(char));
-    i++;
-  }
-
-  //reset the counter variable for use in the next loop
-  i = 0;
-
-  //until temp hits the terminating null in s1...
+  int i=0;
   while(temp){
-    
-    //as long as temp is pointing to a non-empty value...
     if(strcmp(temp,"") != 0){
-      //copy value at temp into allocated space at args[i]
-      strcpy(args[i], temp);
+      strcpy(args[i],temp);
       i++;   
     }
-
-    //(if there are multiple spaces between arguments, the if statement will prevent the extra spaces from being added to args)
-
-    //move to next argument
     temp = strsep(&s," ");
   }
 
-  //terminate args with a 0
+  //termination
   args[i] = 0;
-
 }
 
 
-//returns -1 if c is not found in args
-//returns the index of first occurrence of c in args otherwise
 int contains(char ** args, char * c){
   int i=0;
   while(args[i]){
@@ -132,82 +113,50 @@ int contains(char ** args, char * c){
 int execute(char ** args){
   int i;
   if((i = contains(args,";")) != -1){
+    printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
-    printf("COMMAND WITH ';' AT INDEX %d\n", i);
-
-    char ** part1 = (char **)malloc(i * sizeof(char *));
-
+    char ** part1 = (char**)malloc(sizeof(char*) * i);
+    
     int j = 0;
     while(j < i){
       part1[j] = args[j];
       j++;
     }
-
-    j = 0;
-    while(j <= i){
-      free(args[i]);
-      j++;
-    }
-
+    
     args += (i + 1);
 
     execute(part1);
     execute(args);
+    
+  }else if((i = contains(args,"<")) != -1  ){
+    printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    //not functional yet
 
-  }else if((i = contains(args,">")) != -1){
-    printf("COMMAND WITH '>' AT INDEX %d\n",i);
+  }else if((i = contains(args,">")) != -1  ){
+    printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
+    //not functional yet
 
-    char * command = args[0];
-
-    char ** part1 = (char **)malloc((i-1) * sizeof(char *));
-
-    int j = 1;
-    while(j < i){
-      part1[j] = args[j];
-      j++;
-    }
-
-    j = 0;
-    while(j <= i){
-      free(args[i]);
-      j++;
-    }
-
-    args += (i + 1);
-
-    int f = fork();
-    int status;
-    if(!f){
-
-      int fd = open(args[0]);
-      dup2(fd,STDOUT_FILENO);
-
-      execvp(command, part1);
-
-    }else{
-      wait(&status);
-    }
-
-  }else if((i = contains(args,"<")) != -1){
-    printf("COMMAND WITH '<' AT INDEX %d\n",i);
+  }else if((i = contains(args,"|")) != -1  ){
+    printf("COMMAND WITH '|' AT INDEX %d\n",i);
+    //not functional yet
 
   }else if((i = contains(args,"cd")) != -1){
-
+    chdir(args[1]);
+    //'~' doesn't  work
+    //and for some reason when I tested this once I had to type "exit" three times before it exited; I wasn't able to duplicate this behavior, though
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
   }else{
     int f = fork();
     int status;
     if(!f){
-      //child will execute command
       print_array(args);
       execvp(args[0], args);
     }else{
-      //the parent will wait until the child has finished running to resume
       wait(&status);
     }
-
   }
 
-  return 0;  
+  return 0;
+
 }
