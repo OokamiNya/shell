@@ -1,59 +1,31 @@
+/* TODO:
+   optimize (check for excessive loops ex. strlen)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-
+#include <fcntl.h>
 #include "shell.h"
 
 #define TRUE 1
 #define FALSE 0
 
-#define BUFFER_LEN 256
+#define BUFFER_LEN 512
 #define HOME getenv("HOME")
 
-/* TODO==========
-   konami easter eggs?? scrolling fish idk..
-   ^ on exit maybe:  http://www.ascii-art.de/ascii/def/fish.txt
-   
-   REAL TODO:
-   redirecting
-   pipes
-
-   add color to prompt, customize, bold
-   sighandler - catch sigint, ctrl d for eof
-   command history, up arrow (or ctrl p) for previous command
-   directory stack/linked list
-   'cd - n' goes to nth previous dir ; dir stack/linklist
-   tab completion!!
-   method abstraction, utils.c file maybe (for parsing, trim, etc)
-
-   better errors?
-     errno's from getcwd
-     syntax errors (cmd:";;;;")
-     no such file or dir (redirecting)
-   final checks to optimize code + memory usage
-     perhaps ignore white space rather than trim?
-     excessive looping (strlen, other str fxns)
-   design.txt, edit header file, readme
-
-   NOTES========== 
-   trims excess white space and ';'
-   does not print all errors (ex: error from getcwd, syntax error)
-     ignores multiple ;'s rather than give syntax error (as in bash)
- */
-
 int isRedirect = FALSE;
+int redirect_index;
 char *redirect_symbol;
 
 void printPrompt(){
-  char *cwd = getcwd(cwd,0); // Dynamically allocated
-  // If path includes $HOME
+  char *cwd = 0;
+  cwd = getcwd(cwd,0);
+  // Replace $HOME with '~'
   if (strstr(cwd,HOME)){
     int homeLen = strlen(HOME);
-    int absPathLen = strlen(cwd);
-    int relPathLen = absPathLen-homeLen+1;
-    // Replace $HOME with '~'
+    int relPathLen = strlen(cwd)-homeLen+1;
     strncpy(cwd, &cwd[homeLen-1], relPathLen);
     cwd[0] = '~';
     cwd[relPathLen] = '\0';
@@ -63,120 +35,161 @@ void printPrompt(){
   free(cwd);
 }
 
-void changeDir(char *arg){
-  // If `cd` is given an argument
-  if (arg){
-    // Replace '~' with $HOME
-    if (arg[0]=='~'){
-      char *tmp = malloc(strlen(HOME) + strlen(arg));
-      strcpy(tmp,HOME);
-      strcat(tmp,arg+1);
-      strcpy(arg,tmp);
-      free(tmp);
-    }
-    // If error
-    if (chdir(arg) < 0)
-      printf("cd: %s: %s\n", arg, strerror(errno));
+void redirect(char *redirect_file){
+  int fd, oldfd;
+  if (redirect_symbol[0] == '>'){
+    oldfd = STDOUT_FILENO;
+    if (redirect_symbol[1]) // ">>"
+      fd = open(redirect_file, O_WRONLY|O_CREAT|O_APPEND, 0644);
+    else // ">"
+      fd = open(redirect_file, O_WRONLY|O_CREAT|O_TRUNC, 0644);
   }
-  else
-    chdir(HOME);
+  else{ // "<"
+    oldfd = STDIN_FILENO;
+    fd = open(redirect_file, O_RDONLY, 0644);
+  }
+  // Redirect
+  if (fd < 0)
+    printf("ERROR: %s\n", strerror(errno));
+  else{
+    dup2(fd, oldfd);
+    close(fd);
+  }
 }
 
-void redirect(char **argv){
+// make sure i closed all fd's
+void executePipe(char **argv){
+  int f, status, fd[2]; // fd[0] = in; fd[1] = out
+  pipe(fd);
+  argv[redirect_index] = NULL;
+  f = fork();
+  if (!f){ // Child; in pipe
+    close(fd[0]);
+    dup2(fd[1], STDOUT_FILENO);
+  }
+  else{ // Parent; out pipe
+    wait(&status);
+    close(fd[1]);
+    dup2(fd[0], STDIN_FILENO);
+    argv = &argv[redirect_index+1];
+  }
+  //executeMisc(argv);
+  execvp(argv[0], argv);
+  printf("%s: command not found\n", argv[0]);
+  exit(EXIT_FAILURE);
+}
 
+// Handles everything besides `cd` and `exit` or `quit`
+void executeMisc(char **argv){
+  int f, status;
+  f = fork();
+  if (!f){
+    if (isRedirect){
+      // Piping
+      if (redirect_symbol[0] == '|'){
+	executePipe(argv);
+      }
+      // Redirecting
+      redirect(argv[redirect_index+1]);
+      argv[redirect_index] = NULL;
+    }
+    execvp(argv[0], argv);
+    printf("%s: command not found\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+  else{
+    wait(&status);
+  }
 }
 
 void execute(char **argv){
-  // Handle "exit" command
-  if (isRedirect)
-    redirect(argv);
-  else if (!strcmp(argv[0], "exit")){
+  // `exit` or `quit`
+  if (!strcmp(argv[0], "exit") || !strcmp(argv[0], "quit")){
     printf("Sea ya next time\n");
     free(argv);
     exit(EXIT_SUCCESS);
   }
-  // Handle "cd" command
+  // `cd`
   else if (!strcmp(argv[0], "cd")){
-    changeDir(argv[1]);
+    if (!argv[1])
+      argv[1] = HOME;
+    if (chdir(argv[1]) < 0)
+      printf("cd: %s: %s\n", argv[1], strerror(errno));
   }
-  // Handle non-null or non-whitespace commands
   else{
-    int f, status;
-    f = fork();
-    // If child process
-    if (!f){
-      if (execvp(argv[0], argv) < 0){
-	// If error
-	printf("%s: command not found\n", argv[0]);
-	exit(EXIT_FAILURE);
-      }
-    }
-    else
-      wait(&status);
+    executeMisc(argv);
   }
 }
 
-// Free dynamically allocated memory after use
+// Returns dynamically allocated memory
 char ** parseInput(char *input, char *delim){
-  int maxSize = 4; // Limit of the number of tokens in argv
-  int size = 0; // Index counter
-  char **argv = malloc(sizeof *argv);
+  int maxSize = 1; // Limit of the number of tokens in argv
+  int size = 0;
+  char **argv = malloc(maxSize * sizeof *argv);
   char *arg = strsep(&input, delim);
   char *tmp; // Used to trim whitespace
-  // Separate input by `delim` into arg tokens
   for (; arg; arg = strsep(&input, delim)){
-    // Reallocate when out of memory
-    if (size == maxSize-2){
+    // Reallocate if out of memory
+    if (size == maxSize){
       maxSize *= 2;
-      argv = realloc(argv, maxSize*sizeof *argv);
+      argv = realloc(argv, maxSize * sizeof *argv);
     }
-    // Trim leading white space and ';' from arg
+    // Trim white space and ';' from arg
     while (isspace(*arg) || *arg==';')
       arg++;
-    // If arg isn't all white space or ';'
     if (*arg){
-      // Trim trailing white space and ';'
       tmp = arg + strlen(arg) - 1;
       while (tmp > arg && (isspace(*tmp) || *arg==';'))
 	tmp--;
       *(tmp+1) = '\0';
-      // Instantiate the array
-      if (!strcmp(arg,"<<") || !strcmp(arg,"<") || !strcmp(arg,">>") || \
-	  !strcmp(arg,">") || !strcmp(arg,"|") || !strcmp(arg,"<") || !strcmp(arg,"tee")){
+      // Check if redirect
+      if (!strcmp(arg,">") || !strcmp(arg,">>") || \
+	       !strcmp(arg,"<") || !strcmp(arg,"|")){
 	isRedirect = TRUE;
 	redirect_symbol = arg;
+	redirect_index = size;
+      }
+      // Replace '~' with $HOME
+      if (arg[0]=='~'){
+	char *tmp = malloc(strlen(HOME) + strlen(arg));
+	strcpy(tmp,HOME);
+	strcat(tmp,arg+1);
+	strcpy(arg,tmp);
+	free(tmp);
       }
       argv[size] = arg;
       size++;
     }
   }
-  // Append NULL to follow execvp() syntax
   argv[size] = NULL;
   return argv;
 }
 
 void shell(){
   char *input;
-  char **argv = malloc(sizeof *argv);
+  char **commands = 0;
+  char **argv = 0;
   int count;
   while (1){
     printPrompt();
     fgets(input, BUFFER_LEN, stdin);
-    // Separate commands (with ;) from input
-    argv = parseInput(input, ";");
-    // Execute each command
+    commands = parseInput(input, ";");
     count = 0;
-    while (argv[count]){
-      isRedirect = FALSE;
-      execute(parseInput(argv[count], " "));
+    // Execute each command
+    while (commands[count]){
+      argv = parseInput(commands[count], " ");
+      execute(argv);
+      free(argv);
+      if (isRedirect)
+	isRedirect = FALSE;
       count++;
     }
-    free(argv);
+    free(commands);
   }
 }
 
 int main(){
-  printf("Shellfish: Home of the Selfish\n");
+  printf("Welcome to Shellfish!\n");
   shell();
   return 0;
 }

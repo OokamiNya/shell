@@ -58,18 +58,22 @@ int main() {
     prompt = (char *) malloc(PROMPT_SIZE);
     char current_path[PATH_SIZE];
     path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
-    printf("LL:%s\n", get_arg(path_history));
+    printf("Starting Directory: %s\n", get_arg(path_history));
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
         cmd_status = valid_input = 1;
         char *line = readline(prompt);
         if (line == NULL) {
+# ifdef DEBUG
             printf("\n~~~ EOF Sent :\\ ~~~\n");
+# endif
             free(line);
             free(prompt);
             exit(0);
         }
+#ifdef DEBUG
         printf("$input: `%s`\n", line);
+# endif
         parse_input(line);
         if (valid_input) { // Inputs that contain non-whitespace characters
             add_history(line);
@@ -77,7 +81,6 @@ int main() {
         free(line);
     }
     free(prompt);
-    printf("Thanks for using %s!\n", shell_name);
     return 0;
 }
 
@@ -88,6 +91,41 @@ void parse_input(char *input) {
     while (input[index]) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
+            }
+            else if (input[index] == '|') {
+                if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                }
+                else { // Stops if there is nothing to pipe
+                    printf("There is nothing to pipe from!\n");
+                    break;
+                }
+                argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
+                argv[args] = NULL;
+
+                int pipes[2];
+                if (pipe(pipes) == -1) { // If pipe creation fails, print error
+                    printf("Error with piping: %s\n", strerror(errno));
+                }
+                else {
+                    int stdout_backup = dup(STDOUT_FILENO);
+                    dup2(pipes[1], STDOUT_FILENO); // Redirects stdout to write end of pipe
+                    execute(argv);
+                    cleanup_argv(); // Clean up after execution
+                    setup_argv();
+                    close(pipes[1]);
+                    dup2(stdout_backup, STDOUT_FILENO); // Restores stdout
+
+                    if (global_stdin_backup == STDIN_FILENO) { // Only if stdin is not modified
+                        global_stdin_backup = dup(STDIN_FILENO); // Saves original stdin
+                    }
+                    dup2(pipes[0], STDIN_FILENO); // Redirects read end of pipe to stdin
+                }
             }
             else if (input[index] == '<') {
                 ++index; // Advance past '<'
@@ -132,7 +170,9 @@ void parse_input(char *input) {
                     printf("Input redirection from file `%s` failed: %s\n", filename, strerror(errno));
                 }
                 else {
-                    global_stdin_backup = dup(STDIN_FILENO);
+                    if (global_stdin_backup == STDIN_FILENO) { // Only if stdin is not modified
+                        global_stdin_backup = dup(STDIN_FILENO);
+                    }
                     dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
                     close(inputFile);
                 }
@@ -298,22 +338,28 @@ void parse_input(char *input) {
 }
 
 void execute(char **argv) {
-    /* DEBUG */
+# ifdef DEBUG
     int i = 0;
     for (; i <= args; ++i) {
         printf("$argv[%d]: `%s`\n", i, argv[i]);
     }
     printf("--------------------------------------------------\n");
+# endif
 
     char *cmd = argv[0];
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
-        printf("I'm sad to see you go... :(\n");
         cleanup_argv();
         free(prompt);
         exit(0);
     }
     else if (!strcmp(cmd, "cd")) {
-      change_directory(argv[1] , path_history); // Only parse the first argument in cd
+# ifdef DEBUG
+      printf("path_history PATH IN: %s\n",get_arg(path_history));
+# endif
+      path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
+# ifdef DEBUG
+      printf("path_history PATH OUT: %s\n", get_arg(path_history));
+# endif
     }
     else {
         child_pid = fork();
@@ -336,8 +382,10 @@ void execute(char **argv) {
     }
 }
 
-void change_directory(char *path , node* history) {
+node * change_directory(char *path , node* history) {
+# ifdef DEBUG
   printf("PATH: %s\n",path);
+# endif
   if (!path) { // When no path specified, use home
     path = getenv("HOME");
   }
@@ -346,7 +394,9 @@ void change_directory(char *path , node* history) {
     //printf("Previous Path: %s\n",history->arg);
     path = get_arg(history);
   }
+# ifdef DEBUG
   printf("Path Var: %s\n",path);
+# endif
   errno_result = chdir(path);
   if (errno_result == -1) {
     printf("cd: %s: %s\n", path, strerror(errno));
@@ -354,6 +404,9 @@ void change_directory(char *path , node* history) {
   }
   else{
     history = insert_node(history, path);
-    printf("Path Written: %s\n",history->arg);
-    }
+  }
+# ifdef DEBUG
+    printf("History Path returned: %s\n",history->arg);
+# endif
+  return history;
 }

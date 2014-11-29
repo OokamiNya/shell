@@ -87,12 +87,19 @@ void runs_command(char *scpy) {
       trim(second_cmd);
       //printf("first :%s:\n", first_cmd);
       //printf("secnd :%s:\n", second_cmd);
-
+      
       int f, fd, s, temp, status;
+      char *tmp = (char *)malloc(1024);
       f = fork();
-
+      
       if( !f ){
-	fd = open(second_cmd,O_CREAT | O_WRONLY | O_EXCL, 0644);
+	if( strchr(second_cmd, '>') ){ //if original cmd was COMMAND >> FILE
+	  tmp = strsep(&second_cmd, ">");
+	  trim(second_cmd);
+	  fd = open(second_cmd,O_CREAT | O_WRONLY | O_APPEND ,0644);
+	} else{ 
+	  fd = open(second_cmd,O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	}
 	temp = dup(STDOUT_FILENO);
 	dup2(STDOUT_FILENO, temp);
 	dup2(fd, STDOUT_FILENO);
@@ -100,10 +107,16 @@ void runs_command(char *scpy) {
 	close(fd);
 	close(temp);
 	exit(0);
+	
       } else {
 	wait(NULL);
       }
-
+      /*
+      free(&scpy2);
+      free(&first_cmd);
+      free(&second_cmd);
+      free(&tmp);
+      */
     }
     
     else if(strchr(s,'<')) {
@@ -133,7 +146,8 @@ void runs_command(char *scpy) {
 	exit(0);
       } else {
 	wait(NULL);
-	} */ 
+      } 
+      */ 
     }
     
     else if(strchr(s,'|')) {

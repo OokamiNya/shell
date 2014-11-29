@@ -1,0 +1,10 @@
+total 91
+-rwxr-xr-x+ 1 Jason None 62868 Nov 28 22:34 a.exe
+-rwx------+ 1 Jason None     0 Nov 28 18:01 Design.txt
+-rwxr-xr-x+ 1 Jason None     0 Nov 28 22:34 file.txt
+-rwx------+ 1 Jason None    53 Nov 20 19:54 makefile
+-rwx------+ 1 Jason None  1213 Nov 28 22:34 redirect.c
+-rwx------+ 1 Jason None 13387 Nov 25 19:22 Shell
+-rwx------+ 1 Jason None  1561 Nov 28 17:16 shell.c
+-rwx------+ 1 Jason None    41 Nov 20 19:33 shell.c~
+-rwx------+ 1 Jason None   220 Nov 28 17:17 shell.h

@@ -10,23 +10,21 @@ A shell built by Stanley Lok and Danny Qiu for Mr. DW's 8th Period Systems Class
 - Character escapes: `"` & `\` & `'`
 - Multiple commands: `;`
 - File redirection: `>` & `<`
+- Piping: `|`
 - Handler: `SIGINT`
 - Readline library features: Tab Completion & History
 
 ## TODO:
 
-- Replace !! with previous function
-- Clear input buffer when handling SIGINT
-- Piping: `|`
 - Backtracking: `cd -`
+- Clear input buffer when handling SIGINT
 - Wildcard handling: `*`
+- Replace !! with previous function
 - Smarter tab completion
 - Setting variable values
 - Math
 - Background Processes
 - Prevent buffer overflow attacks by dynamically allocating memory
-- More information on prompt
-- Refactor functions into multiple files
 - _Create super awesome functions_
 
 ## What we dream of doing

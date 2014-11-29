@@ -38,6 +38,15 @@ void execute( char* split_cmds ) {
         }
     }
 }
+char* rmspaces( char *str){
+    if ( str[0] == ' ' ) {
+        str = &str[1];
+    }
+    if ( str[ strlen( str ) - 1 ] == ' ') {
+        str[ strlen(str ) - 1 ] = 0;
+    }
+    return str;
+}
 
 int main() {
     printf( "Welcome to the The Magic Conch Shell.\n" );
@@ -48,7 +57,7 @@ int main() {
     while( i ) {
         
         getcwd( cwd, sizeof(cwd) );
-        printf( "%s$ ", cwd );
+        printf( "%s SHELL$ ", cwd );
         
         
         fgets( input_str, sizeof( input_str ), stdin );
@@ -66,16 +75,13 @@ int main() {
         while (( split_cmds = strsep(&raw_str, ";") )) {
             c++;
             int a = 0;
-            if ( split_cmds[0] == ' ' ) {
-                split_cmds = &split_cmds[1];
-            }
-            if ( split_cmds[ strlen( split_cmds ) - 1 ] == ' ') {
-                split_cmds[ strlen( split_cmds ) - 1 ] = 0;
-            }
+            split_cmds=rmspaces(split_cmds);
             
             if ( strchr( split_cmds, '>' ) ) {
                 char * cmd;
                 cmd = strsep( &split_cmds, ">" ); //gets cmd from input
+                cmd=rmspaces(cmd);
+                split_cmds=rmspaces(split_cmds);
                 temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
                 fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
                 dup2( fd, STDOUT_FILENO ); //redirects STDOUT to file
@@ -86,8 +92,12 @@ int main() {
             else if ( strchr( split_cmds, '<' ) ) {
                 char * cmd;
                 cmd = strsep( &split_cmds, "<" ); //gets cmd from input
+                cmd=rmspaces(cmd);
+                split_cmds=rmspaces(split_cmds);
                 temp_stdin = dup( STDIN_FILENO ); //creates copy of STDIN
-                fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
+                printf("Taking input: %s\n",cmd);
+                printf("from: %s\n",split_cmds);
+                fd = open( split_cmds, O_RDONLY, 0644 ); //opens file from input
                 dup2( fd, STDIN_FILENO ); //redirects STDIN to file
                 execute( cmd ); //runs cmd
                 dup2( temp_stdin, STDIN_FILENO ); //resets STDIN to normal, not file
@@ -96,15 +106,24 @@ int main() {
             else if ( strchr( split_cmds, '|' ) ) {
                 char * cmd1;
                 char output1[500];
+                char* cmd2;
+                cmd2 = malloc(500 * sizeof(char));
                 cmd1 = strsep( &split_cmds, "|" ); //gets 1st cmd from input
+                rmspaces(cmd1);
+                rmspaces(split_cmds);
                 temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
-                //temp_stdin = dup( STDIN_FILENO ); //creates copy of STDOUT
-                //fd = open( split_cmds, O_WRONLY|O_CREAT, 0644 ); //opens file from input
+                temp_stdin = dup( STDIN_FILENO ); //creates copy of STDOUT
                 dup2( STDIN_FILENO, STDOUT_FILENO ); //redirects STDOUT to STDIN
+                printf("redirected STDOUT to STDIN\n");
                 execute( cmd1 ); //runs cmd1
-                //fgets( output1, sizeof( output1 ), stdin ); //maybe something with this
+                printf("about to execute cmd2\n");
                 dup2( temp_stdout, STDOUT_FILENO ); //resets STDOUT to normal, not STDIN
-                execute( split_cmds ); //runs cmd2
+                printf("stdout back to normal\n");
+                cmd2=strcpy(cmd2, split_cmds);
+                printf("strcpyd\n");
+                //cmd2=strcat(cmd2,output1);
+                execute( cmd2 ); //runs cmd2
+                printf("ran cmd2\n");
             }
             else {
                 execute( split_cmds );

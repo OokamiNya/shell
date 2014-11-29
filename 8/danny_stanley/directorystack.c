@@ -20,5 +20,8 @@ node * insert_node(node * current_node, char * input){
   temp = (node *)(malloc(sizeof(node)));
   temp->prev = current_node;
   temp->arg = input;
+# ifdef DEBUG
+  printf("PATH Written: %s\n",temp->arg);
+# endif
   return temp;
 }

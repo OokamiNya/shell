@@ -21,7 +21,7 @@ static const char *shell_name = "StD";
 
 void parse_input(char *);
 void execute(char **);
-void change_directory(char *, node *);
+node * change_directory(char *, node *);
 
 void cleanup_argv();
 void setup_argv();
