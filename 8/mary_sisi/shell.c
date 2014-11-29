@@ -22,6 +22,8 @@ int main(){
 
     char ** args; //allocate space for up to 64 strings of up to 32 characters each
     args = (char**)malloc(sizeof(char)*64);
+    char ** temp = args;
+
     int i=0;
     while(i<32){
       args[i] = (char*)malloc(sizeof(char)*32);
@@ -29,16 +31,14 @@ int main(){
     }
 
     parse(args);
+    execute(args);
 
-    char ** temp = args;
-    i=0;
+    //freeing doesn't work, gotta fix that
     /* while(i<32){ */
     /*   free(temp[i]); */
     /*   i++; */
     /* } */
-    //free(temp);
-
-    execute(args);
+    /* free(temp); */
 
     print_prompt();
   }
