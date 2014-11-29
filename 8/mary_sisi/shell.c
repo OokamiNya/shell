@@ -1,3 +1,14 @@
+/*
+
+have to fix:
+
+- freeing (in main)
+- redirection
+- cd (sometimes the child process(?) will take over; e.g. if you "cd .." and then "exit", it won't actually exit, but instead it'll put you back into your original directory (before "cd .."))
+- special characters or something (when I tried git commiting from this shell only certain comments were acceptable, sorry I didn't test it more thoroughly yet)
+
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
