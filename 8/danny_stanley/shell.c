@@ -353,7 +353,13 @@ void execute(char **argv) {
         exit(0);
     }
     else if (!strcmp(cmd, "cd")) {
-      change_directory(argv[1] , path_history); // Only parse the first argument in cd
+# ifdef DEBUG
+      printf("path_history PATH IN: %s\n",get_arg(path_history));
+# endif
+      path_history = change_directory(argv[1] , path_history); // Only parse the first argument in cd
+# ifdef DEBUG
+      printf("path_history PATH OUT: %s\n", get_arg(path_history));
+# endif
     }
     else {
         child_pid = fork();
@@ -376,7 +382,7 @@ void execute(char **argv) {
     }
 }
 
-void change_directory(char *path , node* history) {
+node * change_directory(char *path , node* history) {
 # ifdef DEBUG
   printf("PATH: %s\n",path);
 # endif
@@ -398,8 +404,9 @@ void change_directory(char *path , node* history) {
   }
   else{
     history = insert_node(history, path);
-# ifdef DEBUG
-    printf("Path Written: %s\n",history->arg);
-# endif
   }
+# ifdef DEBUG
+    printf("History Path returned: %s\n",history->arg);
+# endif
+  return history;
 }
