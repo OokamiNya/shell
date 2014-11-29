@@ -1,19 +1,24 @@
 #include"heads.h"
 #include"helper.c"
 
+char * ultimatepath;
+
 //DOES NOT WORK
 static void sighandler(int signo){
+  /*
   int id = getpid();
   int pid = fork();
   if (!pid){
     printf("Intercepting...\n");
-
-    main();
+    //chdir(ultimatepath);
+    char * s;
+    sprintf(s,"%s/a.out",ultimatepath);
+    execl(ultimatepath,s,NULL);
+    printf("O NOES\n");
     //exit(-1);
   }
-  waitpid(pid);
-  printf("what");
-  sleep(100000);
+  exit(-1);
+  */
   exit(-1);
 }
 
@@ -126,7 +131,7 @@ char redirection(char arg[]){
 
 
 int main(){
- 
+  getcwd(ultimatepath,1024);
   signal(SIGINT,sighandler);
   //semicolon now works.
   while (1){
