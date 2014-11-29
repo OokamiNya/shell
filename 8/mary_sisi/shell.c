@@ -10,8 +10,8 @@ void print_prompt();
 void print_array(); //for testing purposes
 void parse(char ** a); //parses user input
 int contains(char ** a, char * c); //helper
-int execute(char ** a); //hanldes user input
 void allocate_array_mem(char ** a, int i);
+int execute(char ** a); //hanldes user input
 
 
 /*
@@ -49,25 +49,19 @@ int main(){
 
 
 void print_prompt(){
-
   char path[256];
   getcwd(path, 256);  
   printf("%s$ ", path);
-
 }
 
 
 void print_array(char ** args){
-
   int i = 0;
-
   while(args[i]){
     printf("args[%d]: %s\t", i, args[i]);
     i++;
   }
-
   printf("\n");
-
 }
 
 
@@ -96,7 +90,7 @@ void parse(char ** args){
   //allocate memory for each element in args using a while loop
   int i = 0;
   while(i < 64){
-    args[i] = (char *)malloc(64, sizeof(char));
+    args[i] = (char *)malloc(64 * sizeof(char));
     i++;
   }
   //SHOULD BE ABLE TO REPLACE THE ABOVE WITH ALLOCATE_ARRAY_MEM(ARGS, 64) OR WHATEVER INTEGER VALUE IF SAID FUNCTION ACTUALLY WORKS
@@ -130,66 +124,58 @@ void parse(char ** args){
 //returns -1 if c is not found in args
 //returns the index of first occurrence of c in args otherwise
 int contains(char ** args, char * c){
-
   int i=0;
-
   while(args[i]){
-
     if (strcmp(args[i], c) == 0 ){
       return i;
     }
-
     i++;
-
   }
-
   return -1;
-
 }
 
 
-//CURRENTLY BEING REWRITTEN IN RETRY.C
-int execute(char ** args){
-  if(contains(args) == 0){//regular input no ; < > |(
-    if (strcmp(args[0], "exit") == 0){
-      printf("BYE!!!!\n");
-    }
-    else if  (strcmp(args[0], "cd") == 0){
-      chdir(args[1]);      
-    }
-    else{
-      int f = fork();
-      int status;
-      if( !f ){
-	execvp(args[0], args );
-	//everything else
-	//redirection
-      }else{
-	wait(&status);
-      }
-    }
-  }else if (contains(args) == 1){ // if has semi colon
-    char ** part1 =  (char**)malloc(sizeof(char *) * 64);
-    int j = 0;
-    while( args[j]){   
-      if( strcmp(args[j], ";") != 0 ){
-	part1[j] = args[j];
-	j++;
-      }else{
-	execute(part1);
-	j++;
-	// this is super inefficent but it does work
-	char ** part2 =  (char**)malloc(sizeof(char *) * 64);
-	int i = 0;
-	while (args[j]){
-	  part2[i] = args[j];
-	  j++;
-	  i++;
-	}
-	execute(part2);	
-      }
-    }
+void allocate_array_mem(char ** buffer, int i){
+  //allocate space for pointers
+  buffer = (char **)malloc(i * sizeof(char *));
+  //allocate space for strings at the end of each of those pointers
+  int j = 0;
+  while(j > i){
+    buffer[j] = (char *)malloc(64 * sizeof(char));
+    j++;
   }
- 
+}
+
+
+int execute(char ** args){
+  int i;
+  if((i = contains(args,";")) != -1){
+    printf("COMMAND WITH ';' AT INDEX %d\n", i);
+
+  }else if((i = contains(args,">")) != -1){
+    printf("COMMAND WITH '>' AT INDEX %d\n",i);
+
+  }else if((i = contains(args,"<")) != -1){
+    printf("COMMAND WITH '<' AT INDEX %d\n",i);
+
+  }else if((i = contains(args,"cd")) != -1){
+
+  }else if((i = contains(args,"exit")) != -1){
+    exit(-1);
+  }else{
+    //fork
+    int f = fork();
+    int status;
+    if(!f){
+      //child will execute command
+      print_array(args);
+      execvp(args[0], args);
+    }else{
+      //the parent will wait until the child has finished running
+      wait(&status);
+    }
+
+  }
+
   return 0;  
 }

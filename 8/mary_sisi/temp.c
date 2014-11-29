@@ -48,7 +48,7 @@ void parse(char ** args){
 
   i=0;
   while(temp){
-        if(strcmp(temp,"") != 0){
+    if(strcmp(temp,"") != 0){
       strcpy(args[i],temp);
       i++;   
     }
@@ -59,14 +59,18 @@ void parse(char ** args){
   args[i] = 0;
 }
 
+
 void allocate_array_mem(char ** buffer, int i){
+  //allocate space for pointers
+  buffer = (char **)malloc(i * sizeof(char *));
+  //allocate space for strings at the end of each of those pointers
   int j = 0;
   while(j > i){
     buffer[j] = (char *)malloc(64 * sizeof(char));
     j++;
   }
-
 }
+
 
 int contains(char ** args, char * c){
   //printf("IN CONTAINS: %s\n", c);
@@ -83,7 +87,7 @@ int contains(char ** args, char * c){
 int execute(char ** args){
   int i;
   if( (i = contains(args,";")) != -1){
-    printf("COMMAND WITH ;;;;;;; %d\n", i);
+    printf("COMMAND WITH ';' AT INDEX %d\n", i);
 
     char ** part1 = (char**)malloc(sizeof(char*) * i);
     //allocate_array_mem(part1, i+1);
@@ -92,7 +96,6 @@ int execute(char ** args){
     while(j < i){
       printf("in loop\n");
       part1[j] = args[j];
-      printf("broken\n");
       j++;
     }
     
@@ -111,7 +114,7 @@ int execute(char ** args){
   }
 
   else if( (i = contains(args,"<")) != -1  ){
-    printf("COMMAND WITH <<<<<\n");
+    printf("COMMAND WITH '<' AT INDEX %d\n",i);
     int f = fork();
     int status;
     if (!f){
@@ -119,8 +122,6 @@ int execute(char ** args){
 
       int fd = open("foo.txt", O_RDWR | O_CREAT, 0644);
       //dup2(STDIN_FILENO , fd);
-      printf("WORKING????");
-
 
       char * s = (char *) malloc(sizeof(char*));
       int r = read(fd,s , sizeof(s));
@@ -151,20 +152,17 @@ int execute(char ** args){
     }else{
       wait(&status);
     }
-  }
-
-  else if((i = contains(args,"cd")) != -1){
+  }else if((i = contains(args,"cd")) != -1){
     chdir(args[1]);
     //~ doesn't  work
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
   }else{
-    //printf("REGULAR COMMAND\n");
-
-    //fork and exec
+    //fork
     int f = fork();
     int status;
     if(!f){
+      //child will execute command
       print_array(args);
       execvp(args[0], args);
     }else{
