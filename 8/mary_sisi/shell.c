@@ -10,7 +10,6 @@ void print_prompt();
 void print_array(); //for testing purposes
 void parse(char ** a); //parses user input
 int contains(char ** a, char * c); //helper
-void allocate_array_mem(char ** a, int i);
 int execute(char ** a); //hanldes user input
 
 
@@ -18,13 +17,11 @@ int execute(char ** a); //hanldes user input
 
 POTENTIAL IMPROVEMENTS:
 
+- write a function to count the number of elements which will be necessary for an array based on user input
+
 - make parse recognize characters such as '<', '>', '|', ';', etc. so as to separate them into separate strings, and handle cases with spaces on one side (e.g. "ls;wc", "ls; wc", and "ls ;wc")
 
-- factor out code for memory allocation for arrays in parse() and execute()
-
 - in execute: consider multiple redirections on the same line (e.g. "ls | wc retry.c > commands.txt")
-
-- also: see lines 100-101 in parse(), and the note above execute() in retry.c
 
  */
 
@@ -34,9 +31,9 @@ int main(){
   print_prompt();
   //int run = 1;
 
-  while(1){ //run){
+  while(1){
 
-    char ** args; //= (char**)malloc(sizeof(char *) * 64);
+    char ** args;
     parse(args);
     execute(args);
     print_prompt();
@@ -86,15 +83,12 @@ void parse(char ** args){
   //temp points to the remainder of the user input (starting at the second argument, if it exists, and terminating after the end of the user input)
 
   //make an array of char pointers, args, which will hold the parsed values as separate entities
-  //char * args[64];
   //allocate memory for each element in args using a while loop
   int i = 0;
   while(i < 64){
     args[i] = (char *)malloc(64 * sizeof(char));
     i++;
   }
-  //SHOULD BE ABLE TO REPLACE THE ABOVE WITH ALLOCATE_ARRAY_MEM(ARGS, 64) OR WHATEVER INTEGER VALUE IF SAID FUNCTION ACTUALLY WORKS
-  //ALSO, CHECK IF THERE'S A WAY TO DETERMINE THE NUMBER OF ELEMENTS COMING FROM THE USER INPUT (so that it'll be a more efficient while(i<some_num_of_input_values) rather than a potentially-limited and probably-often-extremely-excessive while(i<64)
 
   //reset the counter variable for use in the next loop
   i = 0;
@@ -135,18 +129,6 @@ int contains(char ** args, char * c){
 }
 
 
-void allocate_array_mem(char ** buffer, int i){
-  //allocate space for pointers
-  buffer = (char **)malloc(i * sizeof(char *));
-  //allocate space for strings at the end of each of those pointers
-  int j = 0;
-  while(j > i){
-    buffer[j] = (char *)malloc(64 * sizeof(char));
-    j++;
-  }
-}
-
-
 int execute(char ** args){
   int i;
   if((i = contains(args,";")) != -1){
@@ -163,7 +145,6 @@ int execute(char ** args){
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
   }else{
-    //fork
     int f = fork();
     int status;
     if(!f){
@@ -171,7 +152,7 @@ int execute(char ** args){
       print_array(args);
       execvp(args[0], args);
     }else{
-      //the parent will wait until the child has finished running
+      //the parent will wait until the child has finished running to resume
       wait(&status);
     }
 

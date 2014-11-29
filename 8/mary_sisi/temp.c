@@ -12,7 +12,6 @@ void print_array(char** args); //for testing purposes
 void parse(char ** a); //parses user input
 int contains(char ** a, char * c); //helper
 int execute(char ** a); //hanldes user input
-void allocate_array_mem(char ** a, int i);
 
 
 void print_array(char ** args){
@@ -30,6 +29,26 @@ void print_prompt(){
   printf("%s$ ", path);
 }
 
+/* int count_args(char * input){ */
+
+/*   if(input[0] == 0){ */
+/*     return 0; */
+/*   } */
+
+/*   int num_args = 1; */
+/*   int counter = 0; */
+/*   char prev = 0; */
+/*   while(input[counter]){ */
+/*     if(input[counter] == ' ' && prev != ' '){ */
+/*       num_args++; */
+/*     } */
+/*     prev = input[counter]; */
+/*     counter++; */
+/*   } */
+/*   return num_args; */
+
+/* } */
+
 
 void parse(char ** args){
 
@@ -42,9 +61,17 @@ void parse(char ** args){
 
   int i=0;
   while(i<64){
-    args[i] = (char*)calloc(64,sizeof(char));
+    args[i] = (char*)malloc(64 * sizeof(char));
     i++;
   }
+
+  /* int i=0; */
+  /* int num_args = count_args(s); */
+  /* args = (char **)malloc(num_args * sizeof(char *)); */
+  /* while(i<num_args){ */
+  /*   args[i] = (char *)malloc(64 * sizeof(char)); */
+  /*   i++; */
+  /* } */
 
   i=0;
   while(temp){
@@ -57,18 +84,6 @@ void parse(char ** args){
 
   //terminate args
   args[i] = 0;
-}
-
-
-void allocate_array_mem(char ** buffer, int i){
-  //allocate space for pointers
-  buffer = (char **)malloc(i * sizeof(char *));
-  //allocate space for strings at the end of each of those pointers
-  int j = 0;
-  while(j > i){
-    buffer[j] = (char *)malloc(64 * sizeof(char));
-    j++;
-  }
 }
 
 
@@ -90,7 +105,6 @@ int execute(char ** args){
     printf("COMMAND WITH ';' AT INDEX %d\n", i);
 
     char ** part1 = (char**)malloc(sizeof(char*) * i);
-    //allocate_array_mem(part1, i+1);
     
     int j = 0;
     while(j < i){
@@ -128,7 +142,6 @@ int execute(char ** args){
       close(fd);
 
       char ** part1 = (char**)malloc(sizeof(char*) * i);   
-      //allocate_array_mem(part1, i);
     
       int j = 0;
       while(j < i){
