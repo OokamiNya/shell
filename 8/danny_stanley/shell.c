@@ -118,7 +118,9 @@ void parse_input(char *input) {
                     close(pipes[1]);
                     dup2(stdout_backup, STDOUT_FILENO); // Restores stdout
 
-                    global_stdin_backup = dup(STDIN_FILENO); // Saves original stdin
+                    if (global_stdin_backup == STDIN_FILENO) { // Only if stdin is not modified
+                        global_stdin_backup = dup(STDIN_FILENO); // Saves original stdin
+                    }
                     dup2(pipes[0], STDIN_FILENO); // Redirects read end of pipe to stdin
                 }
             }
@@ -165,11 +167,11 @@ void parse_input(char *input) {
                     printf("Input redirection from file `%s` failed: %s\n", filename, strerror(errno));
                 }
                 else {
-                    if (global_stdin_backup == STDIN_FILENO) { // Only if stdin is not already changed (from piping)
+                    if (global_stdin_backup == STDIN_FILENO) { // Only if stdin is not modified
                         global_stdin_backup = dup(STDIN_FILENO);
-                        dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
-                        close(inputFile);
                     }
+                    dup2(inputFile, STDIN_FILENO); // Redirects inputFile to stdin
+                    close(inputFile);
                 }
                 --index; // Offset ++index at the end of the while loop
             }
