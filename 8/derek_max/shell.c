@@ -26,13 +26,17 @@ int main(){
     commands[3] = "exit";
   */
   while(1){
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+       fprintf(stdout, "%s\n", cwd);
+
     printf("> ");
     fgets(buf, sizeof(buf), stdin);
     char** commands = parse(buf);
     //    printf("commands[0]:%s\n", commands[0]);
     i=0;
     while(commands[i]){
-      printf("commands[%d]:%s\n", i, commands[i]);
+      //printf("commands[%d]:%s\n", i, commands[i]);
       if(commands[i]){
 	if(*commands[i] == 0){
 	  i++;
@@ -42,7 +46,7 @@ int main(){
 	  printf("Exiting.\n");
 	  exit(EXIT_SUCCESS);
 	}
-	else{	
+	else{
 	  //add an if for cd later
 	  fflush(stdout);
 	  execute(commands[i]);
@@ -50,11 +54,11 @@ int main(){
       }
       i++;
     }
-    
+
     //leave:
 
-    
+
   }
-  
+
   return 1;
 }

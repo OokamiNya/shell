@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <fcntl.h>
+#include "shell.h"
 
 //takes out leading and trailing spaces / new lines
 char *strip (char *p){
@@ -15,6 +7,46 @@ char *strip (char *p){
   while(p[strlen(p)-1] == ' ' || p[strlen(p)-1] == '\n')
     p[strlen(p)-1] = '\0';
   return p;
+}
+
+void parse_redirect(char * s){
+  char * tok;
+  int len = 2;
+  int i = 0;
+  printf("toparrmalloc\n");
+  char ** top_arr = (char**)malloc(len*sizeof(char*));
+  printf("strip\n");
+  strip(s);
+  //printf("input: %s\n",s);
+  printf("sc: %s\n",strchr(s, '>'));
+  if(strchr(s,'>')){
+    printf("> detected!\n");
+    while(tok = strsep(&s,">")){
+      tok = strip(tok);
+      printf("Redir %d: %s\n",i,tok);
+      top_arr[i] = tok;
+      i++;
+    }
+    printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
+    //CHECK FOR VALIDITY
+    int fd, tmp_out, status;
+    fd = open(top_arr[1], O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    tmp_out = dup(STDOUT_FILENO);
+    dup2(fd, STDOUT_FILENO);
+    int f = fork();
+    //if child, execute who cmd
+    //else, change stdout back
+    if( !f ){
+      parse_string(top_arr[0]);
+    } else {
+      int w = wait( &status );
+      dup2(tmp_out, STDOUT_FILENO);
+      //printf("finished waiting. w: %d s: %d\n",w,status);
+    }
+  } else if(strchr(s, '<')){
+    //redirin
+  }
+  printf("ended\n");
 }
 
 void parse_string(char *s){
@@ -49,7 +81,7 @@ void parse_string(char *s){
     }
   }
   argarray[i] = NULL;
-  printf("token[%d]:%s\n\n",i,token);
+  //printf("token[%d]:%s\n\n",i,token);
   exec(argarray,i);
   free(token);
   free(argarray);
@@ -118,88 +150,7 @@ void shell(){
     }
     parse_string(cmd);
   }
-  
-  /*
-  s = strip(s);
-  // count how many args 
-  token = s;
-  while (token){
-    token=strchr(token+1,' ');
-    alen++;
-  }
-  
-  s = strsep(&s,"\n");
-  redirect(s);
-  char **argarray = (char **)(malloc(alen*sizeof(char *)));
-  //delimiting stuff
-  int i=0;
-  token = strsep(&s," ");
-  argarray[i] = (char*)malloc(256*sizeof(char));
-  argarray[i] = token;
-  while (token){
-    //getting rid of empty tokens btwnXS arguments
-    if (strlen(token)==0){
-      alen--;
-      argarray=realloc(argarray,alen*sizeof(char *));
-    }
-    else{
-      argarray[i] = (char*)malloc(256*sizeof(char));
-      argarray[i] = token;
-      token = strsep(&s, " ");
-      i++;
-    }
-  }
-
-  argarray[i] = NULL;
-  
-  exec(argarray, alen);
-  //printf("done.\n");
-  free(s);
-  free(token);
-  free(argarray);
-  */
 }
-
-void parse_redirect(char * s){
-  char * tok;
-  int len = 2;
-  int i = 0;
-  printf("toparrmalloc\n");
-  char ** top_arr = (char**)malloc(len*sizeof(char*));
-  printf("strip\n");
-  strip(s);
-  //printf("input: %s\n",s);
-  printf("sc: %d",strchr(&s, '>'));
-  if(strchr(&s,'>')){
-    printf("> detected!");
-    while(tok = strsep(&s,'>')){
-      tok = strip(tok);
-      printf("Redir 1:%s\n",tok);
-      top_arr[i] = tok;
-      i++;
-    }
-    printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
-    //CHECK FOR VALIDITY
-    int fd, tmp_out, status;
-    fd = open(top_arr[1], O_WRONLY | O_CREAT | O_TRUNC);
-    tmp_out = dup(STDOUT_FILENO);
-    dup2(fd, STDOUT_FILENO);
-    int f = fork();
-    //if child, execute who cmd
-    //else, change stdout back
-    if( !f ){
-      parse_string(top_arr[0]);
-    } else {
-      int w = wait( &status );
-      dup2(tmp_out, STDOUT_FILENO);
-      //printf("finished waiting. w: %d s: %d\n",w,status);
-    }
-  } else if(strchr(s, '<')){
-    //redirin
-  }
-  printf("ended\n");
-}
-
 
 static void sighandler(int signo){
   if (signo == SIGINT){
