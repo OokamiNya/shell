@@ -1,11 +1,13 @@
 #ifndef SHELL_H
 #define SHELL_H
 
+static void sigHandler(int signo);
 void printPrompt();
-void redirect(char *redirect_file);
-void executePipe (char **argv);
-void executeMisc(char **argv);
-void execute(char **argv);
+char * trimSpace(char *str);
+void redirect();
+void executePipe ();
+void executeMisc();
+void execute();
 char ** parseInput(char *input, char *delim);
 void shell();
 
