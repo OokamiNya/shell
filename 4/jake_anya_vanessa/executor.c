@@ -33,8 +33,10 @@ int execute(char s[256]) {
   }
 
   if (pipe){
-    int fd;
-    printf("PIPING DOESNT WORK YET\n");
+    int fd1, fd2;
+    char * cmd1 = arg[0];
+    char * cmd2 = arg[pipe + 1];
+    fd1 = open(stdin, 
   }
 
   /* piping things
