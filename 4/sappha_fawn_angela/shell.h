@@ -12,3 +12,4 @@ void execute();
 char** execute_all();
 char* trim(char *);
 void cd(char *);
+char* get_id();
