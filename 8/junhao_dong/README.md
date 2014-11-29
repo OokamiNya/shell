@@ -1,9 +1,9 @@
 Shellfish
 ======
 Junhao Dong  
-Systems Period 8
+Systems Programming, Period 8
 
-Rudimentary shell program
+Shell program
 
 
 ## Basic Features
@@ -12,61 +12,64 @@ Rudimentary shell program
   - [x] Ignore consecutive semicolons rather than returning a syntax error
 - [x] Basic file redirection: `>` & `<`
 - [x] Basic piping: `|`
-- [ ] Checked for memory leaks (Valgrind)
+- [x] Checked for memory leaks: Valgrind
 
 
 ## To Do
 ###Enhancements
 ------
 - [x] Tilde expansion: `~` is interchangeable with user's $HOME directory
-- [ ] Colorful prompt
-- [ ] Chained piping (recursion!)
-- [ ] Signal handling: `SIGINT` & `EOF`
+- [x] Prompt: username, current working directory
+  - [ ] Color
+- [x] Better redirection: `>>`
+  - [x] `cmd < inFile > outFile`
+  - [x] `cmd > out1 flag1 flag2`
+  - [x] Work with pipes
+  - [ ] `<<`, `<<<`
+  - [ ] Redirection for `STDERR` and other file descriptors 
+- [x] Chained piping
 - [ ] Wildcard `*`
+- [ ] Signal handling: `SIGINT`
+  - [ ] `EOF` (Ctrl-D)
 - [ ] Tab completion: for files and commands
 - [ ] Command history & navigation
 - [ ] Directory history & navigation (`cd -`)
-- [ ] More complex redirection
-  - [x] `>>`
-  - [ ] `<<`, `<<<`
-  - [ ] `cmd > out1 flag1 flag2`
-  - [ ] `cmd < infile > outfile`
-  - [ ] Redirection for `STDERR` and other file descriptors 
-- [ ] Debug mode/flag where more obscure errors are printed
-- [ ] Background processes: `&`
 - [ ] Logic operators: `&&`, `||`, `!`
+- [ ] Background processes: `&`, Ctrl-Z
 
 
-###Bugs
+###Bugs to be fixed
 ------
-- [ ] Allow redirect symbols to be adjacent to commands or flags (not separated by space)
+- [ ] Allow redirect and pipe symbols to be adjacent to commands or flags (not separated by space)
 - [ ] Allow tilde expansion to work in conjunction with redirection
 
 
-## Files & Function Headers
+## Function Headers
 shell.h
-------
 
-- `void printPrompt()`
+- static void sigHandler(int signo)
+- void printPrompt()
   - Prints the shell prompt with the current working directory, replacing $HOME with ~ when applicable
-- `void redirect(char *redirect_file)`
-- `void executePipe (char **argv)`
-- `void executeMisc(char **argv)`
-- `void execute(char **argv)`
-- `char ** parseInput(char *input, char *delim)`
-- `void shell()`
+- void safe_exec()
+- char * trimSpace(char *str)
+- void redirect()
+- void executePipe(int pipeIndex)
+- void executeMisc()
+- void execute()
+- char ** parseInput(char *input, char *delim)
+- void shell()
 
 
-MR DW'S EXAMPLE FOR REFERENCE; WILL DELETE WHEN IM DONE
+Ignore==== (here for reference; taken from DW's example)
 
-======== char ** parse_line() ==========
+char ** parse_line()
 Returns: Array of strings where each entry is a token 
 separated by delim
 
 If line contains multiple tokens separated by delim, this 
 function will put each token into an array of strings
 
-======== char * trim() ==========
+char * trim()
 Returns: Pointer to the beginning of line
 
 Removes leading and trailing whitespace on the string line.

@@ -60,11 +60,10 @@ char** parse ( char* input, char* delim ) {
     argv[j] = arg;
   }
 
-  //print argv
-  //int k = 0;
-  //for (;k<i+2; k++) {
-  //  printf("argv[%d]: %s\n", k, argv[k]);
-  //}
+  int k = 0;
+  for (;k<i+2; k++) {
+    printf("argv[%d]: %s\n", k, argv[k]);
+  }
 
   return argv;
 }
@@ -75,15 +74,32 @@ int main() {
 
   char input[256];
   //char** commands = 0;
-  char** argv = 0;
+  //char** args = 0;
+  //char** argv = 0;
 
   while (running) {
+    char** args = 0;
+    char** argv = 0;
+
     printf("(╯'□')╯%s: ", getcwd(cwd, sizeof(cwd)));
     
     fgets(input, sizeof(input), stdin);
-    argv = parse(input," ");
-    execute(argv);
-    free(argv);
+    
+    //printf("Unparsed:\n");
+    args = parse(input,";"); //args has a bunch of commands unparsed by space, parsed by ;
+    //printf("Parsed:\n");
+
+    int i = 0;
+    while (args[i]) { //execute every command
+      argv = parse(args[i]," ");
+      execute(argv);
+      free(argv);
+      i++;
+    }
+
+    //argv = parse(input," ");
+    //execute(argv);
+    //free(argv);
   }
 
   return 0;
