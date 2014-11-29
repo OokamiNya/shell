@@ -1,3 +1,6 @@
+/* TODO:
+   optimize (check for excessive loops ex. strlen)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,8 +18,8 @@
 #define printError() printf("ERROR: %s\n", strerror(errno))
 
 int isRedirect = FALSE;
+int redirect_index;
 char *redirect_symbol;
-char *redirect_file;
 
 void printPrompt(){
   char *cwd = 0;
@@ -38,7 +41,7 @@ void printPrompt(){
   free(cwd);
 }
 
-void redirect(){
+void redirect(char *redirect_file){
   int fd, oldfd;
   if (redirect_symbol[0] == '>'){
     oldfd = STDOUT_FILENO;
@@ -47,16 +50,11 @@ void redirect(){
     else // ">"
       fd = open(redirect_file, O_WRONLY|O_CREAT|O_TRUNC, 0644);
   }
-  else if (redirect_symbol[0] == '<'){
+  else{ // "<"
     oldfd = STDIN_FILENO;
     fd = open(redirect_file, O_RDONLY, 0644);
   }
-  else if (!strcmp(redirect_symbol,"|")){
-  }
-  else{
-    printf("This should never happen.. See redirect(argv)\n"); // DEBUGGING
-  }
-
+  // Redirect
   if (fd < 0)
     printError();
   else{
@@ -64,6 +62,60 @@ void redirect(){
       printError();
     if (close(fd) < 0)
       printError();
+  }
+}
+
+// No error checking for close()
+void executePipe(char **argv){
+  int f, status, fd[2]; // fd[0] = in; fd[1] = out
+  if (pipe(fd) < 0)
+    printError();
+  argv[redirect_index] = NULL;
+
+  f = fork();
+  if (f < 0)
+    printError();
+  else if (!f){ // Child; in pipe
+    close(fd[0]);
+    if (dup2(fd[1], STDOUT_FILENO) < 0)
+      printError();
+    //executeMisc(argv);
+  }
+  else{ // Parent; out pipe
+    wait(&status);
+    close(fd[1]);
+    if (dup2(fd[0], STDIN_FILENO) < 0)
+      printError();
+    //executeMisc(&argv[redirect_index+1]);
+    argv = &argv[redirect_index+1];
+  }
+  execvp(argv[0], argv);
+  printf("%s: command not found\n", argv[0]);
+  exit(EXIT_FAILURE);
+}
+
+// Handles everything besides `cd` and `exit` or `quit`
+void executeMisc(char **argv){
+  int f, status;
+  f = fork();
+  if (f  < 0)
+    printError();
+  else if (!f){
+    if (isRedirect){
+      // Piping
+      if (redirect_symbol[0] == '|'){
+	executePipe(argv);
+      }
+      // Redirecting
+      redirect(argv[redirect_index+1]);
+      argv[redirect_index] = NULL;
+    }
+    execvp(argv[0], argv);
+    printf("%s: command not found\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+  else{
+    wait(&status);
   }
 }
 
@@ -82,22 +134,7 @@ void execute(char **argv){
       printf("cd: %s: %s\n", argv[1], strerror(errno));
   }
   else{
-    int f, status;
-    f = fork();
-    if (f < 0){
-      printError();
-    }
-    else if (!f){
-      if (isRedirect)
-	redirect();
-      if (execvp(argv[0], argv) < 0){
-	printf("%s: command not found\n", argv[0]);
-	exit(EXIT_FAILURE);
-      }
-    }
-    else{
-      wait(&status);
-    }
+    executeMisc(argv);
   }
 }
 
@@ -122,28 +159,23 @@ char ** parseInput(char *input, char *delim){
       while (tmp > arg && (isspace(*tmp) || *arg==';'))
 	tmp--;
       *(tmp+1) = '\0';
-      // Instatiate redirect_file, redirect_symbol, or argv[size]
-      if (isRedirect){
-	redirect_file = arg;
-	break; // Finish after storing the token after the redirect symbol
-      }
-      else if (!strcmp(arg,">") || !strcmp(arg,">>") || \
+      // Check if redirect
+      if (!strcmp(arg,">") || !strcmp(arg,">>") || \
 	       !strcmp(arg,"<") || !strcmp(arg,"|")){
-	redirect_symbol = arg;
 	isRedirect = TRUE;
+	redirect_symbol = arg;
+	redirect_index = size;
       }
-      else{
-	// Replace '~' with $HOME
-	if (arg[0]=='~'){
-	  char *tmp = malloc(strlen(HOME) + strlen(arg));
-	  strcpy(tmp,HOME);
-	  strcat(tmp,arg+1);
-	  strcpy(arg,tmp);
-	  free(tmp);
-	}
-	argv[size] = arg;
-	size++;
+      // Replace '~' with $HOME
+      if (arg[0]=='~'){
+	char *tmp = malloc(strlen(HOME) + strlen(arg));
+	strcpy(tmp,HOME);
+	strcat(tmp,arg+1);
+	strcpy(arg,tmp);
+	free(tmp);
       }
+      argv[size] = arg;
+      size++;
     }
   }
   argv[size] = NULL;
@@ -158,10 +190,9 @@ void shell(){
   while (1){
     printPrompt();
     fgets(input, BUFFER_LEN, stdin);
-
     commands = parseInput(input, ";");
-
     count = 0;
+    // Execute each command
     while (commands[count]){
       argv = parseInput(commands[count], " ");
       execute(argv);

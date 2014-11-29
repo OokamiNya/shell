@@ -5,30 +5,43 @@ Systems Period 8
 
 Rudimentary shell program
 
+
 ## Basic Features
 - [x] Execute multiple commands per line, separated by `;`
   - [x] Trim excess white space
   - [x] Ignore consecutive semicolons rather than returning a syntax error
 - [x] Basic file redirection: `>` & `<`
-  - [x] All args following a redirect symbol, excluding the first, are ignored (subject to change)
-- [x] Pipes: `|`
-- [x] No memory leaks (Valgrind)
+- [x] Basic piping: `|`
+- [ ] Checked for memory leaks (Valgrind)
 
-## TODO (in no particular order)
-- [x] Tilde expansion: `~` is replaced by user's $HOME directory
+
+## To Do
+###Enhancements
+------
+- [x] Tilde expansion: `~` is interchangeable with user's $HOME directory
+- [ ] Debug mode/flag where more obscure errors are printed (currently the default)
 - [ ] Colorful prompt
+- [ ] Chained piping (recursion!)
 - [ ] Signal handling: `SIGINT` & `EOF`
 - [ ] Wildcard `*`
-- [ ] Tab completion
+- [ ] Tab completion: for files and commands
 - [ ] Command history & navigation
 - [ ] Directory history & navigation (`cd -`)
 - [ ] More complex redirection
   - [x] `>>`
   - [ ] `<<`, `<<<`
+  - [ ] `cmd > out1 flag1 flag2`
   - [ ] `cmd < infile > outfile`
   - [ ] Redirection for `STDERR` and other file descriptors 
-- [ ] Background processes
-- [ ] Interpreter
+- [ ] Background processes: `&`
+- [ ] Logic operators: `&&`, `||`, `!`
+
+
+###Bugs
+------
+- [ ] Allow redirect symbols to be adjacent to commands or flags (not separated by space)
+- [ ] Allow tilde expansion to work in conjunction with redirection
+
 
 ## Files & Function Headers
 shell.c
