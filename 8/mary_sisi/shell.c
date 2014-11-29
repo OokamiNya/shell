@@ -132,10 +132,61 @@ int contains(char ** args, char * c){
 int execute(char ** args){
   int i;
   if((i = contains(args,";")) != -1){
+
     printf("COMMAND WITH ';' AT INDEX %d\n", i);
+
+    char ** part1 = (char **)malloc(i * sizeof(char *));
+
+    int j = 0;
+    while(j < i){
+      part1[j] = args[j];
+      j++;
+    }
+
+    j = 0;
+    while(j <= i){
+      free(args[i]);
+      j++;
+    }
+
+    args += (i + 1);
+
+    execute(part1);
+    execute(args);
 
   }else if((i = contains(args,">")) != -1){
     printf("COMMAND WITH '>' AT INDEX %d\n",i);
+
+    char * command = args[0];
+
+    char ** part1 = (char **)malloc((i-1) * sizeof(char *));
+
+    int j = 1;
+    while(j < i){
+      part1[j] = args[j];
+      j++;
+    }
+
+    j = 0;
+    while(j <= i){
+      free(args[i]);
+      j++;
+    }
+
+    args += (i + 1);
+
+    int f = fork();
+    int status;
+    if(!f){
+
+      int fd = open(args[0]);
+      dup2(fd,STDOUT_FILENO);
+
+      execvp(command, part1);
+
+    }else{
+      wait(&status);
+    }
 
   }else if((i = contains(args,"<")) != -1){
     printf("COMMAND WITH '<' AT INDEX %d\n",i);
