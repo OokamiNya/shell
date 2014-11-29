@@ -1,0 +1,113 @@
+gshell
+by George
+
+Features:
+	Executes commands with args
+	Handles redirects for >, >>, 2>, 2>>, &>, &>>, and <
+	Handles up to 256 pipes (might be 255 or 254 actually)
+	Handles semicolons
+	Has builtin cd, help, and exit
+	Prints cwd in prompt
+	Doesn't segfault
+	If a command in a sequence of pipes breaks, tells which one it is
+		e.g.: ls | not_a_command | wc; will inform you that the
+		second command failed
+
+Attempted:
+	If any command in the pipe sequence fails, there's a lot of garbage spit out from
+	other bits of the shell. Tried to make it fail more gracefully but was too lazy.
+
+	If a command is not found, it says 'execve: file not found' (I'm paraphrasing)
+	Wanted to make it more like 'command [whatever_you_typed] not found', but was
+	once again too lazy
+
+Bugs:
+	I think there might be unclosed pipes if you pipe together a bunch of commands
+	and one of the doesn't exist, resulting in exec failing, resulting in the loop
+	exiting early before it has a chance to close the now-forked pipes. It's probably
+	fine though.
+	
+Files & Function Headers:
+shell.c
+	int main();
+		Handles the main loop (print prompt, getline, execute)
+		Splits on ; and \n, passes into splitpipes
+
+	int splitpipes(char *command)
+		Handles a string of pipe-separated commands after
+		semicolons have been split on:
+
+		Breaks up command string on pipe characters, resulting in
+		n separate commands
+		
+		Makes n-1 pipes, calls doredirects with the appropriate
+		file descriptors, either stdin/out for the first/last
+		commands, or the relevant pipe endpoints for the ones
+		in between. 
+
+		Holds on to pids, keeps track of how many are actual
+		commands (as opposed to cd and help), and therefore
+		how many need to be waited for
+
+		Waits for them
+
+	int doredirects(char *command, int infd, int outfd)
+		Handles a single command with no pipes, deals with
+		redirects:
+
+		First checks whether command is exit, cd, or help,
+		and executes/returns accordingly
+
+		otherwise, forks off and replaces stdin/out with
+		infd/outfd, which can be pipes
+
+		looks for args like > and <, and removes them and the
+		subsequent file argument from the list of args
+		(since they don't actually go to the command)
+		assembles the correct redirect_mode flags and
+		calls redirect
+
+		calls docommand to run the actual command, meanwhile
+		the parent returns the child's pid
+
+	int doCommand(char *argv[])
+		Literally just calls execve
+
+		Prints an error if the program gets past the exec
+	
+util.c
+	Handles all parsing functions
+	Also redirects, cd, and printing things
+
+	int argify(char *command, char *argv[]);
+		Takes a single command string and puts it into an argv format,
+		replacing spaces with \0 and putting pointers to the args into
+		argv[]
+
+		returns argc
+
+	int _getline(char *in, int bytestoread);
+		Fetches a line of input from stdin. If more text has been entered
+		than bytestoread, it will discard all the input and print an error
+
+		Blocks until input is received
+
+	typedef int redirect_mode;
+	int redirect(char *filename, redirect_mode mode);
+		Takes a filename and a redirectmode (&ed together from flags), opens
+		a file and calls dup2 on the relevant file descriptors
+
+	int gsh_cd(char *argv[]); //has to be NULL terminated
+		changes directory
+
+		returns -2 on success so can be distinguished from a forked process
+		and not wait()ed for
+
+	void print_prompt();
+		prints "$CWD>" and flushes output
+
+	void print_help();
+		prints a short help listing, mentioning help, cd, exit, and pipes/redirects
+
+
+
