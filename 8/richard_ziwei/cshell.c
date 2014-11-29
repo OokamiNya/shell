@@ -1,4 +1,23 @@
 #include"heads.h"
+#include"helper.c"
+
+//DOES NOT WORK
+static void sighandler(int signo){
+  int id = getpid();
+  int pid = fork();
+  if (!pid){
+    printf("Intercepting...\n");
+
+    main();
+    //exit(-1);
+  }
+  waitpid(pid);
+  printf("what");
+  sleep(100000);
+  exit(-1);
+}
+
+
 
 //HANDLES THE CD AND EXIT EXCEPTIONS
 char dumb_exceptions(char arg[]){
@@ -38,24 +57,31 @@ void normal_stuff(char arg[]){
       exit(-1);
     }
   }
-  printf("I WORK :D\n");
+  //printf("I WORK :D\n");
   wait(&pid);
 }
 
 //PIPING
+//STILL DOESNT WORK; HOW TO PIPE
 char pipe_it(char arg[]){
-  int in = STDIN_FILENO;
-  dup2(STDIN_FILENO,STDOUT_FILENO);
-  dup2(STDOUT_FILENO,in);
+  int pipefd[2];
+  pipe(pipefd);
+  int out = STDOUT_FILENO;
+  dup2(pipefd[1],STDOUT_FILENO);
+
   while(strchr(arg,'|')){
+    
     char * orig;
     orig = strsep(&arg,"|");
     orig[strlen(orig)-1]=0;
     arg++;
-    printf("orig:<%s>\targ:<%s>\n",orig,arg);
+    //printf("orig:<%s>\targ:<%s>\n",orig,arg);
     normal_stuff(orig);
   }
   arg++;
+  close(pipefd[1]);
+  dup2(out,STDOUT_FILENO);
+  dup2(pipefd[0],STDIN_FILENO);
   normal_stuff(arg);
   return 1;
 }
@@ -86,6 +112,7 @@ char redirection(char arg[]){
 	dup2(fd,STDIN_FILENO);
       }
       close(fd);
+      //normal_stuff(orig); does not work
       execlp(orig,orig,NULL);//FIX THIS TO ACCEPT ARGS
     }
     wait(&pid);
@@ -99,7 +126,9 @@ char redirection(char arg[]){
 
 
 int main(){
-  //should probably factor this so ; works
+ 
+  signal(SIGINT,sighandler);
+  //semicolon now works.
   while (1){
     char input[256];
     char direct[256];
@@ -107,9 +136,19 @@ int main(){
     printf("%s$ ",direct);
     fgets(input,sizeof(input),stdin);
     input[strlen(input)-1]=0;
-    //im sorry
-    if (!dumb_exceptions(input) && !redirection(input)){
-      normal_stuff(input);
+    char * ipointer = &input[0];
+    char * orig = &input[0];
+    while (strchr(ipointer,';')){
+      orig = strsep(&ipointer,";");
+      orig = strip(orig); //MALLOCS MEMORY, comment out if you don't want memory leak
+      //strip is found in helper.c
+      if (!dumb_exceptions(orig) && !redirection(orig)){
+	normal_stuff(orig);
+      }
+    }
+    ipointer=strip(ipointer);
+    if (!dumb_exceptions(ipointer) && !redirection(ipointer)){
+	normal_stuff(ipointer);
     }
   }
   return 0;
