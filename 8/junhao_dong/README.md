@@ -21,13 +21,13 @@ Shell program
 - [x] Tilde expansion: `~` is interchangeable with user's $HOME directory
 - [x] Prompt: username, current working directory
   - [ ] Color
-- [x] More complex redirection: `>>`
+- [x] Better redirection: `>>`
   - [x] `cmd < inFile > outFile`
   - [x] `cmd > out1 flag1 flag2`
-  - [ ] Work with pipes
+  - [x] Work with pipes
   - [ ] `<<`, `<<<`
   - [ ] Redirection for `STDERR` and other file descriptors 
-- [ ] Chained piping
+- [x] Chained piping
 - [ ] Wildcard `*`
 - [ ] Signal handling: `SIGINT`
   - [ ] `EOF` (Ctrl-D)
@@ -50,14 +50,17 @@ shell.h
 - static void sigHandler(int signo)
 - void printPrompt()
   - Prints the shell prompt with the current working directory, replacing $HOME with ~ when applicable
+- void safe_exec()
 - char * trimSpace(char *str)
 - void redirect()
-- void executePipe (char **argv)
-- void executeMisc(char **argv)
-- void execute(char **argv)
+- void executePipe(int pipeIndex)
+- void executeMisc()
+- void execute()
 - char ** parseInput(char *input, char *delim)
 - void shell()
 
+
+Ignore==== (here for reference; taken from DW's example)
 
 char ** parse_line()
 Returns: Array of strings where each entry is a token 

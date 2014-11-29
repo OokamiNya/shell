@@ -3,9 +3,10 @@
 
 static void sigHandler(int signo);
 void printPrompt();
+void safe_exec();
 char * trimSpace(char *str);
 void redirect();
-void executePipe ();
+void executePipe(int pipeIndex);
 void executeMisc();
 void execute();
 char ** parseInput(char *input, char *delim);

@@ -48,6 +48,15 @@ void printPrompt(){
   free(cwd);
 }
 
+// Execute a command; Handles errors and frees
+void safe_exec(){
+  execvp(argv[0], argv);
+  printf("%s: command not found\n", argv[0]);
+  free(argv);
+  free(commands);
+  exit(EXIT_FAILURE);
+}
+
 // Trim white space and ';' from *str
 char * trimSpace(char *str){
   char *tmp;
@@ -91,48 +100,50 @@ void redirect(){
   }
 }
 
-void executePipe(){
-  int pipeIndex, fd[2]; // fd[0] = in; fd[1] = out
+void executePipe(int pipeIndex){
+  int fd[2]; // fd[1] = write in; fd[0] = read out
   pipe(fd);
-  // Find pipe index
-  pipeIndex = 0;
-  while (*argv[pipeIndex] != '|')
-    pipeIndex++;
-
   f = fork();
-  if (!f){ // Child; in pipe
-    close(fd[0]);
+  if (!f){ // Child; write in to pipe
     dup2(fd[1], STDOUT_FILENO);
     argv[pipeIndex] = NULL;
-  }
-  else{ // Parent; out pipe
-    wait(&status);
+    close(fd[0]);
     close(fd[1]);
-    dup2(fd[0], STDIN_FILENO);
-    argv = &argv[pipeIndex+1];
+    safe_exec();
   }
-  //executeMisc(argv);
-  execvp(argv[0], argv);
-  printf("%s: command not found\n", argv[0]);
-  exit(EXIT_FAILURE);
+  else{ // Parent; read out from pipe
+    wait(&status);
+    dup2(fd[0], STDIN_FILENO);
+    int i = 0;
+    while (argv[pipeIndex+1+i]){
+      argv[i] = argv[pipeIndex+1+i];
+      i++;
+    }
+    argv[i] = NULL;
+    close(fd[0]);
+    close(fd[1]);
+    isPipe = FALSE;
+    executeMisc();
+  }
 }
 
 void executeMisc(){
-  f = fork();
-  if (!f){
-    // Piping
-    if (isPipe)
-      executePipe();
-    // Redirecting
-    else if (redir_in || redir_out)
-      redirect();
-    execvp(argv[0], argv);
-    printf("%s: command not found\n", argv[0]);
-    exit(EXIT_FAILURE);
+  // Piping
+  int pipeIndex = 0;
+  while (argv[pipeIndex]){
+    if (*argv[pipeIndex] == '|'){
+      isPipe = TRUE;
+      break;
+    }
+    pipeIndex++;
   }
-  else{
-    wait(&status);
-  }
+  if (isPipe)
+    executePipe(pipeIndex); // Execute first command before continuing
+  // Redirecting
+  else if (redir_in || redir_out)
+    redirect();
+  // Execute
+  safe_exec();
 }
 
 void execute(){
@@ -150,8 +161,13 @@ void execute(){
     if (chdir(argv[1]) < 0)
       printf("cd: %s: %s\n", argv[1], strerror(errno));
   }
-  else
-    executeMisc();
+  else{
+    f = fork();
+    if (!f)
+      executeMisc();
+    else
+      wait(&status);
+  }
 }
 
 // Returns dynamically allocated memory
@@ -169,7 +185,7 @@ char ** parseInput(char *input, char *delim){
     // Trim white space
     arg = trimSpace(arg);
     if (*arg){
-      // Check if redirect or pipe
+      // Check if redirect
       if (*arg == '>'){
 	redir_out = TRUE;
 	outSymbol = arg;
@@ -177,11 +193,6 @@ char ** parseInput(char *input, char *delim){
       else if (*arg == '<'){
 	redir_in = TRUE;
 	inSymbol = arg;
-      }
-      else if (*arg == '|'){
-	isPipe = TRUE;
-	argv[size] = "|";
-	size++;
       }
       else if (redir_out && !outFile) outFile = arg;
       else if (redir_in && !inFile) inFile = arg;
@@ -217,7 +228,6 @@ void shell(){
       free(argv);
       count++;
       // Reset globals
-      isPipe = FALSE;
       redir_in = FALSE;
       redir_out = FALSE;
       inFile = 0;
