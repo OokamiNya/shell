@@ -25,6 +25,14 @@ int execute(char** input) {
   }
   else {
     // getting there
+    int spoon = fork();
+    int status;
+    if (!spoon) {
+      execvp(input[0],input);
+    }
+    else {
+      wait(&status);
+    }
   }
   return 0;
 }
@@ -41,7 +49,9 @@ char** parse ( char* input, char* delim ) {
     str++;
   }
   char* arg = strtok(input, delim);
-  char** argv = (char **)malloc(sizeof(char *)* i+1);
+  //somehow this works
+  //printf("%d\n", i+2);
+  char** argv = calloc(i+2,sizeof(char *));
   argv[0] = arg;
   int j = 0;
   while(arg){
@@ -49,7 +59,13 @@ char** parse ( char* input, char* delim ) {
     arg = strtok(NULL, delim);
     argv[j] = arg;
   }
-  //printf("arg[1] %s\n", argv[1]);
+
+  //print argv
+  //int k = 0;
+  //for (;k<i+2; k++) {
+  //  printf("argv[%d]: %s\n", k, argv[k]);
+  //}
+
   return argv;
 }
 
