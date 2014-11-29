@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "shell.h"
+#include "redirect.c"
 
 char** parse(char* input, char* s){
   strtok( input, "\n");
@@ -40,22 +41,7 @@ char* getinput(char* input){
   return input;
 }
 
-void redirect(char* file,char** args){
-  int fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
-  dup2(fd,STDOUT_FILENO);
-  close(fd);
-  execvp(args[0],args);
-}
 
-char** getinfo(char** args){
-  int i = 0;
-  while(args[i]){
-    if(strcmp(args[i],">")){
-      
-    }
-    i++;
-  }
-}
 int main(){
   char a = 0;
   while(1){

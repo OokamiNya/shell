@@ -1,19 +1,26 @@
-FILES = shell.c directorystack.c
-OBJECTS = shell.o directorystack.o
+FILES = shell.c shellutil.c prompt.c directorystack.c
+OBJECTS = *.o
 LIBS = -lreadline
 
-all: clean build run
+all: clean compile build run
 
 clean:
-	@rm -f shell
+	@rm -f shell *.o
+
+compile:
+	@gcc -Wall -c -g $(FILES)
+
+compiledebug:
+	@gcc -Wall -c -g $(FILES) -D DEBUG
 
 build:
-	@gcc -Wall -c -g $(FILES)
 	@gcc -o shell $(OBJECTS) $(LIBS)
+	@rm -f *.o
 
 run:
-	@rm -f *.o
 	@./shell
 
-test:
+test:	clean compile build
 	@./shell < test.txt
+
+debug:	clean compiledebug build run
