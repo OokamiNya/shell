@@ -66,25 +66,29 @@ void normal_stuff(char arg[]){
 //PIPING
 //STILL DOESNT WORK; HOW TO PIPE
 char pipe_it(char arg[]){
-  int pipefd[2];
-  pipe(pipefd);
-  int out = STDOUT_FILENO;
-  dup2(pipefd[1],STDOUT_FILENO);
-
-  while(strchr(arg,'|')){
-    
-    char * orig;
-    orig = strsep(&arg,"|");
-    orig[strlen(orig)-1]=0;
-    arg++;
-    //printf("orig:<%s>\targ:<%s>\n",orig,arg);
-    normal_stuff(orig);
-  }
-  arg++;
-  close(pipefd[1]);
-  dup2(out,STDOUT_FILENO);
-  dup2(pipefd[0],STDIN_FILENO);
-  normal_stuff(arg);
+  int p[2];
+  char *cmd1;
+  char *cmd2;
+  pipe(p);
+  cmd2 = strchr(arg, '|') + 2;
+  cmd1 = strsep(&arg, "|");
+  *(cmd1 + strlen(cmd1) - 1) = NULL;
+  printf("%s.%s\n", cmd1, cmd2);
+  int pid = fork();
+  if (!pid) {
+    close(0);
+    dup(p[0]);
+    close(p[1]);
+    close(p[0]);
+    normal_stuff(cmd2);
+  } else {
+    wait(&pid);
+    close(1);
+    dup(p[1]);
+    close(p[1]);
+    close(p[0]);
+    normal_stuff(cmd1);
+    }
   return 1;
 }
 
@@ -119,8 +123,9 @@ char redirection(char arg[]){
     wait(&pid);
     return 1;
   }
-  else if (strchr(arg,'|')){
-    return pipe_it(arg);
+  else if (strchr(arg, '|')){
+    pipe_it(arg);
+    return 1;
   }   
   return 0;  
 }
