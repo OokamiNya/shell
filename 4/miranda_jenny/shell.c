@@ -38,6 +38,8 @@ void execute( char* split_cmds ) {
         }
     }
 }
+
+
 char* rmspaces( char *str){
     if ( str[0] == ' ' ) {
         str = &str[1];
@@ -66,18 +68,15 @@ int main() {
         
         char *split_cmds; //holds the piece separated off from raw_str (a cmd + arg string)
         
-        int c = 0;
-        
-        char * redirect;
+        char * cmd1;
         int fd = 0;
         int temp_stdin;
         int temp_stdout;
+    
         while (( split_cmds = strsep(&raw_str, ";") )) {
-            c++;
             int a = 0;
             split_cmds=rmspaces(split_cmds);
-            
-            if ( strchr( split_cmds, '>' ) ) {
+            if ( strchr( split_cmds, '>') ) {
                 char * cmd;
                 cmd = strsep( &split_cmds, ">" ); //gets cmd from input
                 cmd=rmspaces(cmd);
@@ -95,8 +94,6 @@ int main() {
                 cmd=rmspaces(cmd);
                 split_cmds=rmspaces(split_cmds);
                 temp_stdin = dup( STDIN_FILENO ); //creates copy of STDIN
-                printf("Taking input: %s\n",cmd);
-                printf("from: %s\n",split_cmds);
                 fd = open( split_cmds, O_RDONLY, 0644 ); //opens file from input
                 dup2( fd, STDIN_FILENO ); //redirects STDIN to file
                 execute( cmd ); //runs cmd
@@ -105,25 +102,29 @@ int main() {
             }
             else if ( strchr( split_cmds, '|' ) ) {
                 char * cmd1;
-                char output1[500];
-                char* cmd2;
-                cmd2 = malloc(500 * sizeof(char));
+           
                 cmd1 = strsep( &split_cmds, "|" ); //gets 1st cmd from input
                 rmspaces(cmd1);
                 rmspaces(split_cmds);
+                
                 temp_stdout = dup( STDOUT_FILENO ); //creates copy of STDOUT
                 temp_stdin = dup( STDIN_FILENO ); //creates copy of STDOUT
-                dup2( STDIN_FILENO, STDOUT_FILENO ); //redirects STDOUT to STDIN
-                printf("redirected STDOUT to STDIN\n");
+                
+                int temp_f=open( ".pipe", O_WRONLY|O_CREAT, 0644 );
+                dup2( temp_f, STDOUT_FILENO); //redirects STDOUT to STDIN
+        
                 execute( cmd1 ); //runs cmd1
-                printf("about to execute cmd2\n");
                 dup2( temp_stdout, STDOUT_FILENO ); //resets STDOUT to normal, not STDIN
-                printf("stdout back to normal\n");
-                cmd2=strcpy(cmd2, split_cmds);
-                printf("strcpyd\n");
-                //cmd2=strcat(cmd2,output1);
-                execute( cmd2 ); //runs cmd2
-                printf("ran cmd2\n");
+                close(temp_f);
+                
+                temp_f=open( ".pipe", O_RDONLY, 0644 );
+                dup2( temp_f, STDIN_FILENO);
+
+                execute( split_cmds ); //runs cmd2
+               
+                dup2( temp_stdin, STDIN_FILENO );
+                close(temp_f);
+                execlp("rm","rm",".pipe",NULL);
             }
             else {
                 execute( split_cmds );
