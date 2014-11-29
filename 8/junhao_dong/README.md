@@ -19,7 +19,6 @@ Rudimentary shell program
 ###Enhancements
 ------
 - [x] Tilde expansion: `~` is interchangeable with user's $HOME directory
-- [ ] Debug mode/flag where more obscure errors are printed (currently the default)
 - [ ] Colorful prompt
 - [ ] Chained piping (recursion!)
 - [ ] Signal handling: `SIGINT` & `EOF`
@@ -33,6 +32,7 @@ Rudimentary shell program
   - [ ] `cmd > out1 flag1 flag2`
   - [ ] `cmd < infile > outfile`
   - [ ] Redirection for `STDERR` and other file descriptors 
+- [ ] Debug mode/flag where more obscure errors are printed
 - [ ] Background processes: `&`
 - [ ] Logic operators: `&&`, `||`, `!`
 
@@ -44,24 +44,22 @@ Rudimentary shell program
 
 
 ## Files & Function Headers
-shell.c
+shell.h
+------
 
-== DW'S things for reference; will delete later ==
+- `void printPrompt()`
+  - Prints the shell prompt with the current working directory, replacing $HOME with ~ when applicable
+- `void redirect(char *redirect_file)`
+- `void executePipe (char **argv)`
+- `void executeMisc(char **argv)`
+- `void execute(char **argv)`
+- `char ** parseInput(char *input, char *delim)`
+- `void shell()`
 
-Handles all line parsing fucntions
-======== int count_tokens() ==========
-Inputs:  char *line
-char delim 
-Returns: Number of tokens in line separated by delim
 
-Counts the number of times the character delim appears in the
-string line
-The number of tokens is 1 more than the number of appearences 
-of delim
-If delim does not appear, 1 is returned
+MR DW'S EXAMPLE FOR REFERENCE; WILL DELETE WHEN IM DONE
 
 ======== char ** parse_line() ==========
-Inputs:  char *line 
 Returns: Array of strings where each entry is a token 
 separated by delim
 
@@ -69,7 +67,6 @@ If line contains multiple tokens separated by delim, this
 function will put each token into an array of strings
 
 ======== char * trim() ==========
-Inputs:  char *line 
 Returns: Pointer to the beginning of line
 
 Removes leading and trailing whitespace on the string line.

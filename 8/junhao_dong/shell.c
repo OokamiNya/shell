@@ -15,8 +15,6 @@
 #define BUFFER_LEN 512
 #define HOME getenv("HOME")
 
-#define printError() printf("ERROR: %s\n", strerror(errno))
-
 int isRedirect = FALSE;
 int redirect_index;
 char *redirect_symbol;
@@ -24,10 +22,6 @@ char *redirect_symbol;
 void printPrompt(){
   char *cwd = 0;
   cwd = getcwd(cwd,0);
-  if (!cwd){
-    printError();
-    return;
-  }
   // Replace $HOME with '~'
   if (strstr(cwd,HOME)){
     int homeLen = strlen(HOME);
@@ -56,39 +50,30 @@ void redirect(char *redirect_file){
   }
   // Redirect
   if (fd < 0)
-    printError();
+    printf("ERROR: %s\n", strerror(errno));
   else{
-    if (dup2(fd, oldfd) < 0)
-      printError();
-    if (close(fd) < 0)
-      printError();
+    dup2(fd, oldfd);
+    close(fd);
   }
 }
 
-// No error checking for close()
+// make sure i closed all fd's
 void executePipe(char **argv){
   int f, status, fd[2]; // fd[0] = in; fd[1] = out
-  if (pipe(fd) < 0)
-    printError();
+  pipe(fd);
   argv[redirect_index] = NULL;
-
   f = fork();
-  if (f < 0)
-    printError();
-  else if (!f){ // Child; in pipe
+  if (!f){ // Child; in pipe
     close(fd[0]);
-    if (dup2(fd[1], STDOUT_FILENO) < 0)
-      printError();
-    //executeMisc(argv);
+    dup2(fd[1], STDOUT_FILENO);
   }
   else{ // Parent; out pipe
     wait(&status);
     close(fd[1]);
-    if (dup2(fd[0], STDIN_FILENO) < 0)
-      printError();
-    //executeMisc(&argv[redirect_index+1]);
+    dup2(fd[0], STDIN_FILENO);
     argv = &argv[redirect_index+1];
   }
+  //executeMisc(argv);
   execvp(argv[0], argv);
   printf("%s: command not found\n", argv[0]);
   exit(EXIT_FAILURE);
@@ -98,9 +83,7 @@ void executePipe(char **argv){
 void executeMisc(char **argv){
   int f, status;
   f = fork();
-  if (f  < 0)
-    printError();
-  else if (!f){
+  if (!f){
     if (isRedirect){
       // Piping
       if (redirect_symbol[0] == '|'){
