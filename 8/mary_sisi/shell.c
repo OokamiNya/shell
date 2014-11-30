@@ -1,19 +1,26 @@
 /*
 
 have to fix:
-
 - freeing (in main)
 - piping
-- cd (sometimes the child process(?) will take over; e.g. if you "cd .." and then "exit", it won't actually exit, but instead it'll put you back into your original directory (before "cd .."))
-- special characters or something (when I tried git commiting from this shell only certain comments were acceptable, sorry I didn't test it more thoroughly yet)
 
-simple optional feateures:
-sighandler for ctrl c
+simple optional features:
+- sighandler for ctrl c
+- implement >> and <<
+- make parse() work without spaces between everything
+
+not-so-simple optional features:
+- up arrow to view history
+- tab to display and/or fill in options while typing
+- * as a wildcard
+- & to run things in the background
+- ~ as a directory shortcut
+- assign values to variables and such
 
 non-coding related things to do:
-write readme.txt about project, when we're done
-make file
-hearer file?
+- write readme.txt about project, when we're done
+- makefile
+- header file?
 
  */
 
@@ -22,6 +29,7 @@ hearer file?
 #include <unistd.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
@@ -109,7 +117,7 @@ void parse(char ** args){
 int contains(char ** args, char * c){
   int i=0;
   while(args[i]){
-    if (strcmp(args[i], c) == 0 ){
+    if (strcmp(args[i], c) == 0){
       return i;
     }
     i++;
@@ -119,7 +127,9 @@ int contains(char ** args, char * c){
 
 
 int execute(char ** args){
+
   int i;
+
   if((i = contains(args,";")) != -1){
     //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
@@ -137,13 +147,14 @@ int execute(char ** args){
     execute(args);
     
   }else if((i = contains(args,"<")) != -1  ){
-    printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
     
     int f = fork();
     int status;
+
     if (!f){
-      int fd = open( args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2(  fd , STDIN_FILENO );
+      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+      dup2(fd, STDIN_FILENO);
 
       char ** part1 = (char**)malloc(sizeof(char*) * i);
       
@@ -153,22 +164,25 @@ int execute(char ** args){
 	j++;
       }
 
-      execvp(part1[0] , part1);
-      //close, and restting stdout not nessecarry b/c its a child
+      execvp(part1[0], part1);
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to reset the file table values, since the child is killed
+
     }else{
       wait(&status);
     }
 
-    //not functional yet
-
   }else if((i = contains(args,">")) != -1  ){
-    printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
+    //printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
     
     int f = fork();
     int status;
+
     if (!f){
       int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2( fd, STDOUT_FILENO );
+      dup2(fd, STDOUT_FILENO);
 
       char ** part1 = (char**)malloc(sizeof(char*) * i);
       
@@ -178,19 +192,29 @@ int execute(char ** args){
 	j++;
       }
 
-      execvp(part1[0] , part1);
-      //close, and restting stdout not nessecarry b/c its a child
+      execvp(part1[0], part1);
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to reset the file table values, since the child is killed
+
     }else{
       wait(&status);
     }
 
   }else if((i = contains(args,"|")) != -1  ){
-    printf("COMMAND WITH '|' AT INDEX %d\n",i);
+    //printf("COMMAND WITH '|' AT INDEX %d\n",i);
        
-    //not yet implemented
+    //ls -l | wc
+    //==
+    //ls -l > buffer.txt
+    //+
+    //wc < buffer.txt
+    //+
+    //rm buffer.txt
 
   }else if((i = contains(args,"cd")) != -1){
-    if (!args[1]){
+    if(!args[1]){
       chdir(getenv("HOME"));
     }else{
       /*int j = 0;
@@ -205,19 +229,19 @@ int execute(char ** args){
 	j ++;
 	}*/
       // ^^ was trying to work on ~
-
       chdir(args[1]);
     }
-    //'~' doesn't  work
-    //and for some reason when I tested this once I had to type "exit" three times before it exited; I wasn't able to duplicate this behavior, though
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
   }else{
     int f = fork();
     int status;
     if(!f){
-      print_array(args);
+      //print_array(args);
       execvp(args[0], args);
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
     }else{
       wait(&status);
     }
