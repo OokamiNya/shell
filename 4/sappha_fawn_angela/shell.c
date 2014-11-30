@@ -19,7 +19,7 @@ int main() {
     for (i = 0; parsed[i]; i++){
       //printf("parsed[%d]:%s\n",i, parsed[i]);
       execute(parsed[i]);
-     }
+    }
 
   }
   return 0;
@@ -119,8 +119,9 @@ void printprompt() {
   printf("%s:~%s$ ", get_id(), s_wd);
 }
 
-void execute(char a[256]){
+int execute(char a[256]){
   char *s1 = a;
+  //printf("s1: %s\n", s1);
   char *sep;
   char** arg = (char**)(malloc(sizeof(char*)));
   int i = 0;
@@ -131,7 +132,7 @@ void execute(char a[256]){
   //printf("s1: %s\n", s1);
   int has = has_redirect(s1);
   
-  // printf("has:%d\n", has);
+  printf("has:%d\n", has);
   //if redirection is necessary
   if (has){
     redirection(s1, has);
@@ -171,8 +172,9 @@ void execute(char a[256]){
       f = fork();
       if (f == 0) {//child process
 	if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist
-	  printf("%s: command not found\n", arg[0]);
-	}
+	  // printf("errno: %d\n", errno);
+	  //printf("strerrno: %s\n", strerror(errno));
+	  printf("%s: command not found\n", arg[0]);	}
       }
       else {//parent process
 	wait(&status);

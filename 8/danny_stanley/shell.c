@@ -5,6 +5,7 @@
 int errno_result; // Used in collaboration with errno if function fails
 pid_t child_pid = -111111; // Hack to initialize child_pid as a value that does not disrupt the system
 char *prompt;
+char sigquitCount;
 
 int args;
 char **argv;
@@ -12,20 +13,58 @@ int tokIndex;
 int tokSize;
 char *tok;
 
+int processCount;
+process **process_pids;
+
 node* path_history; //For cd history
 
 static void signalhandler(int signal) {
     if (signal == SIGINT) {
-        if (child_pid) {
+        if (child_pid) { // Kills the child process
             kill(child_pid, SIGINT);
             int status;
             waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
             cmd_status = 0;
             create_prompt(prompt, PROMPT_SIZE);
-            printf("\n%s", prompt); // Printout a new prompt
+            printf("\n%s", prompt); // Print out a new prompt
             fflush(stdout);
         }
     }
+    else if (signal == SIGQUIT) {
+        if (child_pid) { // Kills the child process
+            kill(child_pid, SIGINT);
+            int status;
+            waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
+        }
+        if (sigquitCount > 0) {
+            printf("\a\x08\x08  \x08\x08"); // \a dings the terminal, other stuff masks the '^\'
+            fflush(stdout);
+        }
+        else {
+            ++sigquitCount;
+        }
+    }
+}
+
+void setup_shell() {
+    signal(SIGINT, signalhandler);
+    signal(SIGQUIT, signalhandler);
+    sigquitCount = 0;
+    prompt = (char *) malloc(PROMPT_SIZE);
+    process_pids = (process **) NULL;
+}
+
+void cleanup_shell() {
+    free(prompt);
+    --processCount;
+    for (; processCount >= 0; --processCount) {
+        if (process_pids[processCount]) { // Makes sure that the process has not already been freed
+            free(process_pids[processCount]->cmd); // Frees commands of processes that are dynamically allocated
+            free(process_pids[processCount]);
+            process_pids[processCount] = NULL;
+        }
+    }
+    free(process_pids);
 }
 
 void cleanup_argv() {
@@ -53,22 +92,29 @@ void setup_argv() {
     tok = (char *) malloc(TOK_INIT_SIZE);
 }
 
+void add_null_argv() { // Adds NULL needed for execvp
+    argv = (char **) realloc(argv, (args + 1) * sizeof(char *));
+    argv[args] = NULL;
+}
+
 int main() {
-    signal(SIGINT, signalhandler);
-    prompt = (char *) malloc(PROMPT_SIZE);
+    setup_shell();
     char current_path[PATH_SIZE];
     path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
+# ifdef DEBUG
     printf("Starting Directory: %s\n", get_arg(path_history));
+# endif
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
         cmd_status = valid_input = 1;
+        sigquitCount = 0;
         char *line = readline(prompt);
         if (line == NULL) {
 # ifdef DEBUG
             printf("\n~~~ EOF Sent :\\ ~~~\n");
 # endif
             free(line);
-            free(prompt);
+            cleanup_shell();
             exit(0);
         }
 #ifdef DEBUG
@@ -80,7 +126,7 @@ int main() {
         }
         free(line);
     }
-    free(prompt);
+    cleanup_shell();
     return 0;
 }
 
@@ -91,6 +137,23 @@ void parse_input(char *input) {
     while (input[index]) {
         if (input[index] != ' ' && input[index] != '\n') {
             if (0) { // Handler for other cases
+            }
+            else if (input[index] == '&') {
+                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
+                    if (tokIndex != 0) { // Adds last token to argv
+                        tok[tokIndex] = '\0';
+                        ++args;
+                        argv = (char **) realloc(argv, args * sizeof(char *));
+                        argv[args-1] = strdup(tok);
+                    }
+                    add_null_argv();
+                    execute(argv, BG_PROCESS);
+                    cleanup_argv();
+                    setup_argv();
+                    dup2(global_stdin_backup, STDIN_FILENO); // Always restore stdin
+                    dup2(global_stdout_backup, STDOUT_FILENO); // Always restore stdout
+                }
+                valid_input = 2; // Saves into history
             }
             else if (input[index] == '|') {
                 if (args != 0 || tokIndex != 0) { // Makes sure that there is something to execute
@@ -105,8 +168,7 @@ void parse_input(char *input) {
                     printf("There is nothing to pipe from!\n");
                     break;
                 }
-                argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
-                argv[args] = NULL;
+                add_null_argv();
 
                 int pipes[2];
                 if (pipe(pipes) == -1) { // If pipe creation fails, print error
@@ -115,7 +177,7 @@ void parse_input(char *input) {
                 else {
                     int stdout_backup = dup(STDOUT_FILENO);
                     dup2(pipes[1], STDOUT_FILENO); // Redirects stdout to write end of pipe
-                    execute(argv);
+                    execute(argv, FG_PROCESS);
                     cleanup_argv(); // Clean up after execution
                     setup_argv();
                     close(pipes[1]);
@@ -192,8 +254,7 @@ void parse_input(char *input) {
                     argv = (char **) realloc(argv, args * sizeof(char *));
                     argv[args-1] = strdup("cat");
                 }
-                argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
-                argv[args] = NULL;
+                add_null_argv();
 
                 ++index;
                 int mode; // Selecting whether to append or write
@@ -248,7 +309,7 @@ void parse_input(char *input) {
                 else {
                     int stdout_backup = dup(STDOUT_FILENO);
                     dup2(output, STDOUT_FILENO); // Redirects stdout to file
-                    execute(argv);
+                    execute(argv, FG_PROCESS);
                     close(output);
                     dup2(stdout_backup, STDOUT_FILENO); // Restores stdout
                 }
@@ -265,9 +326,8 @@ void parse_input(char *input) {
                         argv = (char **) realloc(argv, args * sizeof(char *));
                         argv[args-1] = strdup(tok);
                     }
-                    argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
-                    argv[args] = NULL;
-                    execute(argv);
+                    add_null_argv();
+                    execute(argv, FG_PROCESS);
                     cleanup_argv();
                     setup_argv();
                     dup2(global_stdin_backup, STDIN_FILENO); // Always restore stdin
@@ -321,10 +381,8 @@ void parse_input(char *input) {
             argv = (char **) realloc(argv, args * sizeof(char *));
             argv[args-1] = strdup(tok);
         }
-
-        argv = (char **) realloc(argv, (args + 1) * sizeof(char *)); // NULL is needed for execvp
-        argv[args] = NULL;
-        execute(argv);
+        add_null_argv();
+        execute(argv, FG_PROCESS);
     }
     else {
         if (valid_input != 2) { // 2 is for bypass
@@ -333,11 +391,10 @@ void parse_input(char *input) {
     }
     dup2(global_stdin_backup, STDIN_FILENO); // Restores stdin regardless
     dup2(global_stdout_backup, STDOUT_FILENO); // Restores stdout regardless
-    piping_state = 0; // Terminates any pipes
     cleanup_argv();
 }
 
-void execute(char **argv) {
+void execute(char **argv, int isBackground) {
 # ifdef DEBUG
     int i = 0;
     for (; i <= args; ++i) {
@@ -361,14 +418,61 @@ void execute(char **argv) {
       printf("path_history PATH OUT: %s\n", get_arg(path_history));
 # endif
     }
+    else if (!strcmp(cmd, "jobs")) {
+        int i;
+        for (i=0; i<processCount; ++i) {
+            if (process_pids[i]) {
+                printf("[%d] + %d running? \t%s\n", i, process_pids[i]->pid, process_pids[i]->cmd);
+            }
+        }
+    }
     else {
         child_pid = fork();
         if (child_pid) { // Parent process to wait for child to finish
-            int status;
-            wait(&status);
-            if (WIFEXITED(status)) {
-                if (WEXITSTATUS(status)) {
-                    cmd_status = 0; // Notes that there was an error
+            if (isBackground) {
+                ++processCount;
+                process_pids = (process **) realloc(process_pids, processCount * sizeof(process *));
+                process *bg_process = (process *) malloc(sizeof(process));
+                int cmdlen = 0;
+                int i;
+                for (i=0; i<args; ++i) { // Finds the total length of the command with args
+                    cmdlen += strlen(argv[i]) + 2;
+                }
+                bg_process->cmd = (char *) malloc(cmdlen * sizeof(char)); // Allocates space for the command
+                for (i=0; i<args; ++i) {
+                    strcat(bg_process->cmd, argv[i]);
+                    strcat(bg_process->cmd, " "); // Adds a space between arguments
+                }
+                bg_process->pid = child_pid;
+                process_pids[processCount-1] = bg_process; // Adds process info to array
+# ifdef DEBUG
+                printf("Process Info:\nCommand: `%s`\nPID: %d\n", bg_process->cmd, bg_process->pid);
+# endif
+                int listener_pid = fork();
+                if (!listener_pid) { // Listens for command to end
+                    int child_status;
+                    waitpid(child_pid, &child_status, 0); // Waits for command
+                    process *process_info = remove_process(process_pids, processCount, child_pid); // Removes command from process list
+                    printf("[%d] + %d done \t%s\n", process_info->index, child_pid, process_info->cmd);
+                    free(process_info);
+                    if (WIFEXITED(child_status)) {
+                        if (WEXITSTATUS(child_status)) {
+                            cmd_status = 0; // Notes that there was an error
+                        }
+                    }
+                    exit(0);
+                }
+                else {
+                    usleep(20000);
+                }
+            }
+            else {
+                int status;
+                waitpid(child_pid, &status, 0); // Waits for execution of command
+                if (WIFEXITED(status)) {
+                    if (WEXITSTATUS(status)) {
+                        cmd_status = 0; // Notes that there was an error
+                    }
                 }
             }
         }
@@ -390,7 +494,7 @@ node * change_directory(char *path , node* history) {
     path = getenv("HOME");
   }
   
-  else if (path[0] == '-') { // TODO: Backtracking directories
+  else if (path[0] == '-') {
     //printf("Previous Path: %s\n",history->arg);
     path = get_arg(history);
   }

@@ -13,42 +13,90 @@ int run_command(char* s){
   char *s2;
   char *s3;
   if(s2=strsep(&s1,";")){
-    int f=fork();
-    if(f){
-      wait(&f);
-      if(s1){ //this ensures that it will not print a new line if no other command is run after it (eg: just ls)
-	printf("\n");
+    int i=0;
+    while(s3=strsep(&s2," ")){
+      if(strcmp(s3,"")!=0){
+	args[i]=s3;
+	i++;
       }
+    }
+    args[i]=0;
+    if(strcmp(args[0],"cd")==0){
+      change_directory(args);
       run_command(s1);
     }else{
-      int i=0;
-      while(s3=strsep(&s2," ")){
-	if(strcmp(s3,"")!=0){
-	  args[i]=s3;
+      int f=fork();
+      if(f){
+	wait(&f);
+	if(s1){ //this ensures that it will not print a new line if no other command is run after it (eg: just ls)
+	  printf("\n");
+	}
+	run_command(s1);
+      }else{
+	if(strcmp(args[0],"exit")==0){
+	  kill(getpid(),SIGUSR1);
+	}
+	i=0;
+	int redirect=0;
+	while(args[i]){
+	  if(strcmp(args[i],">")==0){
+	    redirect=1;
+	    break;
+	  } else if(strcmp(args[i],"<")==0){
+	    redirect=2;
+	    break;
+	  } else if(strcmp(args[i],"|")==0){
+	    redirect=3;
+	    break;
+	  } i++;
+	}
+	if(redirect){
+	  args[i]=0;
+	  char *args2[256];
 	  i++;
+	  int j=i;
+	  while(args[i]){
+	    args2[i-j]=args[i];
+	    i++;
+	  } 
+	  int out;
+	  int fd;
+	  if(redirect==1){
+	    out = dup(STDOUT_FILENO);
+	    fd = open(args2[0], O_WRONLY|O_CREAT|O_TRUNC, 0644 );
+	    dup2(fd, STDOUT_FILENO);
+	    int f2=fork();
+	    if(f2){
+	      wait(&f2);
+	      dup2(out, STDOUT_FILENO);
+	      close(fd);
+	      exit(-1);
+	    }else{
+	      execvp(args[0],args);
+	      printf("Command not found: %s\n",args[0]);
+	      exit(-1);
+	    }
+	  }
 	}
-      }
-      args[i]=0;
-      if(strcmp(args[0],"exit")==0){
-	kill(getpid(),SIGUSR1);
-      }
-      if(strcmp(args[0],"cd")==0){
-	char path[256];
-	getcwd(path,sizeof(path));
-	printf("current working dir: %s\n",path);
-	int n=chdir(args[1]);
-	if(n==-1){
-	  printf("Directory not found: %s\n",args[1]);
-	}
-	char path2[256];
-	getcwd(path2,sizeof(path2));
-	printf("current working dir: %s\n",path2);
+	execvp(args[0],args);
+	printf("Command not found: %s\n",args[0]);
 	exit(-1);
       }
-      execvp(args[0],args);
-      printf("Command not found: %s\n",args[0]);
-      exit(-1);
     }
   }
+  return 0;
+}
+
+int change_directory(char** args){
+  char path[256];
+  getcwd(path,sizeof(path));
+  //printf("current working dir: %s\n",path);
+  int n=chdir(args[1]);
+  if(n==-1){
+    printf("Directory not found: %s\n",args[1]);
+  }
+  char path2[256];
+  getcwd(path2,sizeof(path2));
+  //printf("current working dir: %s\n",path2);
   return 0;
 }

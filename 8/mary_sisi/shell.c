@@ -1,11 +1,25 @@
 /*
 
 have to fix:
-
 - freeing (in main)
-- redirection
-- cd (sometimes the child process(?) will take over; e.g. if you "cd .." and then "exit", it won't actually exit, but instead it'll put you back into your original directory (before "cd .."))
-- special characters or something (when I tried git commiting from this shell only certain comments were acceptable, sorry I didn't test it more thoroughly yet)
+
+simple optional features:
+- sighandler for Ctrl+C (attempted, doesn't work yet)
+- implement >> and <<
+- make parse() work without spaces between everything
+
+not-so-simple optional features:
+- up arrow to view history
+- tab to display and/or fill in options while typing
+- * as a wildcard
+- & to run things in the background
+- ~ as a directory shortcut
+- assign values to variables and such
+
+non-coding related things to do:
+- write readme.txt about project, when we're done
+- makefile
+- header file?
 
  */
 
@@ -14,10 +28,12 @@ have to fix:
 #include <unistd.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
 
+static void sighandler(int signo);
 void print_prompt();
 void print_array(char** args); //for testing purposes
 void parse(char ** a); //parses user input
@@ -27,6 +43,8 @@ int execute(char ** a); //hanldes user input
 
 int main(){
 
+  signal(SIGINT, sighandler);
+
   print_prompt();
   int run = 1;
   while(run){
@@ -35,17 +53,18 @@ int main(){
     args = (char**)malloc(sizeof(char)*64);
     char ** temp = args;
 
-    int i=0;
-    while(i<32){
+    int i = 0;
+    while(i < 32){
       args[i] = (char*)malloc(sizeof(char)*32);
       i++;
     }
 
     parse(args);
     execute(args);
-
+ 
     //freeing doesn't work, gotta fix that
-    /* while(i<32){ */
+    /* i = 0; */
+    /* while(i < 32){ */
     /*   free(temp[i]); */
     /*   i++; */
     /* } */
@@ -58,6 +77,13 @@ int main(){
 }
 
 
+//I wish this worked.  It does not.
+static void sighandler(int signo){
+  printf("\n");
+  main();
+}
+
+
 void print_prompt(){
   char path[256];
   getcwd(path, 256);  
@@ -66,12 +92,14 @@ void print_prompt(){
 }
 
 
+//for testing purposes
 void print_array(char ** args){
   int i = 0;
   while(args[i]){
     printf("args[%d]:  %s\t",i,args[i]);
     i++;
   }
+  printf("\n");
 }
 
 
@@ -94,14 +122,14 @@ void parse(char ** args){
   }
 
   //termination
-  args[i] = 0;
+  args[i] = NULL;
 }
 
 
 int contains(char ** args, char * c){
   int i=0;
   while(args[i]){
-    if (strcmp(args[i], c) == 0 ){
+    if (strcmp(args[i], c) == 0){
       return i;
     }
     i++;
@@ -111,9 +139,11 @@ int contains(char ** args, char * c){
 
 
 int execute(char ** args){
+
   int i;
+
   if((i = contains(args,";")) != -1){
-    printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
+    //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
     char ** part1 = (char**)malloc(sizeof(char*) * i);
     
@@ -129,29 +159,148 @@ int execute(char ** args){
     execute(args);
     
   }else if((i = contains(args,"<")) != -1  ){
-    printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
-    //not functional yet
+    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    
+    int f = fork();
+    int status;
+
+    if (!f){
+      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+      dup2(fd, STDIN_FILENO);
+
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      execvp(part1[0], part1);
+      //in case execvp doesn't run:
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
+
+    }else{
+      wait(&status);
+    }
 
   }else if((i = contains(args,">")) != -1  ){
-    printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
-    //not functional yet
+    //printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
+    
+    int f = fork();
+    int status;
+
+    if (!f){
+      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+      dup2(fd, STDOUT_FILENO);
+
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      execvp(part1[0], part1);
+      //in case execvp doesn't run:
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
+
+    }else{
+      wait(&status);
+    }
 
   }else if((i = contains(args,"|")) != -1  ){
-    printf("COMMAND WITH '|' AT INDEX %d\n",i);
-    //not functional yet
+    //printf("COMMAND WITH '|' AT INDEX %d\n",i);
+
+    char ** part1 = (char**)malloc(sizeof(char*) * (i + 3));
+    int j = 0;
+    while(j < i){
+      part1[j] = args[j];
+      j++;
+    }
+    part1[j] = ">";
+    part1[j+1] = "buffer.txt";
+    part1[j+2] = NULL;
+
+    /* printf("part1: "); */
+    /* print_array(part1); */
+
+    args += (i + 1);
+
+    //print_array(args);
+
+    if((i = contains(args,";")) != -1){
+    }else if((i = contains(args, "<")) != -1){
+    }else if((i = contains(args, ">")) != -1){
+    }else if((i = contains(args, "|")) != -1){
+    }else{
+      i = 0;
+      while(args[i]){
+	i++;
+      }
+      //printf("i: %d\n",i);
+    }
+
+    char ** part2 = (char**)malloc(sizeof(char*) * (i + 3));
+
+    j = 0;
+    while(j < i){
+      part2[j] = args[j];
+      j++;
+    }
+
+    part2[j] = "<";
+    part2[j+1] = "buffer.txt";
+    part2[j+2] = NULL;
+
+    /* printf("part2: "); */
+    /* print_array(part2); */
+
+    execute(part1);
+    execute(part2);
+
+    free(part1);
+    free(part2);
+
+    remove("buffer.txt");
 
   }else if((i = contains(args,"cd")) != -1){
-    chdir(args[1]);
-    //'~' doesn't  work
-    //and for some reason when I tested this once I had to type "exit" three times before it exited; I wasn't able to duplicate this behavior, though
+    if(!args[1]){
+      chdir(getenv("HOME"));
+    }else{
+      /*int j = 0;
+	char * path = args[1]; 
+	while( j < strlen(path) ){
+	if ( strcmp(path[j], "~") == 0 ){
+	char * newpath;
+	newpath = strcat( strsep(path),getenv("HOME") );
+	  
+	chdir(path2);
+	}
+	j ++;
+	}*/
+      // ^^ was trying to work on ~
+      chdir(args[1]);
+    }
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
   }else{
     int f = fork();
     int status;
     if(!f){
-      print_array(args);
+      //print_array(args);
       execvp(args[0], args);
+      //in case execvp doesn't run:
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
     }else{
       wait(&status);
     }
