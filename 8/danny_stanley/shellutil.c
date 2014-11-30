@@ -126,3 +126,24 @@ int handle_tilde(char *input, int index) {
     }
     return index - initIndex;
 }
+
+/* Given an process pointer (array), array size, and pid to look for
+ * Sets the process to NULL in the array
+ * Returns a pointer to process found
+ * NEEDS TO BE FREED */
+process * remove_process(process **array, int arraySize, int pid) {
+    int arrayIndex;
+    int processIndex = 0;
+    for (arrayIndex=0; arrayIndex < arraySize; ++arrayIndex) {
+        if (array[arrayIndex]) {
+            ++processIndex;
+            if (array[arrayIndex]->pid == pid) {
+                process *tmp = array[arrayIndex];
+                tmp->index = processIndex;
+                array[arrayIndex] = NULL;
+                return tmp;
+            }
+        }
+    }
+    return NULL;
+}

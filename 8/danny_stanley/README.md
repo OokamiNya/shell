@@ -13,6 +13,7 @@ A shell built by Stanley Lok and Danny Qiu for Mr. DW's 8th Period Systems Class
 - Piping: `|`
 - Handler: `SIGINT`
 - Readline library features: Tab Completion & History
+- Background Processes (VERY BAD)
 
 ## TODO:
 
@@ -23,11 +24,9 @@ A shell built by Stanley Lok and Danny Qiu for Mr. DW's 8th Period Systems Class
 - Smarter tab completion
 - Setting variable values
 - Math
-- Background Processes
 - Prevent buffer overflow attacks by dynamically allocating memory
 - _Create super awesome functions_
 
 ## What we dream of doing
 
-- Creating an API
 - Shipping our shell
