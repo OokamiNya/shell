@@ -116,7 +116,7 @@ int main() {
       if (redir = find_redirect(args[i])) {
 
 	//if redirecting stdout
-	if (redir[0] == ">") {
+	if (redir[0] == '>') {
 	  arg = parse(args[i],">"); //bad things happen if nothing comes after >!!!!!!!!!!!
 	  argv = parse(arg[0]," ");
 	  char* filename = parse(arg[1]," ")[0]; //take the space out of the name
@@ -133,6 +133,51 @@ int main() {
 	    wait(&status);
 	  }
 	} //end stdout
+	//if redirecting stdin
+	else if (redir[0] == '<') {
+	  arg = parse(args[i],"<"); 
+	  argv = parse(arg[0]," ");
+	  char* filename = parse(arg[1]," ")[0]; //take the space out of the name
+	  int spoon = fork();
+	  int status;
+	  if (!spoon) {
+	    int fd = open(filename, O_RDWR, 0777);
+	    int temp_stdin = dup(STDIN_FILENO);
+	    dup2(fd, STDIN_FILENO);
+	    execute(argv);
+	    dup2(temp_stdin, STDIN_FILENO);
+	  }
+	  else {
+	    wait(&status);
+	  }
+	} //end stdin
+	//if pipe
+	else if (redir[0] == '|') {
+	  arg = parse(args[i],"|"); 
+	  int pipes[2];
+	  if (pipe(pipes) == -1) {
+	    printf("Pipe failed\n");
+	  }
+	  else {
+	    int temp_stdout = dup(STDOUT_FILENO); // first command
+	    dup2(pipes[1],STDOUT_FILENO);
+	    argv = parse(arg[0]," ");
+	    execute(argv);
+	    close(pipes[1]);
+	    dup2(temp_stdout,STDOUT_FILENO);
+
+	    int temp_stdin = dup(STDIN_FILENO); //second
+	    dup2(pipes[0], STDIN_FILENO);
+	    argv = parse(arg[1]," ");
+	    execute(argv);
+	    close(pipes[0]);
+	    dup2(temp_stdin, STDIN_FILENO);
+	    
+	  }
+
+	}
+
+
 
 	free(argv);
 	free(arg);
