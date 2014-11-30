@@ -7,6 +7,14 @@ have to fix:
 - cd (sometimes the child process(?) will take over; e.g. if you "cd .." and then "exit", it won't actually exit, but instead it'll put you back into your original directory (before "cd .."))
 - special characters or something (when I tried git commiting from this shell only certain comments were acceptable, sorry I didn't test it more thoroughly yet)
 
+simple optional feateures:
+sighandler for ctrl c
+
+non-coding related things to do:
+write readme.txt about project, when we're done
+make file
+hearer file?
+
  */
 
 #include <stdio.h>
@@ -182,7 +190,24 @@ int execute(char ** args){
     //not yet implemented
 
   }else if((i = contains(args,"cd")) != -1){
-    chdir(args[1]);
+    if (!args[1]){
+      chdir(getenv("HOME"));
+    }else{
+      /*int j = 0;
+	char * path = args[1]; 
+	while( j < strlen(path) ){
+	if ( strcmp(path[j], "~") == 0 ){
+	char * newpath;
+	newpath = strcat( strsep(path),getenv("HOME") );
+	  
+	chdir(path2);
+	}
+	j ++;
+	}*/
+      // ^^ was trying to work on ~
+
+      chdir(args[1]);
+    }
     //'~' doesn't  work
     //and for some reason when I tested this once I had to type "exit" three times before it exited; I wasn't able to duplicate this behavior, though
   }else if((i = contains(args,"exit")) != -1){
