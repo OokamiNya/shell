@@ -6,17 +6,20 @@
 
 
 int main () {
-  char s[256];
+  char raw[256];
+  char clean[256];
   char **args = NULL;
   char **cmds = NULL;
   int argc;
   int cmdc;
   int i;
+  printf("%d\n",is_control_char(';'));
   while (1) {
-    prompt(s);
-    cmdc = countcmds(s);
+    prompt(raw);
+    printf("###%s###\n",killspaces(raw,clean));
+    cmdc = countcmds(clean);
     cmds = malloc(cmdc * sizeof(char*));
-    splitinput(s,cmds);
+    splitinput(clean,cmds);
     i = 0;
     while(i<cmdc) {
       argc = countargs(cmds[i]);
