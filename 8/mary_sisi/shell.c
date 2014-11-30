@@ -2,10 +2,9 @@
 
 have to fix:
 - freeing (in main)
-- piping
 
 simple optional features:
-- sighandler for ctrl c
+- sighandler for Ctrl+C (attempted, doesn't work yet)
 - implement >> and <<
 - make parse() work without spaces between everything
 
@@ -34,6 +33,7 @@ non-coding related things to do:
 #include <string.h>
 #include <fcntl.h>
 
+static void sighandler(int signo);
 void print_prompt();
 void print_array(char** args); //for testing purposes
 void parse(char ** a); //parses user input
@@ -43,6 +43,8 @@ int execute(char ** a); //hanldes user input
 
 int main(){
 
+  signal(SIGINT, sighandler);
+
   print_prompt();
   int run = 1;
   while(run){
@@ -51,8 +53,8 @@ int main(){
     args = (char**)malloc(sizeof(char)*64);
     char ** temp = args;
 
-    int i=0;
-    while(i<32){
+    int i = 0;
+    while(i < 32){
       args[i] = (char*)malloc(sizeof(char)*32);
       i++;
     }
@@ -61,7 +63,8 @@ int main(){
     execute(args);
  
     //freeing doesn't work, gotta fix that
-    /* while(i<32){ */
+    /* i = 0; */
+    /* while(i < 32){ */
     /*   free(temp[i]); */
     /*   i++; */
     /* } */
@@ -71,6 +74,13 @@ int main(){
   }
 
   return 0;
+}
+
+
+//I wish this worked.  It does not.
+static void sighandler(int signo){
+  printf("\n");
+  main();
 }
 
 
@@ -171,7 +181,7 @@ int execute(char ** args){
       if(1){
 	kill(getpid(),SIGTERM);
       }
-      //it isn't necessary to reset the file table values, since the child is killed
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
 
     }else{
       wait(&status);
@@ -200,7 +210,7 @@ int execute(char ** args){
       if(1){
 	kill(getpid(),SIGTERM);
       }
-      //it isn't necessary to reset the file table values, since the child is killed
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
 
     }else{
       wait(&status);
@@ -208,14 +218,6 @@ int execute(char ** args){
 
   }else if((i = contains(args,"|")) != -1  ){
     //printf("COMMAND WITH '|' AT INDEX %d\n",i);
-       
-    //ls -l | wc
-    //==
-    //ls -l > buffer.txt
-    //+
-    //wc < buffer.txt
-    //+
-    //rm buffer.txt
 
     char ** part1 = (char**)malloc(sizeof(char*) * (i + 3));
     int j = 0;
