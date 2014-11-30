@@ -1,5 +1,4 @@
-#include "shell.h"
-
+#include "redirect.h"
 
 //later add 2> and pipes  
 

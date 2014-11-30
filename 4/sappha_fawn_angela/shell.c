@@ -8,7 +8,6 @@ static void sighandler(int signo){
   }
 }
 
-
 int main() {
   signal(SIGINT, sighandler);
   
