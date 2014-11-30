@@ -25,7 +25,6 @@ int has_redirect(char * input){
 		if (s[i] == '<') {
 			if (s[i + 1] == '<')
 				return 2;
-			else
 				return 1;
 		}
 		if (s[i] == '>') {
