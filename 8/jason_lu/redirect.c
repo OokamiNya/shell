@@ -11,7 +11,7 @@ void redirect(char* file,char** args, char* r){
         fd = open(file, O_CREAT | O_WRONLY , 0777);
       }
       if(strcmp(r, "<") == 0){
-        fd = open(file, O_RDONLY , 0777);
+        fd = open(file, O_RDONLY);
         dup2(STDIN_FILENO, fd);
         close(fd);
         execvp(args[0],args);
