@@ -82,12 +82,14 @@ void print_prompt(){
 }
 
 
+//for testing purposes
 void print_array(char ** args){
   int i = 0;
   while(args[i]){
     printf("args[%d]:  %s\t",i,args[i]);
     i++;
   }
+  printf("\n");
 }
 
 
@@ -110,7 +112,7 @@ void parse(char ** args){
   }
 
   //termination
-  args[i] = 0;
+  args[i] = NULL;
 }
 
 
@@ -165,6 +167,7 @@ int execute(char ** args){
       }
 
       execvp(part1[0], part1);
+      //in case execvp doesn't run:
       if(1){
 	kill(getpid(),SIGTERM);
       }
@@ -193,6 +196,7 @@ int execute(char ** args){
       }
 
       execvp(part1[0], part1);
+      //in case execvp doesn't run:
       if(1){
 	kill(getpid(),SIGTERM);
       }
@@ -212,6 +216,53 @@ int execute(char ** args){
     //wc < buffer.txt
     //+
     //rm buffer.txt
+
+    char ** part1 = (char**)malloc(sizeof(char*) * (i + 3));
+    int j = 0;
+    while(j < i){
+      part1[j] = args[j];
+      j++;
+    }
+    part1[j] = ">";
+    part1[j+1] = "buffer.txt";
+    part1[j+2] = NULL;
+
+    /* printf("part1: "); */
+    /* print_array(part1); */
+
+    args += (i + 1);
+
+    //print_array(args);
+
+    if((i = contains(args,";")) != -1){
+    }else if((i = contains(args, "<")) != -1){
+    }else if((i = contains(args, ">")) != -1){
+    }else if((i = contains(args, "|")) != -1){
+    }else{
+      i = 0;
+      while(args[i]){
+	i++;
+      }
+      //printf("i: %d\n",i);
+    }
+
+    char ** part2 = (char**)malloc(sizeof(char*) * (i + 3));
+
+    j = 0;
+    while(j < i){
+      part2[j] = args[j];
+      j++;
+    }
+
+    part2[j] = "<";
+    part2[j+1] = "buffer.txt";
+    part2[j+2] = NULL;
+
+    /* printf("part2: "); */
+    /* print_array(part2); */
+
+    execute(part1);
+    execute(part2);
 
   }else if((i = contains(args,"cd")) != -1){
     if(!args[1]){
@@ -239,6 +290,7 @@ int execute(char ** args){
     if(!f){
       //print_array(args);
       execvp(args[0], args);
+      //in case execvp doesn't run:
       if(1){
 	kill(getpid(),SIGTERM);
       }
