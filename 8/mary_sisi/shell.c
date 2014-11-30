@@ -3,7 +3,7 @@
 have to fix:
 
 - freeing (in main)
-- redirection
+- piping
 - cd (sometimes the child process(?) will take over; e.g. if you "cd .." and then "exit", it won't actually exit, but instead it'll put you back into your original directory (before "cd .."))
 - special characters or something (when I tried git commiting from this shell only certain comments were acceptable, sorry I didn't test it more thoroughly yet)
 
@@ -43,7 +43,7 @@ int main(){
 
     parse(args);
     execute(args);
-
+ 
     //freeing doesn't work, gotta fix that
     /* while(i<32){ */
     /*   free(temp[i]); */
@@ -113,7 +113,7 @@ int contains(char ** args, char * c){
 int execute(char ** args){
   int i;
   if((i = contains(args,";")) != -1){
-    printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
+    //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
     char ** part1 = (char**)malloc(sizeof(char*) * i);
     
@@ -130,15 +130,56 @@ int execute(char ** args){
     
   }else if((i = contains(args,"<")) != -1  ){
     printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    
+    int f = fork();
+    int status;
+    if (!f){
+      int fd = open( args[i+1], O_RDWR | O_CREAT, 0644);
+      dup2(  fd , STDIN_FILENO );
+
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      execvp(part1[0] , part1);
+      //close, and restting stdout not nessecarry b/c its a child
+    }else{
+      wait(&status);
+    }
+
     //not functional yet
 
   }else if((i = contains(args,">")) != -1  ){
     printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
-    //not functional yet
+    
+    int f = fork();
+    int status;
+    if (!f){
+      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+      dup2( fd, STDOUT_FILENO );
+
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      execvp(part1[0] , part1);
+      //close, and restting stdout not nessecarry b/c its a child
+    }else{
+      wait(&status);
+    }
 
   }else if((i = contains(args,"|")) != -1  ){
     printf("COMMAND WITH '|' AT INDEX %d\n",i);
-    //not functional yet
+       
+    //not yet implemented
 
   }else if((i = contains(args,"cd")) != -1){
     chdir(args[1]);
