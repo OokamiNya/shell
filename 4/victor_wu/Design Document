@@ -1,0 +1,96 @@
+Welcome to the Terminal!
+by Victor Wu
+
+Features:
+	-Will fork and execute commands
+	-Can exit and cd(kinda, refer to bugs)
+	-Can run more than one command using ;
+	-Can redirect using > and <
+
+Attempted:
+	-Couldn't get >> nor << to work, but it was left at the end of shell.c,
+	commented out.
+	-Couldn't get piping to work. Searched it up, but did not know how to
+	use freopen and setbuf.
+	
+
+Bugs:
+	-Inserting unnecessary spaces will not work.
+	ex. ls will work while ls___, where _ are spaces, will not work.
+
+	-When using ; or > or <, leaving spaces in between the arguments will 
+	cause an error.
+	ex. ls ; echo hello will cause an error while ls;echo hello will run fine.
+
+
+Files + Functions:
+
+run.c --- the Command Central
+	int main()
+	>Initiates the terminal and runs the commands necessary to get it started.
+	>Takes input and prints out the prompt.	
+	>Is a wrapper function, nothing to see here.
+
+shell.c --- the Core of the Terminal
+	
+	char** parse_command()
+	Input: char* input
+	Returns: an array of strings with the command and the args
+	>Main parsing function of this terminal
+	>Cuts up the input and puts them into an array
+	>Will be cut up based on where there are spaces
+	>Will get rid of the newline at the end, from fgets
+	>First string in the array is the command, the rest are args
+
+
+	int exec_command()
+	Input: char** args
+	Returns: status of the child
+	>Will fork and run the command given to it by parse_command()
+	>Simple function that just runs a single command
+
+	
+	int check_and_run()
+	Input: char* input
+	Returns: 0
+	>Wrapper function to check whether the command contains ;, cd, >, or <
+	>Will run parse_command() and exec_command() if it is another command
+
+
+	int redirect()
+	Input: char* source, char* dest
+	Returns: 0
+	>Handles the redirection that is given by > and <
+	>Will redirect STDOUT and then run the command, given by source
+	
+
+	char* remove_newline()
+	Input: char* input
+	Returns: input without the \n at the end, replaced by a \0
+	>Runs through input and replaces all \n occurences with \0
+
+
+	int check_command()
+	Input: char* input
+	Returns: 1 if ;, cd, >, or < was run, 0 if nothing was run
+	>Checks if ;, cd, >, or < was in the command and runs the necessary
+	functions if they were in the code
+	>Main function that checks for special types of commands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
