@@ -1,7 +1,7 @@
 /**
  * shell.h
  * 
- * Header file for shell.c
+ * Header file for shell.c.
  *
  **/
 

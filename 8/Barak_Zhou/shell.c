@@ -1,7 +1,7 @@
 /**
  * shell.c
  * 
- * Main and only file
+ * Main file.
  *
  **/
 
