@@ -33,8 +33,7 @@ char* get_id(){
   return id;
 }
 
-//change to fix for all paths, use ~?
-//currently only stuff like .. works. hm.
+//make foolproof so cannot go beyond ~ or whatnot
 void cd(char* path){
   //no path given or ~ --> change directory to home directory
   if (path == '\0' || strcmp(path, "~") == 0){
@@ -66,26 +65,16 @@ void cd(char* path){
 
     //not given ~, we simply work with cwd
     else {
+      
       char w[256];
       getcwd(w, sizeof(w));
-      //printf("cwd: %s\n", w);
-      char* cwd = (char*)malloc(sizeof(char)*strlen(w));
-      
-      strcpy(cwd, w);
-      strcat(cwd, "/");
-      printf("cwd: %s\n", cwd);
-     
-      char * final = (char *) malloc(sizeof(char)*256);
-      
-      strcpy(final, cwd);
-  
-      printf("final: %s\n", final);
+      strcat(w, "/");
     
+      char * final = (char *) malloc(sizeof(char)*256);
+      strcpy(final, w);
       strncat(final, sep, strlen(sep));
-      printf("final: %s\n", final);
       
       int success = chdir(final);
-      
       if (success == -1){
       	printf("owl: cd: %s: No such file or directory\n", final);
       }
