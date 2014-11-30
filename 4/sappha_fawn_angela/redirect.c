@@ -15,24 +15,35 @@ void redirect_in(char * from, char * to, int mode){
 
 //returns 1 if has redirect symbol (< , >)
 //returns 2 if has two redirect symbols right next to each other
-//else returns 0
-//how to handle double redirection			  
-int has_redirect(char * input){
-	char * s = input;
-	int len = strlen(s);
-	int i;
-	for (i = 0; i < len; i++) {
-		if (s[i] == '<') {
-			if (s[i + 1] == '<')
-				return 2;
-				return 1;
-		}
-		if (s[i] == '>') {
-			if (s[i + 1] == '>')
-				return 2;
-			else
-				return 1;
-		}
-	}
-	return 0;
+//else returns 0 (false)
+int has_redirect(char* input){
+  //printf("input: %s\n", input);
+  char *less, *more;
+  less = strchr(input, '<');
+  //printf("less: %d\n", less);
+  more = strchr(input, '>');
+  //printf("more: %d\n", more);
+  //if neither are in
+  if (less) { //there is a < sign
+    strsep(&less, "<");
+    char * lessless;
+    lessless = strchr(less, '<');
+    if (lessless){
+      return 2;
+    }
+    return 1;
+  }
+  
+  else if (more) { //there is a < sign
+    strsep(&more, ">");
+    char * moremore;
+    moremore = strchr(more, '>');
+    if (moremore){
+      return 2;
+      }
+    return 1;
+  }
+    
+  return 0;
+
 }

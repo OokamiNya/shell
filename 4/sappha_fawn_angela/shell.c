@@ -129,7 +129,10 @@ void execute(char a[256]){
   s1 = strsep(&s1, "\n");  
 
   //first check for > , < and pipes
-
+ 
+  printf("s1: %s\n", s1);
+  int has = has_redirect(s1);
+  printf("has:%d\n", has);
   //parsing our command
   while (sep = strsep(&s1, " ")){
     //fool proofing: allows for silly things like ls  -l or other silly user input
