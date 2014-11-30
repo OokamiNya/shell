@@ -4,11 +4,11 @@ by Jason Lu
 Features:
 	Forks and executes commands!
 	Parses multiple commands on one line!*
-    Redirects using > and >>
+	Redirects using > and >>
     
 *Usually works
 Attempted:
-
+	Redirection with <
 Bugs:
     The program sometimes ends up opening up multiple shells repeatedly. 
     (This bug occurs very sporadically and irregularly so I was not able to isolate the problem.)  

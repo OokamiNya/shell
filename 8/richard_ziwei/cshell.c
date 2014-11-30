@@ -1,32 +1,19 @@
 #include"heads.h"
 #include"helper.c"
 
+int id;
 
-//DOES NOT WORK
 static void sighandler(int signo){
-  /*
-  int id = getpid();
-  int pid = fork();
-  if (!pid){
-    printf("Intercepting...\n");
-    //chdir(ultimatepath);
-    char * s;
-    sprintf(s,"%s/a.out",ultimatepath);
-    execl(ultimatepath,s,NULL);
-    printf("O NOES\n");
-    //exit(-1);
+  if (getpid() != id){
+    kill(getpid(),SIGINT);
   }
-  exit(-1);
-  */
-  main();
-  exit(-1);
 }
 
 
 
 //HANDLES THE CD AND EXIT EXCEPTIONS
 char dumb_exceptions(char arg[]){
-  if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){
+  if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){//got lazy, didn't want to parse
     strsep(&arg," ");
     if (!arg || strcmp(arg,"~")==0){
       chdir(getenv("HOME"));
@@ -64,31 +51,43 @@ void normal_stuff(char arg[]){
 }
 
 //PIPING
-//STILL DOESNT WORK; HOW TO PIPE
 char pipe_it(char arg[]){
-  int p[2];
-  char *cmd1;
-  char *cmd2;
-  pipe(p);
-  cmd2 = strchr(arg, '|') + 2;
-  cmd1 = strsep(&arg, "|");
-  *(cmd1 + strlen(cmd1) - 1) = NULL;
-  printf("%s.%s\n", cmd1, cmd2);
-  int pid = fork();
-  if (!pid) {
-    close(0);
-    dup(p[0]);
-    close(p[1]);
-    close(p[0]);
-    normal_stuff(cmd2);
-  } else {
-    wait(&pid);
-    close(1);
-    dup(p[1]);
-    close(p[1]);
-    close(p[0]);
-    normal_stuff(cmd1);
+  
+  //after many attempts, time to cheese it
+  
+  char * orig;
+  char * args = &arg[0];
+  int out = dup(STDOUT_FILENO);
+  while (strchr(args,'|')){
+    orig = strsep(&args,"|");
+    orig[strlen(orig)-1]=0;
+    args++;
+    if (access("dummy",F_OK)!=-1){
+      //multi line piping doesnt work
+      char dummy1[256];
+      sprintf(dummy1,"%s < dummy",orig);
+      int fd = open("dummy",O_WRONLY | O_TRUNC);
+      dup2(fd,STDOUT_FILENO);
+      redirection(dummy1);
+      close(fd);
+      dup2(out,STDOUT_FILENO);
     }
+    else{
+      char dummy1[256];
+      sprintf(dummy1,"%s > dummy",orig);
+      redirection(dummy1);
+    }
+  }
+  char dummy1[256];
+  sprintf(dummy1,"%s < dummy",args);
+  redirection(dummy1);
+  char dummy2[16]="rm dummy";
+  normal_stuff(dummy2);
+
+      
+  
+
+  
   return 1;
 }
 
@@ -96,6 +95,8 @@ char pipe_it(char arg[]){
 //WILL CALL PIPE_IT
 char redirection(char arg[]){
   if (strchr(arg,'>') || strchr(arg,'<')){
+    //int out = STDOUT_FILENO;
+    // int in = STDIN_FILENO;
     int pid = fork();
     if (!pid){
       char * orig;
@@ -105,6 +106,9 @@ char redirection(char arg[]){
 	int mode;
 	if (arg[1] == '>'){
 	  mode = O_APPEND;
+	}
+	else{
+	  mode = O_TRUNC;
 	}
 	strsep(&arg," ");
 	fd=open(arg, O_CREAT | O_WRONLY | mode, 0644);
@@ -120,6 +124,8 @@ char redirection(char arg[]){
       //normal_stuff(orig); does not work
       execlp(orig,orig,NULL);//FIX THIS TO ACCEPT ARGS
     }
+    //dup2(out,STDOUT_FILENO);
+    //dup2(in,STDIN_FILENO);
     wait(&pid);
     return 1;
   }
@@ -132,6 +138,7 @@ char redirection(char arg[]){
 
 
 int main(){
+  id=getpid();
   signal(SIGINT,sighandler);
   while (1){
     char input[256];

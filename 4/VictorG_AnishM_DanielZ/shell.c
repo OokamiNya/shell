@@ -12,8 +12,8 @@ void run(char * input);
 
 void myexec(char *input){
   int i = 0;
-  char *singlearg; //holds the piece separated off from x
-  char * args[10]; //arg array
+  char *singlearg; 
+  char * args[10]; 
   while ((singlearg = strsep(&input, " ") )) {
     args[i] = singlearg;
     i++;
@@ -31,13 +31,7 @@ void myexec(char *input){
 }
 
 void semisep(char *s){
-  //char *pos;
-  //printf("%s",s);
   int i=0;
-  //printf("%s\n",s);
-  //if ((pos=strchr(s, '\n')) != NULL)
-  //  *pos = '\0';
-  //printf("%s",s);
   char * raw;
   if (strstr(s,"\n")){
     raw=strsep(&s,"\n");
@@ -45,55 +39,10 @@ void semisep(char *s){
   else{
     raw=s;
   }
-  //char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
   char * singlecommand;
-  //printf("yo\n");
-
-  //printf("%s",raw);
   while ((singlecommand=strsep(&raw,";") )) {
-    //printf("%s\n",singlecommand);
-    //int f=fork();
-    //if (!f){
     myexec(singlecommand);
-    //}
-    //wait(&f);
   }
-  /*
-  for (i=0;s1[i];i++){
-    s2[i] = (char *)(malloc(strlen(s)*sizeof(char)));
-    //printf("s2 :%s:\n", s2[i]);
-    //printf("hey\n");
-    s2[i]=strsep(&s1, ";");
-    //strsep(&s1,";");
-    printf("%s\n",s2[i]);
-  }
-  //printf("s1:%s\n",s1);
-  //s2[i]=(char *)malloc(25*sizeof(char));
-  //s2[i]=s1;
-  //i++;
-  s2[i]=(char *)malloc(25*sizeof(char));
-  s2[i]=NULL;
-  int b;
-  for(b=0;s2[b];b++){
-    //int f;
-    printf("%s\n",s2[b]);
-    //f=fork();
-    if(!fork()){
-      run(s2[b]);
-      return;
-    }
-    printf("%d\n",b);
-    //free(s2);
-    
-  }
-  printf("out\n");
-  //free(s2);
-  return;
-  //s2[i-1]=
-
-  //printf("hey\n");
-  //return s2;
-  */
 }
 
 
@@ -101,54 +50,99 @@ void semisep(char *s){
 char ** separate(char *s){
   char *pos;
   int i=0;
-  //printf("%s\n",s);
   if ((pos=strchr(s, '\n')) != NULL)
     *pos = '\0';
   char *s1=s;
   char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
-  //printf("yo\n");
-  //printf("%s\n",s);
 
   for (i=0;s[i];i++){
     s2[i] = (char *)(malloc(strlen(s)*sizeof(char)));
-    //printf("s2 :%p:\n", s2[i]);
-
     s2[i] = strsep(&s1, " ");
-    //printf("%s\n",s2[i]);
   }
 
-  //s2[i-1]=
-  //s2[i]=(char *)malloc(25*sizeof(char));
   s2[i]=NULL;
-  //printf("hey\n");
   return s2;
 }
+void redirout(char** args, char * dest) {
+  int fd;
+  fd = open(dest, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+  dup2(fd,STDOUT_FILENO);
+  execvp(args[0], args);
+  return;
+}
+void redirin(char** args, char * source){
+  int fd;
+  fd = open(source, O_RDONLY);
+  dup2(fd,STDIN_FILENO);
+  execvp(args[0], args);
+  return;
+}
+void redirpipe(char** args, char ** args2) {
+  //do pipestuff, 
+  //args should preferably be the first set of commands to execute, 
+  //args 2 is the second set of commands to execute, i see this as the easiest way.
+}
 void run(char *input){
-  char **inputA;//=malloc(strlen(input)*strlen(input)*sizeof(char)+sizeof(char));
-  if (!strcmp(input,""))//so you can hit enter with no commands
+  if (!strcmp(input,"\n")){//so you can hit enter with no commands
     return;
+  }
   else if (strchr(input, ';')){
     semisep(input);
     return;
   }
-  inputA=separate(input);
-  //char* problemChild=(char *)malloc(strlen(inputA[0])*sizeof(char));
-  //problemChild=inputA[0];
-  //printf("%s\n",problemChild);
-  
-  if (strstr(input, "<")){
-    //arrleft(input);
+  else if (strstr(input, "<")){
+    char *input2=input;
+    char ** args;
+    args=separate(strsep(&input2,"<"));
+    char * raw;
+    if (strstr(input2,"\n")){
+      raw=strsep(&input2,"\n");
+    }
+    else{
+      raw=input2;
+    }
+    int f=fork();
+    if (!f)
+      redirin(args,raw);
     return;
   }
   else if (strstr(input, ">")){
-    //arrright(input);
+    char *input2=input;
+    char ** args;
+    args=separate(strsep(&input2,">"));
+    char * raw;
+    if (strstr(input2,"\n")){
+      raw=strsep(&input2,"\n");
+    }
+    else{
+      raw=input2;
+    }
+    int f=fork();
+    if (!f)
+      redirout(args,raw);
     return;
   }
   else if (strstr(input, "|")){
-    //pipestuff(input);
+    char * input2=input;
+    char * raw;
+    if (strstr(input2,"\n")){
+      raw=strsep(&input2,"\n");
+    }
+    else{
+      raw=input2;
+    }
+    char ** args;
+    char ** args2;
+    args=separate(strsep(&raw,"|"));
+    printf("%s",raw);
+    args2=separate(raw);
+    int f=fork();
+    if(!f)
+      redirpipe(args,args2);
     return;
   }
-
+  char **inputA=malloc(strlen(input)*strlen(input)*sizeof(char)+sizeof(char));
+  inputA=separate(input);
   if (!strcmp(inputA[0],"cd")){
     if(inputA[1]){
       if (inputA[1][0]=='~'){

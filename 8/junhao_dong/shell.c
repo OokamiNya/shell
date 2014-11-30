@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <signal.h>
 #include "shell.h"
 
 int isPipe = FALSE;
@@ -25,12 +18,10 @@ static void sigHandler(int signo){
       printf("\n");
       exit(EXIT_FAILURE); // success?
     }
-    /*
     else{
-      printf("\n");
-      printPrompt();
+      //printf("\n");
+      //printPrompt();
     }
-    */
   }
 }
 
@@ -47,7 +38,7 @@ void printPrompt(){
   }
   char hostname[BUFFER_LEN];
   gethostname(hostname, BUFFER_LEN-1);
-  printf(CYAN "%s@%s", getenv("USER"), hostname);
+  printf(CYAN "%s@%s", USER, hostname);
   printf(WHITE ":");
   printf(YELLOW "%s$\n", cwd);
   printf(BLUE "><((((º> " RESET);
@@ -208,7 +199,7 @@ char ** parseInput(char *input, char *delim){
 	  char tmp[BUFFER_LEN];
 	  strcpy(tmp,HOME);
 	  strcat(tmp,arg+1);
-	  strcpy(arg,tmp);
+!	  strcpy(arg,tmp);
 	}
 	argv[size] = arg;
 	size++;

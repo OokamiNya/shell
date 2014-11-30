@@ -39,12 +39,12 @@ Exit with "exit", "quit", or Ctrl-D at the start of a line
 - [ ] Background processes: `&`
 
 
-###Minor bugs to be fixed
+###Bugs to be fixed
 ------
 - [ ] Allow redirect and pipe symbols to be adjacent to commands or flags (not separated by space)
 - [ ] Allow tilde expansion to work in conjunction with redirection
 - [ ] Have `SIGINT` re-print the prompt
-
+- [ ] Fix: Exiting with EOF after using `~` expansion segfaults
 
 ## Function Headers
 shell.h

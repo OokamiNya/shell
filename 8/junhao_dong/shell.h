@@ -1,10 +1,19 @@
 #ifndef SHELL_H
 #define SHELL_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+
 #define TRUE 1
 #define FALSE 0
 
 #define HOME getenv("HOME")
+#define USER getenv("USER")
 #define BUFFER_LEN 512
 
 #define RESET   "\x1B[0m"

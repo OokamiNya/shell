@@ -1,16 +1,19 @@
 Cshell
-by Richard Zhen and Ziwei Ye
+by Richard Zhan and Ziwei Ye
+//So I've been committing under the wrong email this entire time. I have only recently changed it. I hope you can still see my commits - Richard Zhan
 
 Features:
 	Forks and executes commands.Including git, emacs, vi and executeable programs.
 	Semicolons.
 	Redirection, > < >>.
-
-Attempted:
-	Pipe.
+	Single line pipe
+	SIGINT kind of
 
 Bugs:
-	Errors when parsing anything with | symbol
+	Multiline piping does not work
+	Using ls in pipe in .../shell/8/richard_ziwei will give an extra file named dummy
+	SIGINT will print ^C and will not reprint the prompt. Looks funky and unresponsive, but it works
+	      		    
 	
 Files & Function Headers:
 shell.c
@@ -18,7 +21,7 @@ shell.c
 	Inputs:  int signno; 
 	Returns: Nothing
 
-	It handles signal in main().
+	It handles SIGINT by killing all child processes. *See bugs
 	====================*/
 
 	/*======== char dumb_exceptions() ==========
@@ -41,7 +44,7 @@ shell.c
 	Inputs:  char arg[] 
 	Returns: 0 or 1, depends on success or failure.
 
-	An attempt at creating the pipe command. Not working as of this commit.
+	Performs a pipe by writing into a dummy file (STDOUT) and reading in the dummy file (STDIN).
 	====================*/
 
 	/*======== char redirection() ==========
@@ -67,6 +70,6 @@ helper.c
 	Inputs:  char arg[] 
 	Returns:
 
-	??????
+	The new string without empty spaces on the end
 	
 	====================*/	

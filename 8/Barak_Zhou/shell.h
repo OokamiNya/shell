@@ -1,40 +1,21 @@
-(╯°□°)╯︵ Shell ︵ ╯(°□° ╯)
-=====
-Barak Zhou
+/**
+ * shell.h
+ * 
+ * Header file for shell.c.
+ *
+ **/
 
-System Level Programming pd. 8
+// Include guard is here in case I want to add another file
+#ifndef SHELL_H
+#define SHELL_H
 
-Shell is exactly what it is: A simple shell.
-Concisely built. (For more than one reason...)
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 
-Type a command. Run a program.
-Easily compiled with a makefile.
-Exit with "exit" or a keyboard interrupt (^C).
-
-##Features
-- Execute terminal commands.
-- Chain multiple commands with ;.
-- Redirect files with > or < (use only one per chain segment).
-- Basic Piping with | (use only one per chain segment).
-- Simple structure means easy to keep track of memory.
-
-##Unsuccessful Features
-- Rest in peace project v1 2014-11-22 -- 2014-11-22: You will be missed. git push regularly!
- - Lost chain redirection (but not chain piping)
- - Lost the ~ as home directory; new implementation was unworthy of presentation
-- Attempted to chain redirection and piping recursively using a system of pipes (the method pipe()). After several seg faults, memory overloads, hours wasted/spent crying, and some research, I realized that this was a project to be tackled on its own.
-
-##Bugs
-- Sometimes "exit" will just reset the shell. I don't know why.
-- If tab or any arrow keys are pressed, the corresponding input will be entered. Not really a bug, but an inconvenience.
-- git commit: the command "git commit -am "string here"" parses the space inside the string, so a commit through the shell cannot have spaces in the string.
-
-##Files
-- shell.h and shell.c: plain and simple.
-- makefile
-
-##Functions
-```
 /**
  * int execute ( char** input )
  * ============================
@@ -52,9 +33,8 @@ Exit with "exit" or a keyboard interrupt (^C).
  * redirect function, but it was never implemented.
  *
  **/
-```
+int execute ( char** input );
 
-```
 /**
  * char** parse ( char* input, char* delim )
  * =========================================
@@ -70,9 +50,8 @@ Exit with "exit" or a keyboard interrupt (^C).
  *     with memory allocated.
  *
  **/
-```
+char** parse ( char* input, char* delim );
 
-```
 /**
  * char* find_redirect ( char* input )
  * ===================================
@@ -88,9 +67,8 @@ Exit with "exit" or a keyboard interrupt (^C).
  * -Note-: use return[0] to get the actual char.
  *     
  **/
-```
+char* find_redirect( char* input );
 
-```
 /**
  * int main()
  * ==========
@@ -110,4 +88,6 @@ Exit with "exit" or a keyboard interrupt (^C).
  *     5. Repeat.
  *
  **/
-```
+int main();
+
+#endif

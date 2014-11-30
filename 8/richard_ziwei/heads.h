@@ -7,3 +7,4 @@
 #include<fcntl.h>
 #include<signal.h>
 void normal_stuff(char arg[]);
+char redirection(char arg[]);
