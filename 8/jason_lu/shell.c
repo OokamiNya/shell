@@ -60,12 +60,16 @@ int main(){
       }else if(strcmp(args[0],"cd") == 0){
         chdir(args[1]);
       }else if(check(args)){
-        printf(">");
+        //printf(">");
+        char* r = check(args);
+        char* filename = getname(args,r);
+        cmdarr(args,r); 
+        redirect(filename, args, r);
       }else{
         
         int f = fork();
         if(!f){
-          printf("SDFSDF");
+          
           execvp(args[0],args);
           //free(args);
           printf("Command not found\n");
