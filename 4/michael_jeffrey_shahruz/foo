@@ -1,1 +1,8 @@
-ls
+OurDesign.txt
+OurDesign.txt~
+a.out
+foo
+main.c
+main.c~
+main.o
+makefile
