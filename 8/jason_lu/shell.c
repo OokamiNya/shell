@@ -31,7 +31,7 @@ char** parse(char* input, char* s){
 char* getinput(char* input){
   char prompt[4096];
   wait(-10);
-  strcpy(prompt,"Shell:");//add directory and username
+  strcpy(prompt,"JShell:");//add directory and username
   printf("%s", prompt);
   getcwd(prompt, sizeof(prompt));
   printf("%s$ ", prompt);
