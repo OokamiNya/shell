@@ -11,9 +11,7 @@ int main() {
   
   char *command;
   char input[256];
-  char *args_array[10];
   char *comm_array[10];
-  int num_args = 0;
   int num_commands;
   int pid;
   int *status;
@@ -36,8 +34,9 @@ int main() {
     }
 
     for( i = 0; i < num_commands; i++) {
+      char *args_array[10];
       command = comm_array[i];
-      num_args = count_args(command);
+      int num_args = count_args(command);
 
       char *comm = strtok(command, " ");
     
@@ -47,17 +46,17 @@ int main() {
     
       args_array[0] = comm;
     
-      if (num_args== 0) {
+      if (num_args == 0) {
 	      args_array[1]=NULL;
       }
     
       else {
-	      i = 1;
-	      while (i <= num_args) {
-	        args_array[i] = strtok(NULL, " ");
-	        i++;
+	      int j = 1;
+	      while (j <= num_args) {
+	        args_array[j] = strtok(NULL, " ");
+	        j++;
 	      }
-	      args_array[i]=NULL;
+	      args_array[j]=NULL;
       }
 
       if (!strcmp(comm,"cd")) {
@@ -66,6 +65,7 @@ int main() {
 	      }
 	      chdir(args_array[1]);
       }
+
       else {
 	      pid = fork();
         if(!pid) {
@@ -76,7 +76,7 @@ int main() {
 	      waitid(P_PID, pid, infop, WEXITED);
       }
     }    
-}
+  }
 }
 
 int count_commands(char input[256]) {
