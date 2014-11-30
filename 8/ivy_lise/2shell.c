@@ -16,11 +16,11 @@ void parse_string(char *s){
   s = strip(s);
   // count how many args 
   strcpy(token,s);
-  while (token){
+  while (token ){//&& strcmp(token,"|")!=0){
     token=strchr(token+1,' ');
     alen++;
   }
-  
+  printf("executing command %s\n",s);
   char **argarray = (char **)(malloc(alen*sizeof(char *)));
   //delimiting stuff
   int i=0;
@@ -43,11 +43,11 @@ void parse_string(char *s){
     }
   }
   argarray[i] = NULL;
-  printf("token[%d]:%s\n\n",i,token);
   exec(argarray,i);
-  free(token);
-  free(argarray);
+//free(token);
+//free(argarray);
 }
+
 
 void exec(char ** argarray, int len){
   //cmd commands
@@ -106,48 +106,54 @@ void shell(){
   char *cmd = (char *)(malloc(10*sizeof(char)));
   while (cmd = strsep(&s,";")){
     cmd = strip(cmd);
-    printf("cmd:%s  \n\n",cmd);
-    parse_string(cmd);
-  }
-
-  /* // count how many args 
-  token = s;
-  while (token){
-    token=strchr(token+1,' ');
-    alen++;
-  }
-  
-  s = strsep(&s,"\n");
-  redirect(s);
-  char **argarray = (char **)(malloc(alen*sizeof(char *)));
-  //delimiting stuff
-  int i=0;
-  token = strsep(&s," ");
-  argarray[i] = (char*)malloc(256*sizeof(char));
-  argarray[i] = token;
-  while (token){
-    //getting rid of empty tokens btwnXS arguments
-    if (strlen(token)==0){
-      alen--;
-      argarray=realloc(argarray,alen*sizeof(char *));
+    printf("cmd:%s  \n",cmd);
+    //    parse_string(cmd);
+    if (strchr(cmd, '|')){
+      piper(cmd);
     }
     else{
-      argarray[i] = (char*)malloc(256*sizeof(char));
-      argarray[i] = token;
-      token = strsep(&s, " ");
-      i++;
+      parse_string(cmd);
     }
   }
-
-  argarray[i] = NULL;
-  
-  exec(argarray, alen);
-  //printf("done.\n");
-  free(s);
-  free(token);
-  free(argarray);
-  */
+  //free(cmd);
 }
+
+void piper(char *s){
+  char *cmd = (char *)(malloc(10*sizeof(char)));
+  char **piparray = (char**)malloc(10*sizeof(char));
+  int i = 0;
+  while (cmd = strsep(&s,"|")){
+    piparray[i] = strip(cmd);
+    //    printf("#%d: %s\n",i,piparray[i]);
+    i++;
+  }
+  int fd,tempstd;
+  // tempstd= open("pout", O_WRONLY|O_CREAT|O_TRUNC, 0666);
+  fd= open("pin",  O_WRONLY|O_CREAT|O_TRUNC, 0666);//O_RDONLY, 0444);
+  //fd= dup(STDOUT_FILENO);
+  tempstd = dup (STDOUT_FILENO);
+  int f = fork();
+  int status;
+  if (!f){   
+    int w = wait(&status);  
+    printf("parenting peeps\n");
+    dup2(fd, STDIN_FILENO);	
+    parse_string(piparray[1]);
+    close(fd);
+  }
+  else{
+    printf("kiddy yawnings\n");  
+    dup2(fd, STDOUT_FILENO);	
+    parse_string(piparray[0]);
+    WEXITSTATUS(&status);
+    close(fd);
+  }
+  //  printf("forking done... yes\n");
+  //  dup2(fd, STDOUT_FILENO);
+  printf("THE END\n");
+  //close (fd);
+}
+  //free(cmd);
 
 void redirect(char * s){
   char * tok;

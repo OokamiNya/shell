@@ -25,8 +25,10 @@ void parse_and_exec(){
 
   char * s1 = command;
   char * s2;
-  char * a[256];
+  char ** a;
   int i = 0;
+
+  a = (char **)malloc(sizeof(char **));
 
   while (s2 = strsep(&s1, ";")){
     a[i] = s2;
@@ -34,12 +36,13 @@ void parse_and_exec(){
   }
   command[i] = 0;
 
-  printf("a[0] is %s", a[0]);
+  printf("a[0] is %s\n", a[0]);
+  printf("a[1] is %s\n", a[1]);
 
   int k;
  
  for(k=0; k < i; k++){
-  
+   /*
      char * b1 = a[k];
      char * b2;
      char * b[256];
@@ -49,12 +52,12 @@ void parse_and_exec(){
        b[i] = s2;
        j++;
      }
-  
+   */
      pid = fork();
      int status, w;
 
      if (pid == 0){
-       execvp(b[0],b); 
+       execvp(a[k],a); 
        exit(0);
      }
 

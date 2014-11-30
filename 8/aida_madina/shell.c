@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <fcntl.h>
 
 int count_commands(char input[256]);
 int count_args(char *command);
@@ -11,14 +12,17 @@ int main() {
   
   char *command;
   char input[256];
-  char *args_array[10];
   char *comm_array[10];
-  int num_args = 0;
   int num_commands;
   int pid;
   int *status;
   siginfo_t *infop;
   char cwd[256];
+  int flag_redir = 0;
+  FILE * fout = NULL;
+  int exit_val = 105;
+  int flag_redir_type = 0;
+  int file;
   
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
@@ -36,8 +40,9 @@ int main() {
     }
 
     for( i = 0; i < num_commands; i++) {
+      char *args_array[10];
       command = comm_array[i];
-      num_args = count_args(command);
+      int num_args = count_args(command);
 
       char *comm = strtok(command, " ");
     
@@ -46,37 +51,88 @@ int main() {
       }
     
       args_array[0] = comm;
-    
-      if (num_args== 0) {
+      int j = 1;    
+      if (num_args == 0) {
 	      args_array[1]=NULL;
       }
-    
+
       else {
-	      i = 1;
-	      while (i <= num_args) {
-	        args_array[i] = strtok(NULL, " ");
-	        i++;
-	      }
-	      args_array[i]=NULL;
+	      while (j <= num_args) {
+	        args_array[j] = strtok(NULL, " ");
+      	  if (!strcmp(args_array[j], ">")) {
+            flag_redir_type = 1;
+      	    flag_redir = j;
+    	    }
+          else if (!strcmp(args_array[j],">>")) {
+            flag_redir_type = 2;
+            flag_redir = j;
+          }
+          else if (!strcmp(args_array[j],"<")) {
+            flag_redir_type = 3;
+            flag_redir = j;
+          }
+      	  j++;
+	      }  
+	      args_array[j]=NULL;
       }
 
       if (!strcmp(comm,"cd")) {
-	      if (!args_array[1]) {
-	        chdir(getenv("HOME"));
-	      }
-	      chdir(args_array[1]);
+        if (!args_array[1]) {
+	         chdir(getenv("HOME"));
+        }
+        chdir(args_array[1]);
       }
+
+      else if (flag_redir) {
+        if (flag_redir_type <= 2) {
+          if (flag_redir_type == 2) {
+            file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_APPEND, 0644);
+          }
+          else if (flag_redir_type == 1) {
+            file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_TRUNC, 0644);
+          }
+  	      pid = fork();
+  	      if (!pid) {
+        	  dup2(file,STDOUT_FILENO);
+        	  int n;
+        	  char *exec_args[10];
+        	  for(n = 0; n < flag_redir; n++) {
+        	    exec_args[n] = args_array[n];
+        	  }
+        	  exec_args[n] = NULL;
+        	  execvp(args_array[0], exec_args);
+        	  return 0;
+        	}
+        }
+        else {
+          char *file_name = args_array[flag_redir + 1];
+          int input_file = open(file_name, O_RDONLY);
+          //char file_input[256];
+          //fgets(file_input, sizeof(file_input), input_file);
+          char *executable = args_array[flag_redir - 1];
+          printf("executable: %s\n", executable);
+          pid = fork();
+          if (!pid) {
+            dup2(STDIN_FILENO, input_file);
+            execlp(executable, executable, "testing testing", NULL);
+            return 0;
+          }
+        }
+
+        flag_redir = 0;
+
+      }
+
       else {
 	      pid = fork();
         if(!pid) {
           execvp(args_array[0], args_array);	
-          int exit_val = 105;
           return WEXITSTATUS(exit_val);
         }
-	      waitid(P_PID, pid, infop, WEXITED);
+      	waitid(P_PID, pid, infop, WEXITED);
       }
     }    
-}
+  }
 }
 
 int count_commands(char input[256]) {
