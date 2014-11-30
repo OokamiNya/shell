@@ -129,25 +129,13 @@ void execute(char a[256]){
 
   //first check for > , < and pipes
  
-  printf("s1: %s\n", s1);
+  //printf("s1: %s\n", s1);
   int has = has_redirect(s1);
   
-  printf("has:%d\n", has);
-  if (has == 1){//<
-    /*
-    sep = strsep(&s1, "<");
-    //printf("sep: %s\n", sep);
-    //printf("s1: %s\n", s1);
-    sep = trim(sep);
-    s1 = trim(s1);
-    if (s1 == 0) {//if null
-      printf("owl: syntax error near unexpected token `newline'\n");
-    }
-    else {
-      redirect_in(sep, s1);
-    }
-    */
-    redirection(s1, 1);
+  //printf("has:%d\n", has);
+  //if redirection is necessary
+  if (has){
+    redirection(s1, has);
   }
   else {
     //otherwise...
