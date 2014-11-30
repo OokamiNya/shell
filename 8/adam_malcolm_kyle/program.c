@@ -25,13 +25,11 @@ void execute(char * start){
     y = strsep(&start, " ");
     if(*y != 0){
       if (! strcmp(">>",y))
-	  redir = 4;
-	else if( ! strcmp("<<",y))
-	  redir = 3;
-	else if( ! strcmp("<",y))
-	  redir = 2;
-	else if (! strcmp(">",y))
-	  redir = 1;
+	redir = 3;
+      else if( ! strcmp("<",y))
+        redir = 2;
+      else if (! strcmp(">",y))
+	redir = 1;
       args[x] = y;
       x++;
     }
@@ -88,37 +86,30 @@ void child_process(char * args[]){
 }
 
 void redirect(char * args[], int redir){
-	int c;
-	int i = fork();
-	if(!i){
-		if (redir == 4){
-			c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
-			dup2(c, STDOUT_FILENO);
-			execlp(args[0], args[0], NULL);
-			close(c);
-		}
-		else if (redir == 3){
-			c = open(args[2], O_RDWR, 0777);
-			printf("%d\n",c);
-			dup2(c, STDIN_FILENO);
-			execvp(args[0], STDIN_FILENO);
-			close(c);
-		}
-		else if (redir == 2){
-			c = open(args[2],O_RDWR,0777);
-			dup2(c,STDIN_FILENO);
-			close(c);
-			execlp(args[0],args[0],NULL);
-		}else{
-			c = open(args[2], O_CREAT | O_WRONLY, 0644);
-			dup2(c, STDOUT_FILENO);
-			execlp(args[0], args[0], NULL);
-			close(c);
-		}
- 	}else{
-		wait(&i);
-		redir = 0;
-	}
+  int c;
+  int i = fork();
+  if(!i){
+    if (redir == 3){
+      c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
+      dup2(c, STDOUT_FILENO);
+      execlp(args[0], args[0], NULL);
+      close(c);
+    }
+    else if (redir == 2){
+      c = open(args[2],O_RDWR,0777);
+      dup2(c,STDIN_FILENO);
+      close(c);
+      execlp(args[0],args[0],NULL);
+    }else{
+      c = open(args[2], O_CREAT | O_WRONLY, 0644);
+      dup2(c, STDOUT_FILENO);
+      execlp(args[0], args[0], NULL);
+      close(c);
+    }
+  }else{
+    wait(&i);
+    redir = 0;
+  }
 }
 
 int main(int argc, char *argv[]){
