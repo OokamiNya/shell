@@ -18,9 +18,12 @@ int main() {
   char *s1;
   char *s2;
   char *commands[1024];
+  char cwd[512] = "";
   
   while(1) {
-    printf("^_^: ");
+   
+    //getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
+    printf("%s ^_^ : ", cwd);
     fgets(s,sizeof(s),stdin);
     
     int i=0;
@@ -131,12 +134,12 @@ void runs_command(char *scpy) {
       trim(second_cmd);
       //printf("first :%s:\n", first_cmd);
       //printf("secnd :%s:\n", second_cmd);
-      /*
+   
       int f, fd, s, temp, status;
       f = fork();
       
       if( !f ){
-	fd = open(second_cmd, O_RDONLY);
+	fd = open(second_cmd, O_RDONLY , 0644);
 	temp = dup(STDIN_FILENO);
 	dup2(STDIN_FILENO, temp);
 	dup2(fd, STDIN_FILENO);
@@ -147,7 +150,7 @@ void runs_command(char *scpy) {
       } else {
 	wait(NULL);
       } 
-      */ 
+
     }
     
     else if(strchr(s,'|')) {

@@ -1,12 +1,10 @@
-/* TODO:
-   optimize (check for excessive loops ex. strlen)
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "shell.h"
 
 #define TRUE 1
@@ -15,9 +13,24 @@
 #define BUFFER_LEN 512
 #define HOME getenv("HOME")
 
-int isRedirect = FALSE;
-int redirect_index;
-char *redirect_symbol;
+int isPipe = FALSE;
+int redir_in = FALSE; // "<"
+int redir_out = FALSE; // ">"
+char *inFile, *inSymbol, *outFile, *outSymbol;
+
+int f, status; // for fork(), wait()
+
+char **commands; // split by `;`
+char **argv; // split by ` `
+
+/*
+static void sigHandler(int signo){
+  if (signo == SIGINT){
+    if (!f)
+      exit(EXIT_FAILURE); // success?
+  }
+}
+*/
 
 void printPrompt(){
   char *cwd = 0;
@@ -30,83 +43,115 @@ void printPrompt(){
     cwd[0] = '~';
     cwd[relPathLen] = '\0';
   }
-  printf("%s$\n", cwd);
+  printf("%s: %s$\n", getenv("USER"), cwd);
   printf("><((((º> ");
   free(cwd);
 }
 
-void redirect(char *redirect_file){
-  int fd, oldfd;
-  if (redirect_symbol[0] == '>'){
-    oldfd = STDOUT_FILENO;
-    if (redirect_symbol[1]) // ">>"
-      fd = open(redirect_file, O_WRONLY|O_CREAT|O_APPEND, 0644);
-    else // ">"
-      fd = open(redirect_file, O_WRONLY|O_CREAT|O_TRUNC, 0644);
-  }
-  else{ // "<"
-    oldfd = STDIN_FILENO;
-    fd = open(redirect_file, O_RDONLY, 0644);
-  }
-  // Redirect
-  if (fd < 0)
-    printf("ERROR: %s\n", strerror(errno));
-  else{
-    dup2(fd, oldfd);
-    close(fd);
-  }
-}
-
-// make sure i closed all fd's
-void executePipe(char **argv){
-  int f, status, fd[2]; // fd[0] = in; fd[1] = out
-  pipe(fd);
-  argv[redirect_index] = NULL;
-  f = fork();
-  if (!f){ // Child; in pipe
-    close(fd[0]);
-    dup2(fd[1], STDOUT_FILENO);
-  }
-  else{ // Parent; out pipe
-    wait(&status);
-    close(fd[1]);
-    dup2(fd[0], STDIN_FILENO);
-    argv = &argv[redirect_index+1];
-  }
-  //executeMisc(argv);
+// Execute a command; Handles errors and frees
+void safe_exec(){
   execvp(argv[0], argv);
   printf("%s: command not found\n", argv[0]);
+  free(argv);
+  free(commands);
   exit(EXIT_FAILURE);
 }
 
-// Handles everything besides `cd` and `exit` or `quit`
-void executeMisc(char **argv){
-  int f, status;
-  f = fork();
-  if (!f){
-    if (isRedirect){
-      // Piping
-      if (redirect_symbol[0] == '|'){
-	executePipe(argv);
-      }
-      // Redirecting
-      redirect(argv[redirect_index+1]);
-      argv[redirect_index] = NULL;
-    }
-    execvp(argv[0], argv);
-    printf("%s: command not found\n", argv[0]);
-    exit(EXIT_FAILURE);
+// Trim white space and ';' from *str
+char * trimSpace(char *str){
+  char *tmp;
+  while (isspace(*str) || *str==';')
+    str++;
+  if (*str){
+    tmp = str + strlen(str) - 1;
+    while (tmp > str && (isspace(*tmp) || *str==';'))
+      tmp--;
+    *(tmp+1) = '\0';
   }
-  else{
-    wait(&status);
+  return str;
+}
+
+void redirect(){
+  int fd, oldfd;
+  if (redir_out){
+    oldfd = STDOUT_FILENO;
+    if (outSymbol[1]) // ">>"
+      fd = open(outFile, O_WRONLY|O_CREAT|O_APPEND, 0644);
+    else // ">"
+      fd = open(outFile, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+    // Redirect
+    if (fd < 0)
+      printf("ERROR: %s\n", strerror(errno));
+    else{
+      dup2(fd, oldfd);
+      close(fd);
+    }
+  }
+  if (redir_in){ // "<"
+    oldfd = STDIN_FILENO;
+    fd = open(inFile, O_RDONLY, 0644);
+    // Redirect
+    if (fd < 0)
+      printf("ERROR: %s\n", strerror(errno));
+    else{
+      dup2(fd, oldfd);
+      close(fd);
+    }
   }
 }
 
-void execute(char **argv){
+void executePipe(int pipeIndex){
+  int fd[2]; // fd[1] = write in; fd[0] = read out
+  pipe(fd);
+  f = fork();
+  if (!f){ // Child; write in to pipe
+    dup2(fd[1], STDOUT_FILENO);
+    argv[pipeIndex] = NULL;
+    close(fd[0]);
+    close(fd[1]);
+    safe_exec();
+  }
+  else{ // Parent; read out from pipe
+    wait(&status);
+    dup2(fd[0], STDIN_FILENO);
+    int i = 0;
+    while (argv[pipeIndex+1+i]){
+      argv[i] = argv[pipeIndex+1+i];
+      i++;
+    }
+    argv[i] = NULL;
+    close(fd[0]);
+    close(fd[1]);
+    isPipe = FALSE;
+    executeMisc();
+  }
+}
+
+void executeMisc(){
+  // Piping
+  int pipeIndex = 0;
+  while (argv[pipeIndex]){
+    if (*argv[pipeIndex] == '|'){
+      isPipe = TRUE;
+      break;
+    }
+    pipeIndex++;
+  }
+  if (isPipe)
+    executePipe(pipeIndex); // Execute first command before continuing
+  // Redirecting
+  else if (redir_in || redir_out)
+    redirect();
+  // Execute
+  safe_exec();
+}
+
+void execute(){
   // `exit` or `quit`
   if (!strcmp(argv[0], "exit") || !strcmp(argv[0], "quit")){
     printf("Sea ya next time\n");
     free(argv);
+    free(commands);
     exit(EXIT_SUCCESS);
   }
   // `cd`
@@ -117,7 +162,11 @@ void execute(char **argv){
       printf("cd: %s: %s\n", argv[1], strerror(errno));
   }
   else{
-    executeMisc(argv);
+    f = fork();
+    if (!f)
+      executeMisc();
+    else
+      wait(&status);
   }
 }
 
@@ -127,38 +176,37 @@ char ** parseInput(char *input, char *delim){
   int size = 0;
   char **argv = malloc(maxSize * sizeof *argv);
   char *arg = strsep(&input, delim);
-  char *tmp; // Used to trim whitespace
   for (; arg; arg = strsep(&input, delim)){
     // Reallocate if out of memory
     if (size == maxSize){
       maxSize *= 2;
       argv = realloc(argv, maxSize * sizeof *argv);
     }
-    // Trim white space and ';' from arg
-    while (isspace(*arg) || *arg==';')
-      arg++;
+    // Trim white space
+    arg = trimSpace(arg);
     if (*arg){
-      tmp = arg + strlen(arg) - 1;
-      while (tmp > arg && (isspace(*tmp) || *arg==';'))
-	tmp--;
-      *(tmp+1) = '\0';
       // Check if redirect
-      if (!strcmp(arg,">") || !strcmp(arg,">>") || \
-	       !strcmp(arg,"<") || !strcmp(arg,"|")){
-	isRedirect = TRUE;
-	redirect_symbol = arg;
-	redirect_index = size;
+      if (*arg == '>'){
+	redir_out = TRUE;
+	outSymbol = arg;
       }
-      // Replace '~' with $HOME
-      if (arg[0]=='~'){
-	char *tmp = malloc(strlen(HOME) + strlen(arg));
-	strcpy(tmp,HOME);
-	strcat(tmp,arg+1);
-	strcpy(arg,tmp);
-	free(tmp);
+      else if (*arg == '<'){
+	redir_in = TRUE;
+	inSymbol = arg;
       }
-      argv[size] = arg;
-      size++;
+      else if (redir_out && !outFile) outFile = arg;
+      else if (redir_in && !inFile) inFile = arg;
+      else{
+	// Replace '~' with $HOME
+	if (arg[0]=='~'){
+	  char tmp[BUFFER_LEN]; // strlen(HOME) + strlen(arg)
+	  strcpy(tmp,HOME); // buffer overflow check later
+	  strcat(tmp,arg+1);
+	  strcpy(arg,tmp);
+	}
+	argv[size] = arg;
+	size++;
+      }
     }
   }
   argv[size] = NULL;
@@ -167,8 +215,6 @@ char ** parseInput(char *input, char *delim){
 
 void shell(){
   char *input;
-  char **commands = 0;
-  char **argv = 0;
   int count;
   while (1){
     printPrompt();
@@ -178,17 +224,21 @@ void shell(){
     // Execute each command
     while (commands[count]){
       argv = parseInput(commands[count], " ");
-      execute(argv);
+      execute();
       free(argv);
-      if (isRedirect)
-	isRedirect = FALSE;
       count++;
+      // Reset globals
+      redir_in = FALSE;
+      redir_out = FALSE;
+      inFile = 0;
+      outFile = 0;
     }
     free(commands);
   }
 }
 
 int main(){
+  //signal(SIGINT, sigHandler);
   printf("Welcome to Shellfish!\n");
   shell();
   return 0;
