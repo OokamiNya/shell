@@ -105,11 +105,10 @@ void redirect(char * args[], int redir){
 			close(c);
 		}
 		else if (redir == 2){
-			c = open(args[2], O_RDWR, 0777);
-			printf("%d\n",c);
-			dup2(c, STDIN_FILENO);
-			execvp(args[0], STDIN_FILENO);
+			c = open(args[2],O_RDWR,0777);
+			dup2(c,STDIN_FILENO);
 			close(c);
+			execlp(args[0],args[0],NULL);
 		}else{
 			c = open(args[2], O_CREAT | O_WRONLY, 0644);
 			dup2(c, STDOUT_FILENO);
