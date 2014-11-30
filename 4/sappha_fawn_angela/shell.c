@@ -1,37 +1,48 @@
 #include "shell.h"
+#include "redirect.h"
 
+//signal handlers
 static void sighandler(int signo){
   if (signo == SIGINT){
     exit(0);
   }
 }
 
+
 int main() {
   signal(SIGINT, sighandler);
+  
   while(1) {
     printprompt();    
     int i;
-    char ** parsed = execute_all();
-    //runs through array of commands
+    char ** parsed = execute_all();//array of commands
+    
     for (i = 0; parsed[i]; i++){
       //printf("parsed[%d]:%s\n",i, parsed[i]);
       execute(parsed[i]);
      }
+
   }
   return 0;
 }
 
+char* get_id(){
+  char *id = (char*)malloc(sizeof(char)*100);
+  id = getlogin();
+  //printf("uid: %s\n", id);
+  return id;
+}
+
 //change to fix for all paths, use ~?
+//currently only stuff like .. works. hm.
 void cd(char* path){
-  printf("%s\n", path);
+  printf("path: %s\n", path);
   chdir(path);
 }
 
-
-
 char** execute_all(){
   char s[256];
-  fgets(s, sizeof(s), stdin);
+  fgets(s, sizeof(s), stdin);//command-line arg
   
   char* s1 = s;
   char *sep;
@@ -41,7 +52,7 @@ char** execute_all(){
   //deleting trailing newspace
   s1 = strsep(&s1, "\n");  
   
-  //parsing our command
+  //parsing our command by semicolons
   while (sep = strsep(&s1, ";")){
     args = (char**)realloc(args, sizeof(char*)*(i+1));
     char * temp = (char *)malloc(sizeof(char)*256);
@@ -50,41 +61,49 @@ char** execute_all(){
     args[i] = temp;
     i++;
   }
-
-  //check for pipes/redirection
-  
+  //adding terminating null
   args = (char**)realloc(args, sizeof(char*)*(i));
   args[i] = NULL;
   return args;
 }
 
+
+//is this not-legit version ok lol
 void printprompt() {
-  char* wd;
-  //getcwd(wd, sizeof(wd));
-  //printf("owl:%s$ ", wd);
-  printf("owl:$ ");
+  char wd[256];
+  getcwd(wd, sizeof(wd));
+  //printf("get_id: %s\n", get_id());
+  char *s_wd;
+  s_wd = strstr(wd, get_id()) + strlen(get_id());
+  printf("%s:~%s$ ", get_id(), s_wd);
 }
 
 void execute(char a[256]){
   char *s1 = a;
   char *sep;
-  char** arg = NULL;
+  char** arg = (char**)(malloc(sizeof(char*)));
   int i = 0;
   s1 = strsep(&s1, "\n");  
 
+  //how come stuff like ls -a -l doesnt work? should it??
+
   //parsing our command
   while (sep = strsep(&s1, " ")){
-    //printf("sep: %sh\n", sep);
-    //fix spaces
-    //printf("%d\n", *sep);
-    //printf("TF:%d\n", sep == "\0");
-    //if (strcmp(sep, " ")) {
+    //fool proofing: allows for silly things like ls  -l or other silly user input
+    if (!(sep && sep[0] == '\0')) {
+      arg = (char**)realloc(arg, sizeof(char*)*(i+1));
+      char * tempo = (char *)malloc(sizeof(char)*256);
+      strcpy(tempo, sep);
+      tempo = trim(tempo);
+      arg[i] = tempo;
       i++;
-      arg = realloc(arg, sizeof(char*)*i);
-      arg[i-1] = sep;
-      //}
+    }
   }
-  arg[i] = 0;
+
+  //adding terminating null
+  arg = (char**)realloc(arg, sizeof(char*)*(i));
+  arg[i] = NULL;
+  
   if (strcmp(arg[0], "exit") == 0) { //if calling exit
     exit(0);
   }
@@ -99,14 +118,15 @@ void execute(char a[256]){
     }
     else {//parent process
       wait(&status);
-      //free(arg);
+      //printf("status: %d\n", status);
     } 
   }
-  //why does this cause errors for echo hello cake??
-  
-  free(arg);
+  //no need to free arg: http://stackoverflow.com/questions/14492971/how-to-free-memory-created-by-malloc-after-using-execvp
+  //free(arg);
+
 }
 
+//gets rid of trailing and leading white space 
 char * trim (char * s) {
   int l = strlen(s);
   //trailing white space -- backwards

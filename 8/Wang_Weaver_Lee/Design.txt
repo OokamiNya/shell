@@ -1,0 +1,55 @@
+Our Project In a NutSHELL
+by Cooper Weaver, Andreas Wang, and Jason Lee
+
+Features: 
+	  Forks and executes commands
+	  Parses multiple commands on one line
+	  Shell can handle redirecting input and output (can put it anywhere on the command line)
+	  Accounts for 'cd' and 'exit' 
+	  Shell handles multiple pipes 
+
+Attemped: 
+
+Bugs: 
+      Redirection needs exactly one space after > or < 
+
+Files and Function headers: 
+shell.c 
+
+/* void mycd()
+Inputs: char** commands, int numargs
+Returns: Nothing 
+
+This function handles the special case of cd.
+
+/* void redirect() 
+Inputs: char *input
+Returns: Nothing 
+
+This function handles redirection before it calls parse() to run the command
+
+/* void process() 
+Inputs: char *input
+Returns: Nothing
+
+This function checks for piping. If there is piping, then it breaks up the pipes into seperate functions and these are put into the mypipe() function to run. If there is no piping, it calls redirect().
+
+/* void mypipe() 
+Inputs: char **commands, int numArgs
+Returns: Nothing
+
+This function the piping of commands using temporary files that store the input and output.
+
+
+/* void parse() 
+Inputs: char *input
+Returns: Nothing
+
+This runs the basic commands with execvp and arrays of arguments
+
+/* int main() 
+Inputs: None 
+Returns: 0
+
+This runs a while loop that keeps the shell running until the process is killed. It also interprets input and cd and exit, which change the directory and exit the shell. 
+      

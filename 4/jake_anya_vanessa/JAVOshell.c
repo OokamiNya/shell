@@ -8,8 +8,10 @@
 
 #include "executor.h"
 
+int cont = 1;
+
 //grabs f from executor.c
-//f is the pid of kid
+//f is the pid of kid, 0 if no kid
 extern int f;
 
 static void sighandler(int signo){
@@ -21,13 +23,13 @@ static void sighandler(int signo){
 }
 
 int main(){
-
+  
   signal(SIGINT, sighandler);
 
   printf("\n");
   chdir(getenv("HOME"));
   
-  while(1){
+  while(cont){
     printf("pid: %d\n", getpid());
 
     char input[256];
@@ -42,7 +44,28 @@ int main(){
     fgets(input, sizeof(input), stdin);
     input[sizeof(input)] = 0;
     
-    execute(input); 
+    char *s1 = input;
+    char *s2;
+    char *arg[256];
+    
+    int i = 0;
+    while(s1) {
+      //generates arg (array of arguments)
+      s2 = strsep(&s1, " ");
+      arg[i] = s2;
+      i++;
+    }
+    
+    /*
+      minor cleaning up
+      last argument = NULL for execvp to work
+      newstr is the new second-to-last argument with \n removed
+    */
+    arg[i] = 0;
+    char * newstr;
+    newstr = strsep(&(arg[i-1]), "\n");
+    arg[i-1] = newstr;
+    execute(arg); 
   }
   return 0;
 }

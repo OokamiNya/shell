@@ -7,3 +7,8 @@ shell.o: shell.c shell.h redirect.h
 
 redirect.o: redirect.c redirect.h
 	gcc -c redirect.c
+
+clean:
+	rm *~
+	rm *.o	
+	rm ./shell
