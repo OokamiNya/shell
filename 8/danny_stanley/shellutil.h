@@ -8,6 +8,8 @@
 int escape_read(char *, int);
 int handle_tilde(char *, int);
 
+process * remove_process(process **, int, int);
+
 extern int escapeIndex;
 extern int escapeSize;
 extern char *escape_buf;
