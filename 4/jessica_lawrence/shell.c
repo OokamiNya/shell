@@ -60,6 +60,18 @@ char* killspaces(char* src, char* dest) {
   return dest;
 }
 
+int count (char*s, char *c) {
+  char* temp = malloc(256*sizeof(char));
+  char* starttemp = temp;
+  strncpy(temp, s, 256);
+  int argc = 0;
+  while(strsep(&temp, c)) {
+    argc++;
+  }
+  free(starttemp);
+  return argc;
+}
+
 int countcmds(char* s) {
   char* temp = malloc(256*sizeof(char));
   char* starttemp = temp;
@@ -71,6 +83,7 @@ int countcmds(char* s) {
   free(starttemp);
   return argc;
 }
+
 
 int countargs(char* s) {
   char* temp = malloc(256*sizeof(char));

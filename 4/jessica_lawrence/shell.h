@@ -4,6 +4,7 @@
 void prompt(char* s);
 char is_control_char(char c);
 char* killspaces(char* src, char* dst);
+int count (char*s, char *c);
 int countcmds(char* s);
 int countargs(char* s);
 void splitinput(char* s, char** cmds);
