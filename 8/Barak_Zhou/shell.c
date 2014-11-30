@@ -60,26 +60,42 @@ char** parse ( char* input, char* delim ) {
     argv[j] = arg;
   }
 
+  
+  //print everything - use with caution
+  /*
   int k = 0;
   for (;k<i+2; k++) {
     printf("argv[%d]: %s\n", k, argv[k]);
   }
+  */
 
   return argv;
 }
+
+//returns the first location of a redirect, but don't print it! use return[0]
+char* find_redirect( char* input ) {
+  char* redirect_stdin = "<";
+  char* redirect_stdout = ">";
+  char* pipe = "|";
+  while (*input) {
+    if (*input == *redirect_stdin || *input == *redirect_stdout || *input == *pipe) {
+      return input;
+    }
+    input ++;
+  }
+  return 0;
+}
+
 
 int main() {
   char cwd[256];
   int running = 1;
 
   char input[256];
-  //char** commands = 0;
-  //char** args = 0;
-  //char** argv = 0;
-
   while (running) {
     char** args = 0;
     char** argv = 0;
+    char** arg = 0; //at this point I forgot what the names mean and I'm making these up
 
     printf("(╯'□')╯%s: ", getcwd(cwd, sizeof(cwd)));
     
@@ -90,13 +106,48 @@ int main() {
     //printf("Parsed:\n");
 
     int i = 0;
-    while (args[i]) { //execute every command
-      argv = parse(args[i]," ");
-      execute(argv);
-      free(argv);
-      i++;
-    }
+    while (args[i]) { //execute every command, parsing the > < | as well
+      
+      //char* redir = find_redirect(args[i]);
+      //printf("%c\n", redir[0]);
+      
+      //split the string at the redirect
+      char* redir;
+      if (redir = find_redirect(args[i])) {
 
+	//if redirecting stdout
+	if (redir[0] == ">") {
+	  arg = parse(args[i],">"); //bad things happen if nothing comes after >!!!!!!!!!!!
+	  argv = parse(arg[0]," ");
+	  char* filename = parse(arg[1]," ")[0]; //take the space out of the name
+	  int spoon = fork();
+	  int status;
+	  if (!spoon) {
+	    int fd = open(filename, O_CREAT | O_WRONLY, 0777);
+	    int temp_stdout = dup(STDOUT_FILENO);
+	    dup2(fd, STDOUT_FILENO);
+	    execute(argv);
+	    dup2(temp_stdout, STDOUT_FILENO);
+	  }
+	  else {
+	    wait(&status);
+	  }
+	} //end stdout
+
+	free(argv);
+	free(arg);
+      }
+      
+      else {
+	argv = parse(args[i]," ");
+
+	execute(argv);
+	free(argv);
+      }
+      i++;
+
+    }
+    free(args);
     //argv = parse(input," ");
     //execute(argv);
     //free(argv);
