@@ -4,6 +4,9 @@
 #include <string.h>
 #include <signal.h>
 
+int count_commands(char input[256]);
+int count_args(char *command);
+
 int main() {
   
   char *command;
@@ -11,92 +14,92 @@ int main() {
   char *args_array[10];
   char *comm_array[10];
   int num_args = 0;
+  int num_commands;
   int pid;
   int *status;
   siginfo_t *infop;
   char cwd[256];
-  int num_commands;
   
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(input, sizeof(input), stdin);
     input[strlen(input)-1]='\0';
- 
-    char *count_commands = input;
-    num_commands = 1;
-    while(*count_commands) {
-      if (*count_commands == ';'){
-	num_commands++;
-      }
-      //printf("..");
-      count_commands++;
-    }
-    printf("%d\n", num_commands);
 
+    num_commands = count_commands(input);
     comm_array[0] = strtok(input, ";");
-
     int i = 1;
     while (i < num_commands) {
       comm_array[i] = strtok(NULL, ";");
-      printf("%d: %s, num_commands: %d, size of input: %lu\n",i,comm_array[i], num_commands, sizeof(input));
       if(i > num_commands)
-	return;
+        return 0;
       i++;
     }
 
-    for( i = 0; i < num_commands; i++)
-    {
-      
+    for( i = 0; i < num_commands; i++) {
       command = comm_array[i];
-      printf("command: %s\n",command);
-      char *p = command;
-
-      while (*p){
-	if (*p == ' '){
-	  num_args++;
-	}
-	p++;
-      }
+      num_args = count_args(command);
 
       char *comm = strtok(command, " ");
     
       if (!strcmp(comm,"exit")) {
-	exit(0);
+	      exit(0);
       }
     
       args_array[0] = comm;
     
       if (num_args== 0) {
-	args_array[1]=NULL;
+	      args_array[1]=NULL;
       }
     
       else {
-	i = 1;
-	while (i <= num_args) {
-	  args_array[i] = strtok(NULL, " ");
-	  i++;
-	}
-	args_array[i]=NULL;
+	      i = 1;
+	      while (i <= num_args) {
+	        args_array[i] = strtok(NULL, " ");
+	        i++;
+	      }
+	      args_array[i]=NULL;
       }
 
       if (!strcmp(comm,"cd")) {
-	if (!args_array[1]) {
-	  chdir(getenv("HOME"));
-	}
-	chdir(args_array[1]);
+	      if (!args_array[1]) {
+	        chdir(getenv("HOME"));
+	      }
+	      chdir(args_array[1]);
       }
       else {
-	pid = fork();
-	if(!pid) {
-	  execvp(args_array[0], args_array);	
-	  return WEXITSTATUS(105);
-	  exit(0);
-	}
-	waitid(P_PID, pid, infop, WEXITED);
+	      pid = fork();
+        if(!pid) {
+          execvp(args_array[0], args_array);	
+          int exit_val = 105;
+          return WEXITSTATUS(exit_val);
+        }
+	      waitid(P_PID, pid, infop, WEXITED);
       }
+    }    
+}
+}
+
+int count_commands(char input[256]) {
+  int num_commands = 1;
+  char *commands = input;
+  while (*commands) {
+    if (*commands == ';'){
+      num_commands++;
     }
+    commands++;
   }
-    
-  return 0;
+  return num_commands;
+}
+
+int count_args(char *command) {
+  char *p = command;
+  int num_args = 0;
+  while (*p){
+    if (*p == ' ') {
+      num_args++;
+    }
+    p++;
+  }
+  return num_args;
 }
 
