@@ -106,7 +106,7 @@ void shell(){
   char *cmd = (char *)(malloc(10*sizeof(char)));
   while (cmd = strsep(&s,";")){
     cmd = strip(cmd);
-    printf("cmd:%s  \n\n",cmd);
+    printf("cmd:%s  \n",cmd);
     //    parse_string(cmd);
     if (strchr(cmd, '|')){
       piper(cmd);
@@ -124,36 +124,34 @@ void piper(char *s){
   int i = 0;
   while (cmd = strsep(&s,"|")){
     piparray[i] = strip(cmd);
-    printf("#%d: %s\n",i,piparray[i]);
+    //    printf("#%d: %s\n",i,piparray[i]);
     i++;
   }
-  
-  printf("zummy\n");
   int fd,tempstd;
-  tempstd= open("pout", O_WRONLY|O_CREAT|O_TRUNC, 0666);
-  fd = open("pin", O_WRONLY|O_CREAT|O_TRUNC, 0666);
+  // tempstd= open("pout", O_WRONLY|O_CREAT|O_TRUNC, 0666);
+  fd= open("pin",  O_WRONLY|O_CREAT|O_TRUNC, 0666);//O_RDONLY, 0444);
+  //fd= dup(STDOUT_FILENO);
+  tempstd = dup (STDOUT_FILENO);
   int f = fork();
   int status;
   if (!f){   
+    int w = wait(&status);  
     printf("parenting peeps\n");
-    dup2(STDOUT_FILENO,fd);
-
-    dup2(STDOUT_FILENO,tempstd);
-    int w = wait(&status);
-   
+    dup2(fd, STDIN_FILENO);	
     parse_string(piparray[1]);
-    exit(-1);
+    close(fd);
   }
   else{
     printf("kiddy yawnings\n");  
+    dup2(fd, STDOUT_FILENO);	
     parse_string(piparray[0]);
-    WEXITSTATUS(113);
-    exit(-1);
-    //
+    WEXITSTATUS(&status);
+    close(fd);
   }
   //  printf("forking done... yes\n");
   //  dup2(fd, STDOUT_FILENO);
   printf("THE END\n");
+  //close (fd);
 }
   //free(cmd);
 
