@@ -39,21 +39,17 @@ void cd(char* path){
   //no path given or ~ --> change directory to home directory
   if (path == '\0' || strcmp(path, "~") == 0){
     chdir(getenv("HOME"));
-    //int success = chdir(getenv("HOME"));
-    //printf("success: %d\n", success);
   }
+  
+  //given path
   else {
     printf("original path: %s\n", path);
-    printf("getenv('HOME'):%s\n", getenv("HOME"));
-    char* wd;
-    getcwd(wd, sizeof(wd));
-    printf("cwd: %s\n", wd);
+    //printf("getenv('HOME'):%s\n", getenv("HOME"));
     char *sep;
     sep = strsep(&path, "~");
-    
     //if there was a ~, we must format before chdir-ing
     if ((sep && sep[0] == '\0')) { //this means that there was a ~
-      //printf("path: %s\n", path);
+      printf("path: %s\n", path);
       //printf("sep: %s\n", sep);
       char* home;
       home = getenv("HOME"); 
@@ -67,8 +63,33 @@ void cd(char* path){
 	printf("owl: cd: %s: No such file or directory\n", final);
       }
     }
+
     //not given ~, we simply work with cwd
     else {
+      char w[256];
+      getcwd(w, sizeof(w));
+      //printf("cwd: %s\n", w);
+      char* cwd = (char*)malloc(sizeof(char)*strlen(w));
+      
+      strcpy(cwd, w);
+      strcat(cwd, "/");
+      printf("cwd: %s\n", cwd);
+     
+      char * final = (char *) malloc(sizeof(char)*256);
+      
+      strcpy(final, cwd);
+  
+      printf("final: %s\n", final);
+    
+      strncat(final, sep, strlen(sep));
+      printf("final: %s\n", final);
+      
+      int success = chdir(final);
+      
+      if (success == -1){
+      	printf("owl: cd: %s: No such file or directory\n", final);
+      }
+      
     }
   }  
 }
