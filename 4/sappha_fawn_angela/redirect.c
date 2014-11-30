@@ -43,7 +43,7 @@ void redirection(char *s, int mode){
     sep = trim(sep);
     in = trim(in);
     if (in == 0) {//if null; for example ls < 
-      printf("owl: syntax error near unexpected token `newline'\n");
+      printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
       //printf("in: %s\n", in);
@@ -54,6 +54,8 @@ void redirection(char *s, int mode){
 
   else if (mode == 2){ //<<
     //how do lol
+    //<< isn't a thing lmao
+    //clean this up later
   }
 
   else if (mode == 3){ //>
@@ -62,7 +64,7 @@ void redirection(char *s, int mode){
     sep = trim(sep);
     in = trim(in);
     if (in == 0) {//if null; for example ls < 
-      printf("owl: syntax error near unexpected token `newline'\n");
+      printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
       redirect_out(sep, in, 1);
@@ -77,14 +79,24 @@ void redirection(char *s, int mode){
     in = trim(in);
     printf("in (file):%s\n", in);
     if (in == 0) {//if null; for example ls < 
-      printf("owl: syntax error near unexpected token `newline'\n");
+      printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
       //in is file
       redirect_out(sep, in, 2);
     }
   }
-
+  else if (mode == 5) { // |
+    sep = strsep(&in, "|");
+    sep = trim(sep);
+    in = trim(in);
+    if (in == 0) { // if there isn't a 2nd command
+      printf("owl: syntax error near unexpected token newline'\n");
+    }
+    else {
+      pipe(in, sep);
+    }
+  }
 
 }
 //returns 0 if no redirect symbols
@@ -92,15 +104,17 @@ void redirection(char *s, int mode){
 //returns 2 if <<
 //return 3 if >
 //return 4 if >>
+//return 5 if |
 int has_redirect(char* i){
   //printf("input: %s\n", input);
   char *input = (char*) malloc((sizeof(char)*256));
   strcpy(input, i);
-  char *less, *more;
+  char *less, *more, *pipe;
   less = strchr(input, '<');
   //printf("less: %d\n", less);
   more = strchr(input, '>');
   //printf("more: %d\n", more);
+  pipe = strchr(input, '|');
   //if neither are in
   if (less) { //there is a < sign
     strsep(&less, "<");
@@ -121,7 +135,22 @@ int has_redirect(char* i){
       }
     return 3;
   }
+  else if (pipe) {
+    return 5;
+  }
     
   return 0;
 
+}
+
+void pipe(char * one, char * two) {
+  char * temp = "temp"; // temporary file name
+  redirect_out(one, temp, 1); // sends output from command one to the temp file
+  char * command = malloc(strlen(two)+ 6); //mallocs memory for two + " temp" + terminating null
+  command[0] = '\0';
+  strcat(command, two);
+  strcat(command, " temp");
+  execute(command); //runs the 2nd command on temp
+  char * delete = "rm temp";
+  execute(delete); // removes the temporary file, can I do this?
 }

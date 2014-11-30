@@ -9,18 +9,55 @@
 #include <errno.h>
 //more includes
 void run(char * input);
+
+void myexec(char *input){
+  int i = 0;
+  char *singlearg; //holds the piece separated off from x
+  char * args[10]; //arg array
+  while ((singlearg = strsep(&input, " ") )) {
+    args[i] = singlearg;
+    i++;
+  }
+  args[i] = 0;
+  int f = fork();
+  if ( !f ) {
+    execvp(args[0], args);
+    exit(0);
+  }
+  else {
+    wait( &f );
+      f = 0;
+  }
+}
+
 void semisep(char *s){
   char *pos;
   int i=0;
   //printf("%s\n",s);
-  if ((pos=strchr(s, '\n')) != NULL)
-    *pos = '\0';
-  //printf("%s\n",s);
-  char *s1=s;
+  //if ((pos=strchr(s, '\n')) != NULL)
+  //  *pos = '\0';
+  //printf("%s",s);
+  char * raw;
+  if (strstr(s,"\n")){
+    raw=strsep(&s,"\n");
+  }
+  else{
+    raw=s;
+  }
   char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
+  char * singlecommand;
   //printf("yo\n");
-  printf("%s\n",s1);
 
+  //printf("%s",raw);
+  while ((singlecommand=strsep(&raw,";") )) {
+    //printf("%s\n",singlecommand);
+    //int f=fork();
+    //if (!f){
+    myexec(singlecommand);
+    //}
+    //wait(&f);
+  }
+  /*
   for (i=0;s1[i];i++){
     s2[i] = (char *)(malloc(strlen(s)*sizeof(char)));
     //printf("s2 :%s:\n", s2[i]);
@@ -46,6 +83,7 @@ void semisep(char *s){
     }
     printf("%d\n",b);
     //free(s2);
+    
   }
   printf("out\n");
   //free(s2);
@@ -54,7 +92,10 @@ void semisep(char *s){
 
   //printf("hey\n");
   //return s2;
+  */
 }
+
+
 
 char ** separate(char *s){
   char *pos;
@@ -87,6 +128,13 @@ void run(char *input){
   //char* problemChild=(char *)malloc(strlen(inputA[0])*sizeof(char));
   //problemChild=inputA[0];
   //printf("%s\n",problemChild);
+  if (!strcmp(input,""))//so you can hit enter with no commands
+    return;
+  if (strchr(input, ';')){
+    semisep(input);
+    return;
+  }
+
   if (!strcmp(inputA[0],"cd")){
     if(inputA[1]){
       if (inputA[1][0]=='~'){
@@ -148,7 +196,8 @@ void run(char *input){
 int main(){
   char s[1024];
   int f=1;
-  /*while(1){
+  
+  while(1){
     printf("==|==<(x_x)>===>:");
     fgets(s,1024,stdin);
     //f=fork();
@@ -156,9 +205,8 @@ int main(){
     //return 0;
     wait(NULL);
   }
-  */
-  char damn[256]="ls;w;ls\n";
-  semisep(damn);
+  //char damn[256]="ls;w;ls";
+  //semisep(damn);
   return 0;
 }
  
