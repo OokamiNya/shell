@@ -3,7 +3,7 @@ by Adam DeHovitz, Malcolm Wells, Kyle Oleksiuk
 
 Features:
 	Forks and executes commands
-	Parses multiple commands on one line
+	Parses multiple commands on one line using ';' (handles multiple ;)
 	Ignores extra white space
 	Redirects using >, <, >>
 	Changes Directories and exists
@@ -13,49 +13,51 @@ Attempted:
 
 
 Bugs:
-	Putting two ;'s next to each other will break the parser
-	Redirecting to a file that does not exist occasionally
-	does not work.
-	Hair regrowth function may result in a seg fault.
-	Occasionally, the unicorn command will fail, opening a
-	great chasm in the earth and summoning the demon Beelzebub,
-	who will proceeded to unleash his wrath and begin his reign
-	of terror.
+	
 	
 Files & Function Headers:
-parse.c
-	Handles all line parsing fucntions
-	/*======== int count_tokens() ==========
-	Inputs:  char *line
-        	  char delim 
-	Returns: Number of tokens in line separated by delim
+program.c
+	Handles everything
 
-	Counts the number of times the character delim appears in the
-	 string line
-	The number of tokens is 1 more than the number of appearences 
-	of delim
-	If delim does not appear, 1 is returned
+	/*======== void process() ==========
+	Inputs:  char *start	
+
+	Takes in user input and breaks on ';' delimeter
+	Processes each token
 	====================*/
 
-	/*======== char ** parse_line() ==========
-	Inputs:  char *line 
-	Returns: Array of strings where each entry is a token 
-	separated by delim
-
-	If line contains multiple tokens separated by delim, this 
-	function will put each token into an array of strings
+	/*======== void execute() ==========
+	Inputs:  char *start
+	
+	Takes in user input and breaks it up by arguement into an
+	array
+	Sends array to appropriate function depending on nature of
+	command
 	====================*/
 
-	/*======== char * trim() ==========
-	Inputs:  char *line 
-	Returns: Pointer to the beginning of line
+	/*======== void normal_process() ==========
+	Inputs:  char * args[]
 
-	Removes leading and trailing whitespace on the string line.
-	Terminating '\0' is placed at a new location if necessary.
+	Handles cd and exit commands
 	====================*/
 
-dwsh.c
-	Handles the forking an executing of commands...
+	/*======== void child_process() ==========
+	Inputs:  char * args[]
 
-magical.c
-	UNOCORNS!	
+	Creates a forked process that executes the command dicatate by
+	args
+	====================*/
+
+	/*======== void redirect() ==========
+	Inputs:  char * args[]
+
+	[INSERT DESCRIPTION]
+	====================*/
+
+	/*======== void set_home() ==========
+	Inputs:  char *start
+
+	sets global variable home using path from current directory
+	Can be accessed with '~'
+	====================*/
+	
