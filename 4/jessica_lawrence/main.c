@@ -13,10 +13,9 @@ int main () {
   int argc;
   int cmdc;
   int i;
-  printf("%d\n",is_control_char(';'));
   while (1) {
     prompt(raw);
-    printf("###%s###\n",killspaces(raw,clean));
+    killspaces(raw,clean);
     cmdc = countcmds(clean);
     cmds = malloc(cmdc * sizeof(char*));
     splitinput(clean,cmds);
