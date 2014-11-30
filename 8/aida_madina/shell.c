@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <fcntl.h>
 
 int count_commands(char input[256]);
 int count_args(char *command);
@@ -19,6 +20,9 @@ int main() {
   char cwd[256];
   int flag_redir = 0;
   FILE * fout = NULL;
+  int exit_val = 105;
+  int flag_redir_type = 0;
+
   
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
@@ -47,48 +51,60 @@ int main() {
       }
     
       args_array[0] = comm;
-    
+      int j = 1;    
       if (num_args == 0) {
 	args_array[1]=NULL;
       }
-    
       else {
-	int j = 1;
 	while (j <= num_args) {
 	  args_array[j] = strtok(NULL, " ");
 	  if (!strcmp(args_array[j], ">")) {
-	    flag_redir = 1;
+	    flag_redir = j;
 	  }
+    else if (!strcmp(args_array[j],">>")) {
+      flag_redir_type = 1;
+      flag_redir = j;
+    }
 	  j++;
-	}
+	}  
 	args_array[j]=NULL;
       }
 
-
       if (!strcmp(comm,"cd")) {
-	if (!args_array[1]) {
+        if (!args_array[1]) {
 	  chdir(getenv("HOME"));
-	}
-	chdir(args_array[1]);
+        }
+        chdir(args_array[1]);
       }
+
       else if (flag_redir) {
-	/*If the redirection flag is on, then we get the result of the execution
-	  of a process from stdout. (is this possible? how to get the
-	  data from a process call?)
-	 */
-	char * str_out[1000];
-	fout = stdout;
-	fgets(str_out, sizeof(str_out), fout);
-	printf("\n\nStr_out: %s\n", str_out);
-	printf("\nflag_redir: %d\n\n", flag_redir);
-	flag_redir = 0;
+        int file;
+        if (flag_redir_type) {
+          file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_APPEND, 0644);
+        }
+        else {
+          file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_TRUNC, 0644);
+        }
+	     
+	pid = fork();
+	if (!pid) {
+	  dup2(file,STDOUT_FILENO);
+	  int n;
+	  char *exec_args[10];
+	  for(n = 0; n < flag_redir; n++) {
+	    exec_args[n] = args_array[n];
+	  }
+	  exec_args[n] = NULL;
+	  execvp(args_array[0], exec_args);
+	  return 0;
+	}
+        flag_redir = 0;
       }
 
       else {
 	pid = fork();
         if(!pid) {
           execvp(args_array[0], args_array);	
-          int exit_val = 105;
           return WEXITSTATUS(exit_val);
         }
 	waitid(P_PID, pid, infop, WEXITED);
