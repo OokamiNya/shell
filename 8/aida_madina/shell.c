@@ -86,6 +86,7 @@ int main() {
           execlp(args_array[0], args_array[0], NULL);
           return 0;
         }
+        flag_redir = 0;
       }
 
       else {
