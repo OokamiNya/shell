@@ -264,6 +264,11 @@ int execute(char ** args){
     execute(part1);
     execute(part2);
 
+    free(part1);
+    free(part2);
+
+    remove("buffer.txt");
+
   }else if((i = contains(args,"cd")) != -1){
     if(!args[1]){
       chdir(getenv("HOME"));
