@@ -111,7 +111,6 @@ char** execute_all(){
 }
 
 
-//is this not-legit version ok lol
 void printprompt() {
   char wd[256];
   getcwd(wd, sizeof(wd));
@@ -132,47 +131,67 @@ void execute(char a[256]){
  
   printf("s1: %s\n", s1);
   int has = has_redirect(s1);
+  
   printf("has:%d\n", has);
-  //parsing our command
-  while (sep = strsep(&s1, " ")){
-    //fool proofing: allows for silly things like ls  -l or other silly user input
-    if (!(sep && sep[0] == '\0')) {
-      arg = (char**)realloc(arg, sizeof(char*)*(i+1));
-      char * tempo = (char *)malloc(sizeof(char)*256);
-      strcpy(tempo, sep);
-      tempo = trim(tempo);
-      arg[i] = tempo;
-      i++;
+  if (has == 1){//<
+    /*
+    sep = strsep(&s1, "<");
+    //printf("sep: %s\n", sep);
+    //printf("s1: %s\n", s1);
+    sep = trim(sep);
+    s1 = trim(s1);
+    if (s1 == 0) {//if null
+      printf("owl: syntax error near unexpected token `newline'\n");
     }
+    else {
+      redirect_in(sep, s1);
+    }
+    */
+    redirection(s1, 1);
   }
-
-  //adding terminating null
-  arg = (char**)realloc(arg, sizeof(char*)*(i));
-  arg[i] = NULL;
-
-  //if argument is 'exit' or 'quit':
-  if (strcmp(arg[0], "exit") == 0 || strcmp(arg[0], "quit") == 0) { 
-    exit(0);
-  }
-
-  //else if argument is to change directory:
-  else if (strcmp(arg[0], "cd") == 0) {//if calling cd
-    cd(arg[1]);
-  }
-
-  //otherwise, all other commands require forking:
-  else { 
-    int f, status;
-    f = fork();
-    if (f == 0) {//child process
-      if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist
-	printf("%s: command not found\n", arg[0]);
+  else {
+    //otherwise...
+    //parsing our command
+    while (sep = strsep(&s1, " ")){
+      //fool proofing: allows for silly things like ls  -l or other silly user input
+      if (!(sep && sep[0] == '\0')) {
+	arg = (char**)realloc(arg, sizeof(char*)*(i+1));
+	char * tempo = (char *)malloc(sizeof(char)*256);
+	strcpy(tempo, sep);
+	tempo = trim(tempo);
+	arg[i] = tempo;
+	i++;
       }
     }
-    else {//parent process
-      wait(&status);
-      //printf("status: %d\n", status);
-    } 
+ 
+    //adding terminating null
+    arg = (char**)realloc(arg, sizeof(char*)*(i));
+    arg[i] = NULL;
+    
+    //if argument is 'exit' or 'quit':
+    if (strcmp(arg[0], "exit") == 0 || strcmp(arg[0], "quit") == 0) { 
+      exit(0);
+    }
+    
+    //else if argument is to change directory:
+    else if (strcmp(arg[0], "cd") == 0) {//if calling cd
+      cd(arg[1]);
+    }
+    
+    //otherwise, all other commands require forking:
+    else { 
+      int f, status;
+      f = fork();
+      if (f == 0) {//child process
+	if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist
+	  printf("%s: command not found\n", arg[0]);
+	}
+      }
+      else {//parent process
+	wait(&status);
+	//printf("status: %d\n", status);
+      } 
+    }
   }
   //no need to free arg: http://stackoverflow.com/questions/14492971/how-to-free-memory-created-by-malloc-after-using-execvp
   //free(arg);
