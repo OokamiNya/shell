@@ -55,6 +55,7 @@ int execute(char ** arg) {
       cmd1arg[i] = arg[i];
       i++;
     }
+    cmd1arg[i] = 0;
     
     char * cmd2arg[256];
     i = 1;
@@ -62,6 +63,7 @@ int execute(char ** arg) {
       cmd2arg[i-1] = arg[pipe + i];
       i++;
     }
+    cmd2arg[i] = 0;
     
     int stdinhold = dup(STDIN_FILENO);
     int stdouthold = dup(STDOUT_FILENO);
@@ -93,8 +95,7 @@ int execute(char ** arg) {
 
   //handles cd
   else if(!strcmp(arg[0],"cd")){
-    printf("cding\n");
-    if (sizeof(arg) / sizeof(char *) > 1)
+    if (arg[1])
       chdir(arg[1]);
     else
       chdir(getenv("HOME"));
