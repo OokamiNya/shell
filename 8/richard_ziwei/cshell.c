@@ -1,25 +1,12 @@
 #include"heads.h"
 #include"helper.c"
 
+int id;
 
-//DOES NOT WORK
 static void sighandler(int signo){
-  /*
-  int id = getpid();
-  int pid = fork();
-  if (!pid){
-    printf("Intercepting...\n");
-    //chdir(ultimatepath);
-    char * s;
-    sprintf(s,"%s/a.out",ultimatepath);
-    execl(ultimatepath,s,NULL);
-    printf("O NOES\n");
-    //exit(-1);
+  if (getpid() != id){
+    kill(getpid(),SIGINT);
   }
-  exit(-1);
-  */
-  main();
-  exit(-1);
 }
 
 
@@ -132,6 +119,7 @@ char redirection(char arg[]){
 
 
 int main(){
+  id=getpid();
   signal(SIGINT,sighandler);
   while (1){
     char input[256];
