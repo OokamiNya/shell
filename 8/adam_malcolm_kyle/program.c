@@ -4,8 +4,11 @@ char home[256] = "/";
 
 void process(char * start){
   //site of user input processing
+  char * y;
   while (start){
-    execute(strsep(&start, ";"));      
+    y = strsep(&start, ";");
+    if (*y != 0)
+      execute(y);
   }
 }
 

@@ -1,17 +1,31 @@
 /**
- * Shell.c
- * Contains main()
+ * shell.c
+ * 
+ * Main file.
  *
  **/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "shell.h"
 
+/**
+ * int execute ( char** input )
+ * ============================
+ *
+ * Takes an array of strings and executes them as a command,
+ * with input[0] as the command and other strings as parameters
+ *
+ * Parameters:
+ *     char** input: Array of strings
+ *
+ * Return:
+ *     0 if successful.
+ *
+ * -Note-: this return was supposed to be used for a recursive
+ * redirect function, but it was never implemented.
+ *
+ **/
 int execute(char** input) {
+  // check if the command is cd, exit or regular command
   if (!strcmp(input[0], "cd")){
     if (!input[1]) {
       chdir(getenv("HOME"));
@@ -24,7 +38,6 @@ int execute(char** input) {
     exit(EXIT_SUCCESS);
   }
   else {
-    // getting there
     int spoon = fork();
     int status;
     if (!spoon) {
@@ -37,6 +50,21 @@ int execute(char** input) {
   return 0;
 }
 
+/**
+ * char** parse ( char* input, char* delim )
+ * =========================================
+ *
+ * Takes a string and parse it by the delimiter.
+ * 
+ * Parameters:
+ *     char* input: String to be parsed.
+ *     char* delim: Delimiter.
+ *
+ * Return:
+ *     A pointer to an array of strings after parse, 
+ *     with memory allocated.
+ *
+ **/
 char** parse ( char* input, char* delim ) {
   strtok(input, "\n"); //this guy again...
 
@@ -72,7 +100,21 @@ char** parse ( char* input, char* delim ) {
   return argv;
 }
 
-//returns the first location of a redirect, but don't print it! use return[0]
+/**
+ * char* find_redirect ( char* input )
+ * ===================================
+ *
+ * Takes a string and finds the first occurence of >, < or |
+ * 
+ * Parameters:
+ *     char* input: String to be analyzed.
+ *
+ * Return:
+ *     A pointer to the first char >, < or | found in input.
+ *
+ * -Note-: use return[0] to get the actual char.
+ *     
+ **/
 char* find_redirect( char* input ) {
   char* redirect_stdin = "<";
   char* redirect_stdout = ">";
@@ -86,13 +128,32 @@ char* find_redirect( char* input ) {
   return 0;
 }
 
-
+/**
+ * int main()
+ * ==========
+ *
+ * Main method.
+ *
+ * Process of input/output:
+ *     1. Get the console input
+ *     2. Parse by ; and execute individual commands
+ *     3. Check: Is there a redirect in there?
+ *         Yes:
+ *             a. Check which redirect
+ *             b. Parse by space and execute accordingly.
+ *         No:
+ *             a. Execute accordingly.
+ *     4. Free the memory.
+ *     5. Repeat.
+ *
+ **/
 int main() {
   char cwd[256];
-  int running = 1;
+  int running = 1; //a habit I developed from game development. This is redundant
 
   char input[256];
   while (running) {
+    //these will all have to be freed at some point
     char** args = 0;
     char** argv = 0;
     char** arg = 0; //at this point I forgot what the names mean and I'm making these up
@@ -174,11 +235,7 @@ int main() {
 	    dup2(temp_stdin, STDIN_FILENO);
 	    
 	  }
-
 	}
-
-
-
 	free(argv);
 	free(arg);
       }
@@ -193,9 +250,6 @@ int main() {
 
     }
     free(args);
-    //argv = parse(input," ");
-    //execute(argv);
-    //free(argv);
   }
 
   return 0;
