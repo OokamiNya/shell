@@ -49,6 +49,6 @@ char * create_prompt(char *prompt_buf, int prompt_size) {
     else {
         status = fg_red;
     }
-    snprintf(prompt_buf, prompt_size, "%s%s%s$ %s%s%s %s%s%s %s%s\nᐅ %s", bold_prefix, fg_pink, shell_name, bold_prefix, fg_orange, time, bold_prefix, fg_cyan, path, normal_prefix, status, reset);
+    snprintf(prompt_buf, prompt_size, "%s%s%s%s$ %s%s%s %s%s%s %s%s\nᐅ %s", reset, bold_prefix, fg_pink, shell_name, bold_prefix, fg_orange, time, bold_prefix, fg_cyan, path, normal_prefix, status, reset);
     return prompt_buf;
 }

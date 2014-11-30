@@ -5,6 +5,7 @@
 int errno_result; // Used in collaboration with errno if function fails
 pid_t child_pid = -111111; // Hack to initialize child_pid as a value that does not disrupt the system
 char *prompt;
+char sigquitCount;
 
 int args;
 char **argv;
@@ -19,16 +20,51 @@ node* path_history; //For cd history
 
 static void signalhandler(int signal) {
     if (signal == SIGINT) {
-        if (child_pid) {
+        if (child_pid) { // Kills the child process
             kill(child_pid, SIGINT);
             int status;
             waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
             cmd_status = 0;
             create_prompt(prompt, PROMPT_SIZE);
-            printf("\n%s", prompt); // Printout a new prompt
+            printf("\n%s", prompt); // Print out a new prompt
             fflush(stdout);
         }
     }
+    else if (signal == SIGQUIT) {
+        if (child_pid) { // Kills the child process
+            kill(child_pid, SIGINT);
+            int status;
+            waitpid(child_pid, &status, WNOHANG | WUNTRACED); // Wait for child to end
+        }
+        if (sigquitCount > 0) {
+            printf("\a\x08\x08  \x08\x08"); // \a dings the terminal, other stuff masks the '^\'
+            fflush(stdout);
+        }
+        else {
+            ++sigquitCount;
+        }
+    }
+}
+
+void setup_shell() {
+    signal(SIGINT, signalhandler);
+    signal(SIGQUIT, signalhandler);
+    sigquitCount = 0;
+    prompt = (char *) malloc(PROMPT_SIZE);
+    process_pids = (process **) NULL;
+}
+
+void cleanup_shell() {
+    free(prompt);
+    --processCount;
+    for (; processCount >= 0; --processCount) {
+        if (process_pids[processCount]) { // Makes sure that the process has not already been freed
+            free(process_pids[processCount]->cmd); // Frees commands of processes that are dynamically allocated
+            free(process_pids[processCount]);
+            process_pids[processCount] = NULL;
+        }
+    }
+    free(process_pids);
 }
 
 void cleanup_argv() {
@@ -56,25 +92,6 @@ void setup_argv() {
     tok = (char *) malloc(TOK_INIT_SIZE);
 }
 
-void setup_shell() {
-    signal(SIGINT, signalhandler);
-    prompt = (char *) malloc(PROMPT_SIZE);
-    process_pids = (process **) NULL;
-}
-
-void cleanup_shell() {
-    free(prompt);
-    --processCount;
-    for (; processCount >= 0; --processCount) {
-        if (process_pids[processCount]) { // Makes sure that the process has not already been freed
-            free(process_pids[processCount]->cmd); // Frees commands of processes that are dynamically allocated
-            free(process_pids[processCount]);
-            process_pids[processCount] = NULL;
-        }
-    }
-    free(process_pids);
-}
-
 void add_null_argv() { // Adds NULL needed for execvp
     argv = (char **) realloc(argv, (args + 1) * sizeof(char *));
     argv[args] = NULL;
@@ -84,10 +101,13 @@ int main() {
     setup_shell();
     char current_path[PATH_SIZE];
     path_history = insert_node(path_history, getcwd(current_path,PATH_SIZE));//Will make more elegant later
+# ifdef DEBUG
     printf("Starting Directory: %s\n", get_arg(path_history));
+# endif
     while (!feof(stdin)) {
         create_prompt(prompt, PROMPT_SIZE);
         cmd_status = valid_input = 1;
+        sigquitCount = 0;
         char *line = readline(prompt);
         if (line == NULL) {
 # ifdef DEBUG
@@ -474,7 +494,7 @@ node * change_directory(char *path , node* history) {
     path = getenv("HOME");
   }
   
-  else if (path[0] == '-') { // TODO: Backtracking directories
+  else if (path[0] == '-') {
     //printf("Previous Path: %s\n",history->arg);
     path = get_arg(history);
   }
