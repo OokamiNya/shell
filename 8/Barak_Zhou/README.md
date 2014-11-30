@@ -1,7 +1,7 @@
-Shell
-(╯°□°)╯︵ ┻━┻ ︵ ╯(°□° ╯)
+(╯°□°)╯︵ Shell ︵ ╯(°□° ╯)
 =====
 Barak Zhou
+
 System Level Programming pd. 8
 
 Shell is exactly what it is: A simple shell.
@@ -30,4 +30,22 @@ Exit with "exit" or a keyboard interrupt (^C).
 - git commit: the command "git commit -am "string here"" parses the space inside the string, so a commit through the shell cannot have spaces in the string.
 
 ##Functions
--test
+```C
+/**
+ * int execute ( char** input )
+ * ============================
+ *
+ * Takes an array of strings and executes them as a command,
+ * with input[0] as the command and other strings as parameters
+ *
+ * Parameters:
+ *     char** input: Array of strings
+ *
+ * Return:
+ *     0 if successful.
+ *
+ * -Note-: this return was supposed to be used for a recursive
+ * redirect function, but it was never implemented.
+ *
+ **/
+```
