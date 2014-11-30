@@ -1,0 +1,53 @@
+The Magic Conch Shell
+by Jenny Baran and Miranda Chaiken
+
+Features:
+	Forks and executes commands!
+	Parses multiple commands on one line!
+	Redirects using >, <!
+	Handles pipes.
+
+Attempted:
+	The following did not end up working, but have been left
+	in the code, commented out.
+	Tried replacing full path with just current director, got
+	seg faults.
+
+Bugs:
+	?
+	
+Files & Function Headers:
+shell.c
+	Handles parsing, forking, and executing.
+	/*======== static void sighandler() ==========
+	Inputs:  int signo
+	Returns: N/A
+
+	Catches keyboard interrupt. If currently in a child process,
+	exits that process. Otherwise, exits the shell.
+	====================*/
+
+	/*======== char * rmspaces() ==========
+	Inputs:  char * str 
+	Returns: Pointer to the beginning of str
+
+	Removes leading and trailing whitespace on the string line.
+	Terminating '\0' is placed at a new location if necessary.	====================*/
+
+	/*======== void execute() ==========
+	Inputs:  char * split_cmds
+	Returns: N/A
+
+	Takes string containing one command and however many args
+	apply to it. Creates an array of args. Forks and runs with
+	execvp. In the case that the cmd is cd or exit, handles with
+	chdir() or exit(), respectively.
+	====================*/
+
+	/*======== int main() ==========
+	Inputs: N/A
+	Returns: 0
+	
+	Deals with piping, redirection, multiple cmds on one line.
+	Otherwise, calls execute on cmds.
+	====================*/
