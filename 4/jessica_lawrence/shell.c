@@ -60,36 +60,6 @@ char* killspaces(char* src, char* dest) {
   return dest;
 }
 
-/*
-char* killspaces(char* src, char* dest) {
-  int s = 0;
-  int d = 0;
-  int skip = 0;
-  while(src[s]) {
-    if(src[s]==' ') {
-      if(s>0 && 
-         src[s-1]!=' ' && 
-         !is_control_char(src[s-1]) &&
-         !is_control_char(src[s+1])) {
-        skip = 0;
-      } else {
-        skip = 1;
-      }
-    } else {
-      skip = 0;
-    }
-    if(skip) {
-      s++;
-    } else { 
-      dest[d]=src[s];
-      s++;
-      d++;
-    }
-  }
-  dest[d-1] = 0;
-  return dest;
-  }*/
-
 int countcmds(char* s) {
   char* temp = malloc(256*sizeof(char));
   char* starttemp = temp;
