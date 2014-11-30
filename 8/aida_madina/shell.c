@@ -21,6 +21,7 @@ int main() {
   int flag_redir = 0;
   FILE * fout = NULL;
   int exit_val = 105;
+  int flag_redir_type = 0;
 
   
   while(1) {
@@ -60,6 +61,10 @@ int main() {
 	  if (!strcmp(args_array[j], ">")) {
 	    flag_redir = j;
 	  }
+    else if (!strcmp(args_array[j],">>")) {
+      flag_redir_type = 1;
+      flag_redir = j;
+    }
 	  j++;
 	}  
 	args_array[j]=NULL;
@@ -73,7 +78,14 @@ int main() {
       }
 
       else if (flag_redir) {
-	int file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_TRUNC, 0644);
+        int file;
+        if (flag_redir_type) {
+          file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_APPEND, 0644);
+        }
+        else {
+          file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_TRUNC, 0644);
+        }
+	     
 	pid = fork();
 	if (!pid) {
 	  dup2(file,STDOUT_FILENO);
