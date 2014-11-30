@@ -6,4 +6,4 @@
 #include <string.h>
 
 int run_command(char* s);
-int cd(char* s);
+int change_directory(char** args);
