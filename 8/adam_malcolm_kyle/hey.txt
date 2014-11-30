@@ -1,0 +1,16 @@
+a.out
+design.txt
+hey.txt
+makefile
+program.c
+program.h
+program.o
+yo.txt
+  PID TTY           TIME CMD
+  471 ttys000    0:00.05 -bash
+ 1646 ttys000    0:00.01 /Applications/Xcode.app/Contents/Developer/usr/bin/make
+ 1653 ttys000    0:00.00 ./a.out
+ 1654 ttys000    0:00.00 ./a.out
+ 1661 ttys000    0:00.00 ./a.out
+ 1672 ttys000    0:00.00 ./a.out
+  672 ttys001    0:00.09 -bash
