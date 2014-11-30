@@ -9,15 +9,17 @@ void redirect(char* file,char** args, char* r){
         fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
       }else if (strcmp(r, ">") == 0){
         fd = open(file, O_CREAT | O_WRONLY , 0777);
-      }else if(strcmp(r, "<") == 0){
+      }
+      if(strcmp(r, "<") == 0){
         fd = open(file, O_RDONLY , 0777);
         dup2(STDIN_FILENO, fd);
         close(fd);
         execvp(args[0],args);
+      }else{
+        dup2(fd,STDOUT_FILENO);
+        close(fd);
+        execvp(args[0],args);
       }
-      dup2(fd,STDOUT_FILENO);
-      close(fd);
-      execvp(args[0],args);
   }
 }
 
