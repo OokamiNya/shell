@@ -6,6 +6,7 @@ have to fix:
 
 simple optional features:
 - sighandler for ctrl c
+- implement >> and <<
 - make parse() work without spaces between everything
 
 not-so-simple optional features:
@@ -14,6 +15,7 @@ not-so-simple optional features:
 - * as a wildcard
 - & to run things in the background
 - ~ as a directory shortcut
+- assign values to variables and such
 
 non-coding related things to do:
 - write readme.txt about project, when we're done
@@ -115,7 +117,7 @@ void parse(char ** args){
 int contains(char ** args, char * c){
   int i=0;
   while(args[i]){
-    if (strcmp(args[i], c) == 0 ){
+    if (strcmp(args[i], c) == 0){
       return i;
     }
     i++;
@@ -125,7 +127,9 @@ int contains(char ** args, char * c){
 
 
 int execute(char ** args){
+
   int i;
+
   if((i = contains(args,";")) != -1){
     //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
@@ -143,13 +147,14 @@ int execute(char ** args){
     execute(args);
     
   }else if((i = contains(args,"<")) != -1  ){
-    printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
     
     int f = fork();
     int status;
+
     if (!f){
-      int fd = open( args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2(  fd , STDIN_FILENO );
+      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+      dup2(fd, STDIN_FILENO);
 
       char ** part1 = (char**)malloc(sizeof(char*) * i);
       
@@ -159,22 +164,25 @@ int execute(char ** args){
 	j++;
       }
 
-      execvp(part1[0] , part1);
-      //close, and restting stdout not nessecarry b/c its a child
+      execvp(part1[0], part1);
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to reset the file table values, since the child is killed
+
     }else{
       wait(&status);
     }
 
-    //not functional yet
-
   }else if((i = contains(args,">")) != -1  ){
-    printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
+    //printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
     
     int f = fork();
     int status;
+
     if (!f){
       int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2( fd, STDOUT_FILENO );
+      dup2(fd, STDOUT_FILENO);
 
       char ** part1 = (char**)malloc(sizeof(char*) * i);
       
@@ -184,19 +192,29 @@ int execute(char ** args){
 	j++;
       }
 
-      execvp(part1[0] , part1);
-      //close, and restting stdout not nessecarry b/c its a child
+      execvp(part1[0], part1);
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to reset the file table values, since the child is killed
+
     }else{
       wait(&status);
     }
 
   }else if((i = contains(args,"|")) != -1  ){
-    printf("COMMAND WITH '|' AT INDEX %d\n",i);
+    //printf("COMMAND WITH '|' AT INDEX %d\n",i);
        
-    //not yet implemented
+    //ls -l | wc
+    //==
+    //ls -l > buffer.txt
+    //+
+    //wc < buffer.txt
+    //+
+    //rm buffer.txt
 
   }else if((i = contains(args,"cd")) != -1){
-    if (!args[1]){
+    if(!args[1]){
       chdir(getenv("HOME"));
     }else{
       /*int j = 0;
