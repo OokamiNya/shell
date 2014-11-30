@@ -35,7 +35,7 @@ void execute(char * start){
       else if (! strcmp(">",y))
         redir = 1;
       else if (! strcmp("|",y))
-        pipe = 1;
+        pipe = x;
       args[x] = y;
       x++;
     }
@@ -49,7 +49,7 @@ void execute(char * start){
     redirect(args, redir);
   }else if(pipe){
     args[x + 1] = 0;
-    piping(args);
+    piping(args,pipe);
   }
   else{
     if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
@@ -96,20 +96,48 @@ void child_process(char * args[]){
   }
 }
 
-void piping(char * args[]){
-
-  int c,d,e;
+void piping(char * args[], int pipe){
+  int x = 0;
+  while(args[x]){
+    printf("%d. %s\n",pipe,args[x]);
+    x++;}
+  int c;
   int i = fork();
   if (!i){
     c = open("woo.txt", O_CREAT | O_WRONLY | O_TRUNC, 0777);
     dup2(c,STDOUT_FILENO);
-    execlp(args[0],args[0],NULL);
+    char * args2[256];
+    int n = 0;
+    while( n !=pipe){
+      //printf("|%s|\n",args[n]);
+      args2[n]=args[n];
+      n++;
+    }
+    args2[n] = 0;
+    //int x = 0;
+    //while(args2[x])
+    //printf("%s\n",args2[x]);
+    execvp(args2[0],args2);
+    exit(0);
   }
   else{
-    d = wait(&e);
-    c = open("woo.txt",O_RDONLY);
-    dup2(c,STDIN_FILENO);
-    execlp(args[2],args[2],NULL);
+    wait(&i);
+    int x = fork();
+    if (!x){
+      c = open("woo.txt",O_RDONLY);
+      dup2(c,STDIN_FILENO);
+      char * args2[256];
+      int n = 1;
+      while(args[n+pipe]){
+	args2[n - 1]=args[n+pipe];
+	n++;}
+      args2[n -1] = 0;
+      execvp(args2[0],args2);
+      exit(0);
+    }
+    else{
+      wait(&x);
+    }
   }
 }
 
