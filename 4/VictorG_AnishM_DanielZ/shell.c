@@ -127,7 +127,7 @@ void run(char *input){
   char **inputA;//=malloc(strlen(input)*strlen(input)*sizeof(char)+sizeof(char));
   if (!strcmp(input,""))//so you can hit enter with no commands
     return;
-  if (strchr(input, ';')){
+  else if (strchr(input, ';')){
     semisep(input);
     return;
   }
@@ -136,6 +136,18 @@ void run(char *input){
   //problemChild=inputA[0];
   //printf("%s\n",problemChild);
   
+  if (strstr(input, "<")){
+    //arrleft(input);
+    return;
+  }
+  else if (strstr(input, ">")){
+    //arrright(input);
+    return;
+  }
+  else if (strstr(input, "|")){
+    //pipestuff(input);
+    return;
+  }
 
   if (!strcmp(inputA[0],"cd")){
     if(inputA[1]){
