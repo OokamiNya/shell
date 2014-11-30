@@ -1,7 +1,7 @@
 #include "shell.h"
 
 
-//later add 2>  
+//later add 2> and pipes  
 
 //redirects stdin from a file
 void redirect_in(char * command, char * file, int mode){
@@ -54,7 +54,7 @@ void redirection(char *s, int mode){
   }
 
   else if (mode == 2){ //<<
-
+    //how do lol
   }
 
   else if (mode == 3){ //>
