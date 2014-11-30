@@ -2,42 +2,98 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <fcntl.h>
 int f;
+extern int cont;
 
-int execute(char s[256]) {
-
-  char *s1 = s;
-  char *s2;
-  char *arg[256];
-  
+int execute(char ** arg) {
   int i = 0;
+
   int pipe = 0;
-  while(s1) {
-    //generates arg (array of arguments)
-    s2 = strsep(&s1, " ");
-    arg[i] = s2;
+  for (i; arg[i] != 0; i++){
     if (!strcmp(arg[i], "|")){
-      //if it's a pipe, get the location of the pipe
       pipe = i;
-      printf("%d\n", pipe);
     }
-    i++;
   }
 
-  /*
-    minor cleaning up
-    last argument = NULL for execvp to work
-    newstr is the new second-to-last argument with \n removed
-  */
+  int semi = 0;
+  i = 0;
+  for (i; arg[i] != 0; i++){
+    if (!strcmp(arg[i], ";")){
+      semi = i;
+    }
+  }
 
-  arg[i] = 0;
-  char * newstr;
-  newstr = strsep(&(arg[i-1]), "\n");
-  arg[i-1] = newstr;
+  //handle semicolon
+  if (semi){
+    char * cmd1arg[256];
+    i = 0;
+    while (i < semi){
+      cmd1arg[i] = arg[i];
+      i++;
+    }
+
+    char * cmd2arg[256];
+    i = 1;
+    while (arg[semi + i] != 0){
+      cmd2arg[i-1] = arg[semi + i];
+      i++;
+    }
+    
+    int stdinhold = dup(STDIN_FILENO);
+    int stdouthold = dup(STDOUT_FILENO);
+    
+    execute(cmd1arg);
+    execute(cmd2arg);
+  }
+  
+  //handle pipe
+  else if (pipe){
+    char * cmd1arg[256];
+    i = 0;
+    while (i < pipe){
+      cmd1arg[i] = arg[i];
+      i++;
+    }
+    
+    char * cmd2arg[256];
+    i = 1;
+    while (arg[pipe + i] != 0){
+      cmd2arg[i-1] = arg[pipe + i];
+      i++;
+    }
+    
+    int stdinhold = dup(STDIN_FILENO);
+    int stdouthold = dup(STDOUT_FILENO);
+    
+    int fd = open("pipinghot", O_WRONLY|O_CREAT, 0644);
+    dup2(fd, STDOUT_FILENO);
+    execute(cmd1arg);
+    dup2(stdouthold, STDOUT_FILENO);
+    close(fd);
+
+    fd = open("pipinghot", O_RDONLY, 0644);
+    dup2(fd, STDIN_FILENO);
+    execute(cmd2arg);
+    dup2(stdinhold, STDIN_FILENO);
+    close(fd);
+
+    //delete pipinghot
+    
+    f = fork();
+    if (!f){
+      execlp("rm", "rm", "pipinghot", NULL);
+      exit(0);
+    }
+    else{
+      wait(f);
+      f = 0;
+    }
+  }
 
   //handles cd
-  if(!strcmp(arg[0],"cd")){
+  else if(!strcmp(arg[0],"cd")){
+    printf("cding\n");
     if (sizeof(arg) / sizeof(char *) > 1)
       chdir(arg[1]);
     else
@@ -45,36 +101,27 @@ int execute(char s[256]) {
   }
   
   //handles exit
-  if(!strcmp(arg[0], "exit")){
-    exit(0);
+  else if(!strcmp(arg[0], "exit")){
+    cont = 0;
   }
     
-
-  //handle(?) pipe
-  if (pipe){
-    int fd1, fd2;
-    char * cmd1 = arg[0];
-    char * cmd2 = arg[pipe + 1];
-    //fd1 = open(stdin, 
-    printf("YOU GOTTA FIX PIPE\n");
-  }
-
   else{
-    f = fork();
-    //if it's a child, execvp the args
-    if (!f){
-      execvp(arg[0], arg);
-      exit(0);
-    }
-    //if it's a parent, wait for child
-    else{
-      wait(f);
-      //resets the f to 0 so it doesn't think there's a kid
-      f = 0;
-    }
+    executef(arg);
   }
   
   return 0;
+}
+
+int executef(char** arg){
+  f = fork();
+  if (!f){
+    execvp(arg[0], arg);
+    exit(0);
+  }
+  else{
+    wait(f);
+    f = 0;
+  }
 }
 
 char *replace_string(char *str, char *orig, char *rep){
