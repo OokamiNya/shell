@@ -11,6 +11,16 @@ static void sighandler( int signo ) {
     }
 }
 
+char* rmspaces( char *str){
+    if ( str[0] == ' ' ) {
+        str = &str[1];
+    }
+    if ( str[ strlen( str ) - 1 ] == ' ') {
+        str[ strlen( str ) - 1 ] = 0;
+    }
+    return str;
+}
+
 void execute( char* split_cmds ) {
     int a = 0;
     char *split_args; //holds the piece separated off from x
@@ -37,17 +47,6 @@ void execute( char* split_cmds ) {
             f = 0;
         }
     }
-}
-
-
-char* rmspaces( char *str){
-    if ( str[0] == ' ' ) {
-        str = &str[1];
-    }
-    if ( str[ strlen( str ) - 1 ] == ' ') {
-        str[ strlen(str ) - 1 ] = 0;
-    }
-    return str;
 }
 
 int main() {
