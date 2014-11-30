@@ -19,12 +19,12 @@ int argc;
  while (1) {
    prompt(raw);
    killspaces(raw,clean);
-   cmdc = countcmds(clean);
+   cmdc = count(clean, ";");
    cmds = malloc(cmdc * sizeof(char*));
    splitinput(clean,cmds);
    i = 0;
    while(i<cmdc) {
-     argc = countargs(cmds[i]);
+     argc = count(cmds[i], " ");
      args = malloc((argc+1) * sizeof(char*)); //+1 for NULL
      if (strchr (cmds[i], '>')) {
        char **chunk = NULL;
@@ -49,7 +49,40 @@ int argc;
        if(f == 0) {
 	 
 	 int fd = open (str,O_WRONLY|O_CREAT, 0666);
-	 dup2 (fd, 1);
+	 dup2 (fd, STDOUT_FILENO);
+	 close(fd);
+	 execvp (args[0], args);
+	 printf ("LMFAO no such command XDDDDDD q:^)-k\n");
+	 exit(0);
+       } else {
+	 wait(1);
+       }
+       free (chunk);
+     }
+     if (strchr (cmds[i], '<')) {
+       char **chunk = NULL;
+       int cc;
+       cc = count (cmds[i], "<");
+       //printf ("%d", cc);
+       chunk = malloc((cc) * sizeof(char*));
+       char *c = clean;
+       char *t;
+       int j = 0; 
+       while ((t = strsep(&c, "<"))) {
+	 chunk[j] = t;
+	 j++;
+       }
+       ///printf ("There is > here\n, %s, \n%s", chunk [0], chunk [1]);
+       splitcmd(chunk[0],args);
+       char str[256];
+       strcpy (str, chunk[1]);
+       //strcat (str, ".txt");
+       //str [strlen(str) - 1] = '\0';
+       int f = fork();
+       if(f == 0) {
+	 
+	 int fd = open (str,O_RDONLY, 0666);
+	 dup2 (fd, STDIN_FILENO);
 	 close(fd);
 	 execvp (args[0], args);
 	 printf ("LMFAO no such command XDDDDDD q:^)-k\n");

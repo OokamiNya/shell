@@ -36,6 +36,48 @@ int run_command(char* s){
 	if(strcmp(args[0],"exit")==0){
 	  kill(getpid(),SIGUSR1);
 	}
+	i=0;
+	int redirect=0;
+	while(args[i]){
+	  if(strcmp(args[i],">")==0){
+	    redirect=1;
+	    break;
+	  } else if(strcmp(args[i],"<")==0){
+	    redirect=2;
+	    break;
+	  } else if(strcmp(args[i],"|")==0){
+	    redirect=3;
+	    break;
+	  } i++;
+	}
+	if(redirect){
+	  args[i]=0;
+	  char *args2[256];
+	  i++;
+	  int j=i;
+	  while(args[i]){
+	    args2[i-j]=args[i];
+	    i++;
+	  } 
+	  int out;
+	  int fd;
+	  if(redirect==1){
+	    out = dup(STDOUT_FILENO);
+	    fd = open(args2[0], O_WRONLY|O_CREAT|O_TRUNC, 0644 );
+	    dup2(fd, STDOUT_FILENO);
+	    int f2=fork();
+	    if(f2){
+	      wait(&f2);
+	      dup2(out, STDOUT_FILENO);
+	      close(fd);
+	      exit(-1);
+	    }else{
+	      execvp(args[0],args);
+	      printf("Command not found: %s\n",args[0]);
+	      exit(-1);
+	    }
+	  }
+	}
 	execvp(args[0],args);
 	printf("Command not found: %s\n",args[0]);
 	exit(-1);

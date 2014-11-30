@@ -172,17 +172,19 @@ int pipeCommands(char *left, char *right){
   pipe(fd);
   int f = fork();
   if (!f){
-	printf("Doing %s\n",left);
-	dup2(fd[1],STDOUT_FILENO);
-	close(fd[0]);
-	executePipe(left);
+    close(fd[0]);
+    close(1);
+    dup2(fd[1],STDOUT_FILENO);
+    printf("Doing %s\n",right);
+    executePipe(left);
   }else{
-	int status;
-	wait(&status);
-	dup2(fd[0],STDIN_FILENO);
-	close(fd[0]);
-	printf("Doing %s\n",right);
-	executePipe(right);
+    int status;
+    wait(&status);
+    close(fd[1]);
+    close(0);
+    printf("Doing %s\n",left);
+    dup2(fd[0],STDIN_FILENO);
+    executePipe(right);
   }
 }
 
