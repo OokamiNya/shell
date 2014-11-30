@@ -4,7 +4,9 @@ by Jason Lu
 Features:
 	Forks and executes commands!
 	Parses multiple commands on one line!*
-
+    Redirects using > and >>
+    
+*Usually works
 Attempted:
 
 Bugs:
@@ -12,6 +14,8 @@ Bugs:
     (This bug occurs very sporadically and irregularly so I was not able to isolate the problem.)  
     
     Sometimes you need to enter exit multiple times for the program to exit.
+    
+    Semicolons sometimes do not work if there are more than two
     
 Files & Function Headers:
 
