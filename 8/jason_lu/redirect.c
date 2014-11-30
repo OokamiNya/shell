@@ -10,9 +10,16 @@ void redirect(char* file,char** args, char* r){
       }else if (strcmp(r, ">") == 0){
         fd = open(file, O_CREAT | O_WRONLY , 0777);
       }
-      dup2(fd,STDOUT_FILENO);
-      close(fd);
-      execvp(args[0],args);
+      if(strcmp(r, "<") == 0){
+        fd = open(file, O_RDONLY);
+        dup2(STDIN_FILENO, fd);
+        close(fd);
+        execvp(args[0],args);
+      }else{
+        dup2(fd,STDOUT_FILENO);
+        close(fd);
+        execvp(args[0],args);
+      }
   }
 }
 

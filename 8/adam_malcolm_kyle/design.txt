@@ -1,0 +1,63 @@
+Shell
+by Adam DeHovitz, Malcolm Wells, Kyle Oleksiuk
+
+Features:
+	Forks and executes commands
+	Parses multiple commands on one line using ';' (handles multiple ;)
+	Ignores extra white space
+	Redirects using >, <, >>
+	Changes Directories and exists
+	Saves home direcory (HOME=<path from cur dir>)
+
+Attempted:
+
+
+Bugs:
+	
+	
+Files & Function Headers:
+program.c
+	Handles everything
+
+	/*======== void process() ==========
+	Inputs:  char *start	
+
+	Takes in user input and breaks on ';' delimeter
+	Processes each token
+	====================*/
+
+	/*======== void execute() ==========
+	Inputs:  char *start
+	
+	Takes in user input and breaks it up by arguement into an
+	array
+	Sends array to appropriate function depending on nature of
+	command
+	====================*/
+
+	/*======== void normal_process() ==========
+	Inputs:  char * args[]
+
+	Handles cd and exit commands
+	====================*/
+
+	/*======== void child_process() ==========
+	Inputs:  char * args[]
+
+	Creates a forked process that executes the command dicatate by
+	args
+	====================*/
+
+	/*======== void redirect() ==========
+	Inputs:  char * args[]
+
+	[INSERT DESCRIPTION]
+	====================*/
+
+	/*======== void set_home() ==========
+	Inputs:  char *start
+
+	sets global variable home using path from current directory
+	Can be accessed with '~'
+	====================*/
+	
