@@ -2,15 +2,18 @@
 
 //Only works for > and >> 
 void redirect(char* file,char** args, char* r){
-  int fd = 0;
-  if(strcmp(r, ">>") == 0){
-    fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
-  }else if (strcmp(r, ">") == 0){
-    fd = open(file, O_CREAT | O_WRONLY , 0777);
+  int f = fork();
+  if(!f){
+      int fd = 0;
+      if(strcmp(r, ">>") == 0){
+        fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
+      }else if (strcmp(r, ">") == 0){
+        fd = open(file, O_CREAT | O_WRONLY , 0777);
+      }
+      dup2(fd,STDOUT_FILENO);
+      close(fd);
+      execvp(args[0],args);
   }
-  dup2(fd,STDOUT_FILENO);
-  close(fd);
-  execvp(args[0],args);
 }
 
 int printargs(char** args){
