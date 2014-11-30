@@ -62,6 +62,7 @@ int main(){
       }else if(check(args)){
         //printf(">");
         char* r = check(args);
+        printf("%s\n",r);
         char* filename = getname(args,r);
         cmdarr(args,r); 
         redirect(filename, args, r);
