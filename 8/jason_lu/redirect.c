@@ -1,12 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include "redirect.h"
 
-
-void redirect(char* file,char** args){
-  int fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
+//Only works for > and >> 
+void redirect(char* file,char** args, char* r){
+  int fd = 0;
+  if(strcmp(r, ">>") == 0){
+    fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
+  }else if (strcmp(r, ">") == 0){
+    fd = open(file, O_CREAT | O_WRONLY , 0777);
+  }
   dup2(fd,STDOUT_FILENO);
   close(fd);
   execvp(args[0],args);
@@ -46,6 +47,20 @@ char cmdarr(char** args, char* s){
   return 0;
 }
 
+char* check(char** args){
+    int i = 0;
+    while(args[i]){
+        if(strcmp(args[i], ">") == 0 || 
+           strcmp(args[i], ">>") == 0 || 
+           strcmp(args[i], "<") == 0 || 
+           strcmp(args[i], "<<") == 0){
+            return args[i];
+        }
+        i++;
+    }
+    return 0;
+}
+/*
 int main(){
   char** args = (char**)malloc(sizeof(char*) * 5);
   args[0] = "ls";
@@ -53,6 +68,9 @@ int main(){
   args[2] = ">";
   args[3] = "file.txt";
   //["ls", ">", "file"];
+  if(check(args)){
+    printf("Thing:%s\n", check(args));
+  }
   printf("File:%s\n", getname(args,">"));
   //printargs(args);
   char* filename = getname(args,">");
@@ -60,3 +78,4 @@ int main(){
   //printargs(args);
   redirect(filename, args);
 }
+*/
