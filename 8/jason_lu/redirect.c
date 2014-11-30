@@ -75,17 +75,17 @@ int main(){
   char** args = (char**)malloc(sizeof(char*) * 5);
   args[0] = "ls";
   args[1] = "-l";
-  args[2] = ">";
+  args[2] = "<";
   args[3] = "file.txt";
   //["ls", ">", "file"];
   if(check(args)){
     printf("Thing:%s\n", check(args));
   }
-  printf("File:%s\n", getname(args,">"));
-  //printargs(args);
-  char* filename = getname(args,">");
+  printf("File:%s\n", getname(args,"<"));
+  printargs(args);
+  char* filename = getname(args,"<");
   cmdarr(args,">");
-  //printargs(args);
-  redirect(filename, args);
+  printargs(args);
+  redirect(filename, args, "<");
 }
 */
