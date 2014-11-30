@@ -1,36 +1,29 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <signal.h>
 #include "shell.h"
-
-#define TRUE 1
-#define FALSE 0
-
-#define BUFFER_LEN 512
-#define HOME getenv("HOME")
 
 int isPipe = FALSE;
 int redir_in = FALSE; // "<"
 int redir_out = FALSE; // ">"
 char *inFile, *inSymbol, *outFile, *outSymbol;
 
-int f, status; // for fork(), wait()
+int f = 1; // for fork()
+int status; // for wait()
 
 char **commands; // split by `;`
 char **argv; // split by ` `
 
-/*
+
 static void sigHandler(int signo){
   if (signo == SIGINT){
-    if (!f)
+    if (!f){
+      printf("\n");
       exit(EXIT_FAILURE); // success?
+    }
+    else{
+      //printf("\n");
+      //printPrompt();
+    }
   }
 }
-*/
 
 void printPrompt(){
   char *cwd = 0;
@@ -43,18 +36,13 @@ void printPrompt(){
     cwd[0] = '~';
     cwd[relPathLen] = '\0';
   }
-  printf("%s: %s$\n", getenv("USER"), cwd);
-  printf("><((((º> ");
+  char hostname[BUFFER_LEN];
+  gethostname(hostname, BUFFER_LEN-1);
+  printf(CYAN "%s@%s", USER, hostname);
+  printf(WHITE ":");
+  printf(YELLOW "%s$\n", cwd);
+  printf(BLUE "><((((º> " RESET);
   free(cwd);
-}
-
-// Execute a command; Handles errors and frees
-void safe_exec(){
-  execvp(argv[0], argv);
-  printf("%s: command not found\n", argv[0]);
-  free(argv);
-  free(commands);
-  exit(EXIT_FAILURE);
 }
 
 // Trim white space and ';' from *str
@@ -98,6 +86,15 @@ void redirect(){
       close(fd);
     }
   }
+}
+
+// Execute a command; Handles errors and frees
+void safe_exec(){
+  execvp(argv[0], argv);
+  printf("%s: command not found\n", argv[0]);
+  free(argv);
+  free(commands);
+  exit(EXIT_FAILURE);
 }
 
 void executePipe(int pipeIndex){
@@ -199,10 +196,10 @@ char ** parseInput(char *input, char *delim){
       else{
 	// Replace '~' with $HOME
 	if (arg[0]=='~'){
-	  char tmp[BUFFER_LEN]; // strlen(HOME) + strlen(arg)
-	  strcpy(tmp,HOME); // buffer overflow check later
+	  char tmp[BUFFER_LEN];
+	  strcpy(tmp,HOME);
 	  strcat(tmp,arg+1);
-	  strcpy(arg,tmp);
+!	  strcpy(arg,tmp);
 	}
 	argv[size] = arg;
 	size++;
@@ -218,7 +215,11 @@ void shell(){
   int count;
   while (1){
     printPrompt();
-    fgets(input, BUFFER_LEN, stdin);
+    // Exit on EOF
+    if (!fgets(input, BUFFER_LEN, stdin)){
+      printf("\n");
+      return;
+    }
     commands = parseInput(input, ";");
     count = 0;
     // Execute each command
@@ -238,7 +239,7 @@ void shell(){
 }
 
 int main(){
-  //signal(SIGINT, sigHandler);
+  signal(SIGINT, sigHandler);
   printf("Welcome to Shellfish!\n");
   shell();
   return 0;

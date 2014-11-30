@@ -1,0 +1,72 @@
+Cshell
+by Richard Zhen and Ziwei Ye
+
+Features:
+	Forks and executes commands.Including git, emacs, vi and executeable programs.
+	Semicolons.
+	Redirection, > < >>.
+
+Attempted:
+	Pipe.
+
+Bugs:
+	Errors when parsing anything with | symbol
+	
+Files & Function Headers:
+shell.c
+	/*======== static void sighandler() ==========
+	Inputs:  int signno; 
+	Returns: Nothing
+
+	It handles signal in main().
+	====================*/
+
+	/*======== char dumb_exceptions() ==========
+	Inputs:  char arg[]
+	Returns: 0 or 1, depends on success or failure.
+
+	Handles non-executable commands like cd and exit. Checks whether the first word is either cd and exit,
+	and executes the according command. cd also has "~", the home shortcut implemented.
+	====================*/
+
+	/*======== void normal_stuff() ==========
+	Inputs:  char arg[] 
+	Returns: Nothing
+
+	Forks a new fork, and execute arg in that environment by strseping the arguments and putting it in an array.
+	 Execvp is then called on that array. If the said command doesn't exist, "invalid command" is printed.
+	====================*/
+
+	/*======== char pipe_it() ==========
+	Inputs:  char arg[] 
+	Returns: 0 or 1, depends on success or failure.
+
+	An attempt at creating the pipe command. Not working as of this commit.
+	====================*/
+
+	/*======== char redirection() ==========
+	Inputs:  char arg[] 
+	Returns: 0 or 1, depends on success or failure.
+
+	Implements redirection. If the character '>' '<' is found, a new fork is created where the two parameters are strseped
+	 and the appropriate file descriptor is called. Also implements the ">>" redirection.
+	====================*/
+
+	/*======== int main() ==========
+	Inputs:  char arg[] 
+	Returns: 0.
+
+	The main function. In an infinite loop, the current pathname is printed, and then it waits for input for a command.
+	 It then cchecks the input in order for semicolons, cd & quit command, redirection symbols and execute them respectively.
+	 Otherwise it executes the command.
+	
+	====================*/
+
+helper.c
+	/*======== char* strip ==========
+	Inputs:  char arg[] 
+	Returns:
+
+	??????
+	
+	====================*/	
