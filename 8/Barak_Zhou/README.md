@@ -30,7 +30,7 @@ Exit with "exit" or a keyboard interrupt (^C).
 - git commit: the command "git commit -am "string here"" parses the space inside the string, so a commit through the shell cannot have spaces in the string.
 
 ##Functions
-```C
+```
 /**
  * int execute ( char** input )
  * ============================
