@@ -24,10 +24,14 @@ void execute(char * start){
   while (start){
     y = strsep(&start, " ");
     if(*y != 0){
-      if (! strcmp(">",y))
-	redir = 1;
-      if( ! strcmp("<",y))
-	redir = 2;
+      if (! strcmp(">>",y))
+	  redir = 4;
+	else if( ! strcmp("<<",y))
+	  redir = 3;
+	else if( ! strcmp("<",y))
+	  redir = 2;
+	else if (! strcmp(">",y))
+	  redir = 1;
       args[x] = y;
       x++;
     }
@@ -87,15 +91,23 @@ void redirect(char * args[], int redir){
 	int c;
 	int i = fork();
 	if(!i){
-		if(redir-1){
+		if (redir == 4){
+			c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
+			dup2(c, STDOUT_FILENO);
+			execlp(args[0], args[0], NULL);
+			close(c);
+		}
+		else if (redir == 3){
 			c = open(args[2], O_RDWR, 0777);
 			printf("%d\n",c);
 			dup2(c, STDIN_FILENO);
-		//	char * hey[256];
-		//	hey[0] = args[0];
-		//	read( c, hey[1], sizeof(hey));
-		//	printf("|%s|\n",hey[1]);
-		//	hey[2] = 0;
+			execvp(args[0], STDIN_FILENO);
+			close(c);
+		}
+		else if (redir == 2){
+			c = open(args[2], O_RDWR, 0777);
+			printf("%d\n",c);
+			dup2(c, STDIN_FILENO);
 			execvp(args[0], STDIN_FILENO);
 			close(c);
 		}else{
@@ -104,12 +116,7 @@ void redirect(char * args[], int redir){
 			execlp(args[0], args[0], NULL);
 			close(c);
 		}
- 	}/*else {
-		int *temp;
-		wait(temp);
-		exit(0);
-	}
-	*/else{
+ 	}else{
 		wait(&i);
 		redir = 0;
 	}
