@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "shell.h"
-#include "redirect.c"
+#include "redirect.h"
 
 char** parse(char* input, char* s){
   strtok( input, "\n");
@@ -43,7 +43,6 @@ char* getinput(char* input){
 
 
 int main(){
-  char a = 0;
   while(1){
     //Prompt
     char input[4096];
@@ -57,20 +56,26 @@ int main(){
 
       //Executes input
       if(strcmp(args[0],"exit") == 0){
-	exit(0);
+        exit(0);
       }else if(strcmp(args[0],"cd") == 0){
-	chdir(args[1]);
-      }else if(strchr(superargs[j],">")){
-	//redirect(
+        chdir(args[1]);
+      }else if(check(args)){
+        //printf(">");
+        char* r = check(args);
+        char* filename = getname(args,r);
+        cmdarr(args,r); 
+        redirect(filename, args, r);
       }else{
-	int f = fork();
-	if(!f){
-	  execvp(args[0],args);
-	  free(args);
-	  printf("Command not found\n");
-	  break; 
-	  //exit(0);
-	}
+        
+        int f = fork();
+        if(!f){
+          
+          execvp(args[0],args);
+          //free(args);
+          printf("Command not found\n");
+          
+          //exit(0);
+        }
 	
       }
       //free(args);
