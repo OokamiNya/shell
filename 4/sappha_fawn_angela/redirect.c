@@ -1,4 +1,6 @@
 #include "shell.h"
+
+
 //later add 2>  
 
 //redirects stdin from a file
@@ -17,17 +19,18 @@ void redirect_in(char * command, char * file, int mode){
 }
  
 //redirects stdout to a file
-void redirect_out(char * from, char * to, int mode){
+void redirect_out(char * command, char * file, int mode){
 	int fd, fd1;
 	if (mode == 1){
-	  fd = open(to, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+	  fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 	}
 	else if (mode == 2){
-	  fd = open(to, O_CREAT | O_APPEND | O_WRONLY, 0644);
+	  fd = open(file, O_CREAT | O_APPEND | O_WRONLY, 0644);
 	}
 	fd1 = dup(STDOUT_FILENO);
+	//printf("DONE");
 	dup2(fd, STDOUT_FILENO);
-	execute(from);
+	execute(command);
 	dup2(fd1, STDOUT_FILENO);
 }
 
@@ -44,8 +47,8 @@ void redirection(char *s, int mode){
       printf("owl: syntax error near unexpected token `newline'\n");
     }
     else {
-      printf("in: %s\n", in);
-      printf("sep: %s\n", sep);
+      //printf("in: %s\n", in);
+      //printf("sep: %s\n", sep);
       redirect_in(sep, in, 1);
     }
   }
@@ -71,16 +74,15 @@ void redirection(char *s, int mode){
   else if (mode == 4){ //>>
     sep = strsep(&in, ">");
     printf("sep: %s\n", sep);
-    char *sep2;
-    sep2 = strsep(&sep, ">");
-    sep2 = trim(sep2);
-    
+    strsep(&in, ">");
     in = trim(in);
+    printf("in (file):%s\n", in);
     if (in == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token `newline'\n");
     }
     else {
-      redirect_out(sep2, in, 2);
+      //in is file
+      redirect_out(sep, in, 2);
     }
   }
 

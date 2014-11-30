@@ -132,7 +132,7 @@ void execute(char a[256]){
   //printf("s1: %s\n", s1);
   int has = has_redirect(s1);
   
-  //printf("has:%d\n", has);
+  // printf("has:%d\n", has);
   //if redirection is necessary
   if (has){
     redirection(s1, has);
