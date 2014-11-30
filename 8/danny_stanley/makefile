@@ -20,7 +20,7 @@ build:
 run:
 	@./shell
 
-test:	clean compile build
+test:	clean compiledebug build
 	@./shell < test.txt
 
 debug:	clean compiledebug build run

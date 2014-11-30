@@ -36,7 +36,7 @@ int main () {
         if(f == 0) {
           docmd(args);
         } else {
-          wait();
+          wait(1);
         }
         }
       i++;

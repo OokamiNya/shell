@@ -17,15 +17,27 @@
 #define TOK_INIT_SIZE 512
 #define FILE_SIZE 256
 
+#define FG_PROCESS 0
+#define BG_PROCESS 1
+
+typedef struct process {
+    char *cmd;
+    int pid;
+    int index;
+} process;
+
 static const char *shell_name = "StD";
 
 void parse_input(char *);
-void execute(char **);
+void execute(char **, int);
 node * change_directory(char *, node *);
 
 void cleanup_argv();
 void setup_argv();
+void add_null_argv();
+
+void setup_shell();
+void cleanup_shell();
 
 static int global_stdin_backup = STDIN_FILENO;
 static int global_stdout_backup = STDOUT_FILENO;
-int piping_state;

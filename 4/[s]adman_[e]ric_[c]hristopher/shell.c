@@ -48,6 +48,16 @@ int doPipeStuff(char* arg){
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
       }else{
+      	char* split_buffer2 = calloc(256,sizeof(char));
+      	if (countchar(split_buffer , '<') = 1 )){
+	      	split_buffer2 = strsep(&split_buffer, "<"); 
+	      	split_buffer2 = strsep(&split_buffer, "<"); 
+	      	file_in = open(split_buffer2, O_RDONLY); }
+	//else {
+	//Are we still putting <</>> here also?	
+	//}
+      	dup2(file_in,STDIN_FILENO);
+	close(file_in); 
       	//!!!!redirect file if format: input < file | output
       }
       if(commands-command_index-1){//if not at last command
@@ -55,6 +65,18 @@ int doPipeStuff(char* arg){
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
       }else{
+      	char* split_buffer2 = calloc(256,sizeof(char));
+      	if (countchar(split_buffer , '<') = 1 )){	
+      		split_buffer2 = strsep(&split_buffer, ">"); 
+      		split_buffer2 = strsep(&split_buffer, ">"); 
+      		file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC); }
+      	else{
+      		split_buffer2 = strsep(&split_buffer, ">>"); 
+      		split_buffer2 = strsep(&split_buffer, ">>"); 	
+      		file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_APPEND);
+      	}
+      	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
       	//!!!!redirect file if format: input | output > file
       }
       //!!!!check if has > or <!!!!!!!!!!
