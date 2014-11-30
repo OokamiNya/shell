@@ -29,6 +29,10 @@ Exit with "exit" or a keyboard interrupt (^C).
 - If tab or any arrow keys are pressed, the corresponding input will be entered. Not really a bug, but an inconvenience.
 - git commit: the command "git commit -am "string here"" parses the space inside the string, so a commit through the shell cannot have spaces in the string.
 
+##Files
+- shell.h and shell.c: plain and simple.
+- makefile
+
 ##Functions
 ```
 /**
@@ -46,6 +50,64 @@ Exit with "exit" or a keyboard interrupt (^C).
  *
  * -Note-: this return was supposed to be used for a recursive
  * redirect function, but it was never implemented.
+ *
+ **/
+```
+
+```
+/**
+ * char** parse ( char* input, char* delim )
+ * =========================================
+ *
+ * Takes a string and parse it by the delimiter.
+ * 
+ * Parameters:
+ *     char* input: String to be parsed.
+ *     char* delim: Delimiter.
+ *
+ * Return:
+ *     A pointer to an array of strings after parse, 
+ *     with memory allocated.
+ *
+ **/
+```
+
+```
+/**
+ * char* find_redirect ( char* input )
+ * ===================================
+ *
+ * Takes a string and finds the first occurence of >, < or |
+ * 
+ * Parameters:
+ *     char* input: String to be analyzed.
+ *
+ * Return:
+ *     A pointer to the first char >, < or | found in input.
+ *
+ * -Note-: use return[0] to get the actual char.
+ *     
+ **/
+```
+
+```
+/**
+ * int main()
+ * ==========
+ *
+ * Main method.
+ *
+ * Process of input/output:
+ *     1. Get the console input
+ *     2. Parse by ; and execute individual commands
+ *     3. Check: Is there a redirect in there?
+ *         Yes:
+ *             a. Check which redirect
+ *             b. Parse by space and execute accordingly.
+ *         No:
+ *             a. Execute accordingly.
+ *     4. Free the memory.
+ *     5. Repeat.
  *
  **/
 ```
