@@ -76,21 +76,3 @@ shell.c --- the Core of the Terminal
 	>Checks if ;, cd, >, or < was in the command and runs the necessary
 	functions if they were in the code
 	>Main function that checks for special types of commands
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
