@@ -11,4 +11,4 @@ void child_process(char * args[]);
 void normal_process(char * args[]);
 void redirect(char * args[], int redir);
 void set_home(char * start);
-void piping(char * args[]);
+void piping(char * args[], int pipe);
