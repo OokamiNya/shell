@@ -11,31 +11,50 @@ Piping with | (*TO DO*)<br>
 ## Attempted:
 
 ## Bugs:
-Cd to folders with "~/" broken (*FIX*)
+Cd to folders with "~/" broken (*FIX*)<br>
 
 ## Files and Function Headers:
 #shell.c
 Main Shell File
 _______________
-int cd()
-Inputs: char *address
-Returns: 0 if successfully changes directory, otherwise -1
+int cd()<br>
+Inputs: char *address<br>
+Returns: 0 if successfully changes directory, otherwise -1<br>
 
-Used to change directory to address
+Used to change directory to address<br>
 _______________
-int shell()
-Inputs: NONE
-Returns: NONE
+int shell()<br>
+Inputs: NONE<br>
+Returns: NONE<br>
 
-The overarching function that keeps the shell continously running and parses the command line inputs
+The overarching function that keeps the shell continously running and parses the command line inputs<br>
 _______________
-int execute()
-Inputs: char *command
-Returns: 1 if successfully executed
+int execute()<br>
+Inputs: char *command<br>
+Returns: 1 if successfully executed<br>
 
-Runs single commands such as 'ls' and 'exit', along with their parameters
+Runs single commands such as 'ls' and 'exit', along with their parameters<br>
 _______________
-int writeTo()
-Inputs: char **params, int index
-Returns: NONE
+int writeTo()<br>
+Inputs: char **params, int index<br>
+Returns: NONE<br>
 
+Writes to a file when '>' is used in a command<br>
+_______________
+int appendTo()<br>
+Inputs: char **params, int index<br>
+Returns: NONE<br>
+
+Appends to a file when '>>' is used in a command<br>
+_______________
+int inputFrom()<br>
+Inputs: char **params, int index<br>
+Returns: NONE<br>
+
+Grabs input from a file when '<' is used in a command<br>
+_______________
+int emptyString()<br>
+Inputs: char *s<br>
+Returns: 1 if s contains no commands, 0 otherwise<br>
+
+Used to parse for empty commands<br>
