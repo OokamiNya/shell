@@ -33,11 +33,54 @@ char* get_id(){
   return id;
 }
 
-//change to fix for all paths, use ~?
-//currently only stuff like .. works. hm.
+//make foolproof so cannot go beyond ~ or whatnot
 void cd(char* path){
-  printf("path: %s\n", path);
-  chdir(path);
+  //no path given or ~ --> change directory to home directory
+  if (path == '\0' || strcmp(path, "~") == 0){
+    chdir(getenv("HOME"));
+  }
+  
+  //given path
+  else {
+    printf("original path: %s\n", path);
+    //printf("getenv('HOME'):%s\n", getenv("HOME"));
+    char *sep;
+    sep = strsep(&path, "~");
+    //if there was a ~, we must format before chdir-ing
+    if ((sep && sep[0] == '\0')) { //this means that there was a ~
+      printf("path: %s\n", path);
+      //printf("sep: %s\n", sep);
+      char* home;
+      home = getenv("HOME"); 
+ 
+      char * final = (char *) malloc(sizeof(char)* (1 + strlen(home)+ strlen(path)));
+      strcpy(final, home);
+      strncat(final, path, strlen(path));
+      int success = chdir(final);
+      //if not successful chdir --> path not found
+      if (success == -1){
+	printf("owl: cd: %s: No such file or directory\n", final);
+      }
+    }
+
+    //not given ~, we simply work with cwd
+    else {
+      
+      char w[256];
+      getcwd(w, sizeof(w));
+      strcat(w, "/");
+    
+      char * final = (char *) malloc(sizeof(char)*256);
+      strcpy(final, w);
+      strncat(final, sep, strlen(sep));
+      
+      int success = chdir(final);
+      if (success == -1){
+      	printf("owl: cd: %s: No such file or directory\n", final);
+      }
+      
+    }
+  }  
 }
 
 char** execute_all(){
@@ -85,7 +128,7 @@ void execute(char a[256]){
   int i = 0;
   s1 = strsep(&s1, "\n");  
 
-  //how come stuff like ls -a -l doesnt work? should it??
+  //first check for > , < and pipes
 
   //parsing our command
   while (sep = strsep(&s1, " ")){
@@ -103,18 +146,25 @@ void execute(char a[256]){
   //adding terminating null
   arg = (char**)realloc(arg, sizeof(char*)*(i));
   arg[i] = NULL;
-  
-  if (strcmp(arg[0], "exit") == 0) { //if calling exit
+
+  //if argument is 'exit' or 'quit':
+  if (strcmp(arg[0], "exit") == 0 || strcmp(arg[0], "quit") == 0) { 
     exit(0);
   }
+
+  //else if argument is to change directory:
   else if (strcmp(arg[0], "cd") == 0) {//if calling cd
     cd(arg[1]);
   }
-  else { //otherwise, we need to fork
+
+  //otherwise, all other commands require forking:
+  else { 
     int f, status;
     f = fork();
     if (f == 0) {//child process
-      execvp(arg[0], arg);
+      if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist
+	printf("%s: command not found\n", arg[0]);
+      }
     }
     else {//parent process
       wait(&status);
