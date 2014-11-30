@@ -31,7 +31,8 @@ void myexec(char *input){
 }
 
 void semisep(char *s){
-  char *pos;
+  //char *pos;
+  //printf("%s",s);
   int i=0;
   //printf("%s\n",s);
   //if ((pos=strchr(s, '\n')) != NULL)
@@ -44,7 +45,7 @@ void semisep(char *s){
   else{
     raw=s;
   }
-  char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
+  //char **s2=(char**)(malloc(strlen(s)*strlen(s)*sizeof(char)+sizeof(char)));
   char * singlecommand;
   //printf("yo\n");
 
@@ -124,16 +125,17 @@ char ** separate(char *s){
 }
 void run(char *input){
   char **inputA;//=malloc(strlen(input)*strlen(input)*sizeof(char)+sizeof(char));
-  inputA=separate(input);
-  //char* problemChild=(char *)malloc(strlen(inputA[0])*sizeof(char));
-  //problemChild=inputA[0];
-  //printf("%s\n",problemChild);
   if (!strcmp(input,""))//so you can hit enter with no commands
     return;
   if (strchr(input, ';')){
     semisep(input);
     return;
   }
+  inputA=separate(input);
+  //char* problemChild=(char *)malloc(strlen(inputA[0])*sizeof(char));
+  //problemChild=inputA[0];
+  //printf("%s\n",problemChild);
+  
 
   if (!strcmp(inputA[0],"cd")){
     if(inputA[1]){
@@ -205,7 +207,8 @@ int main(){
     //return 0;
     wait(NULL);
   }
-  //char damn[256]="ls;w;ls";
+  
+  //char damn[256]="ls;echo hello\n";
   //semisep(damn);
   return 0;
 }
