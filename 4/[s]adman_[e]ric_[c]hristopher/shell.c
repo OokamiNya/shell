@@ -47,17 +47,17 @@ int doPipeStuff(char* arg){
 	file_in = open("piped",O_RDONLY);
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
+      }else{
+      	//!!!!redirect file if format: input < file | output
       }
       if(commands-command_index-1){//if not at last command
 	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
+      }else{
+      	//!!!!redirect file if format: input | output > file
       }
-      ///////////////////////////////
-      /////////    NOT    ///////////
-      /////////   DONE    ///////////
-      /////////    YET    ///////////
-      //check if has > or <!!!!!!!!!!
+      //!!!!check if has > or <!!!!!!!!!!
       execvp(addresses[0],addresses);
     }else{
       wait(-1);

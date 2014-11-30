@@ -42,6 +42,7 @@ void execute(char * start){
   args[x]=0;
   if (redir){
     //printf("%d", redir);
+    args[x + 1] = 0;
     redirect(args, redir);
   }else{
     if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
@@ -104,10 +105,20 @@ void redirect(char * args[], int redir){
       close(c);
       execlp(args[0],args[0],NULL);
     }else{
-      c = open(args[2], O_CREAT | O_WRONLY, 0644);
-      dup2(c, STDOUT_FILENO);
-      execlp(args[0], args[0], NULL);
-      close(c);
+      int x =2;
+      while (args[x]){
+	int d = fork();
+	if (!d){
+	  c = open(args[x], O_CREAT | O_WRONLY, 0644);
+	  dup2(c, STDOUT_FILENO);
+	  close(c);
+	  execlp(args[0], args[0], NULL);
+	}
+	else{
+	  wait(&d);
+	  x+=2;
+	}
+      }
     }
   }else{
     wait(&i);
