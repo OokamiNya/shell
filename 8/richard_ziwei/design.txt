@@ -39,7 +39,6 @@ The main function. In an infinite loop, the current pathname is printed, and the
 It then cchecks the input in order for semicolons, cd & quit command, redirection symbols and execute them respectively.
 Otherwise it executes the command.
 ====================*/
-redir.c
 /*======== char pipe_it() ==========
 Inputs: char arg[]
 Returns: 0 or 1, depends on success or failure.
