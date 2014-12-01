@@ -16,6 +16,7 @@ int main() {
     printprompt();    
     int i;
     char ** parsed = parser();//array of user inputed commands
+    //printf("parsed[0]: '%s'\n", parsed[0]);
     for (i = 0; parsed[i]; i++){
       //printf("parsed[%d]:%s\n",i, parsed[i]);
       execute(parsed[i]);
@@ -108,14 +109,18 @@ char** parser(){
     args = (char**)realloc(args, sizeof(char*)*(i+1));
     char * temp = (char *)malloc(sizeof(char)*256);
     strcpy(temp, sep);
-    temp = trim(temp);
-    args[i] = temp;
-    i++;
+    if (temp[0] != '\0') { //if there isn't an empty argument
+      temp = trim(temp);
+      args[i] = temp;
+      i++;
+    }
   }
-
+  //printf("i: %d\n", i); 
+  if (i) { //ensures there's actually something in the array 
   //adding terminating null to properly terminate our array
-  args = (char**)realloc(args, sizeof(char*)*(i));
-  args[i] = NULL;
+    args = (char**)realloc(args, sizeof(char*)*(i));
+    args[i] = NULL;
+  }
   return args;
 }
 
@@ -133,7 +138,7 @@ void printprompt() {
   //printf("get_id: %s\n", get_id());
   char *s_wd;
   s_wd = strstr(wd, get_id()) + strlen(get_id());
-  printf("%s:~%s$ ", get_id(), s_wd);
+  printf("%s@OWL:~%s$ ", get_id(), s_wd);
 }
 
 /*======== void execute() =======================
