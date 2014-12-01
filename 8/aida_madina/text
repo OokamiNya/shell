@@ -1,1 +1,16 @@
-hello yes how are you today i'm fine thanks
+apiccato97 console  Nov 16 10:49 
+apiccato97 ttys000  Nov 30 18:28 
+total 128
+drwxr-xr-x  13 apiccato97  staff   442 Nov 30 20:48 .
+drwxr-xr-x  21 apiccato97  staff   714 Nov 29 21:57 ..
+-rw-r--r--   1 apiccato97  staff     2 Nov 29 21:04 README.md
+-rwxr-xr-x   1 apiccato97  staff  8728 Nov 30 20:48 a.out
+-rw-r--r--   1 apiccato97  staff   493 Nov 29 21:04 design.txt
+-rwxr-xr-x   1 apiccato97  staff  9544 Nov 30 20:46 exec
+-rw-r--r--   1 apiccato97  staff    76 Nov 29 21:04 makefile
+-rw-r--r--   1 apiccato97  staff   736 Nov 30 20:46 redirect.c
+-rw-r--r--   1 apiccato97  staff  1755 Nov 30 20:45 shell.c
+-rw-r--r--   1 apiccato97  staff  4612 Nov 30 20:46 shell.o
+-rw-r--r--   1 apiccato97  staff   228 Nov 30 20:48 test.c
+-rw-r--r--   1 apiccato97  staff    68 Nov 30 20:48 text
+-rw-r--r--   1 apiccato97  staff  1196 Nov 30 19:37 utils.h

@@ -114,14 +114,12 @@ int execute(char *s){
 	  return 1;
 	}
   }
-
   while (k = strsep(&p," ")){
 	if (strcmp(k,"")){ //removes blanks from multiple spaces
 	  params[n] = k;
 	  n++;
 	}  
   }
-
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
 	if (params[1]){
@@ -186,12 +184,11 @@ int pipeCommands(char *left, char *right){
 	dup2(fd[1],STDOUT_FILENO);
 	executePipe(left);
   }else{
-	int status;
-	wait(&status);
-	close(fd[1]);
-	dup2(fd[0],STDIN_FILENO);
-	executePipe(right);
-  
+    int status;
+    wait(&status);
+    close(fd[1]);
+    dup2(fd[0],STDIN_FILENO);
+    executePipe(right);
   }
 }
 
@@ -207,7 +204,7 @@ int executePipe(char *s){
 	}
 	p++;
   }
-  char ** params = malloc( sizeof(char *) * n);
+  char **params = malloc(sizeof(char *) * n);
   n = 0;
   p = s;
   char *k;

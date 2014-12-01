@@ -41,7 +41,10 @@ void semisep(char *s){
   }
   char * singlecommand;
   while ((singlecommand=strsep(&raw,";") )) {
-    myexec(singlecommand);
+    int f=fork();
+    if (!f)
+      run(singlecommand);
+    wait(NULL);
   }
 }
 
@@ -78,20 +81,21 @@ void redirin(char** args, char * source){
   return;
 }
 void redirpipe(char** args, char ** args2) {
-	int pid;
+  int pid;
   int fd[2];
-
-	pipe(fd);
-
-	if (!(pid = fork())) {
-		dup2(fd[0], 0);
-		close(fd[1]);
-		execvp(args[0], args);
+  
+  pipe(fd);
+  
+  if (!(pid = fork())) {
+    dup2(fd[0], 0);
+    close(fd[1]);
+    execvp(args[0], args);
   }
-	else{
-		dup2(fd[1], 1);
-		close(fd[0]);
-		execvp(args2[0], args2);
+  else{
+    wait(NULL);
+    dup2(fd[1], 1);
+    close(fd[0]);
+    execvp(args2[0], args2);
   }
   //do pipestuff,
   //args should preferably be the first set of commands to execute,
@@ -169,11 +173,11 @@ void run(char *input){
       	//printf("This is b: %s\n",b);
       	int c=1;
       	inputA[1][0]=b[c];
-              for (c=2;!inputA[1][c];c++){
+	for (c=2;!inputA[1][c];c++){
       	  inputA[1][c]=b[c];
       	  //printf("%c\n",b[c]);
         }
-      	printf("%s\n",inputA[1]);
+      	//printf("%s\n",inputA[1]);
       	char *env;
       	strcpy(env,getenv("HOME"));
       	chdir(strcat(env,inputA[1]));
@@ -182,12 +186,12 @@ void run(char *input){
       	free(inputA);
       	return;
       }
-            //printf("hey\n");
+      //printf("hey\n");
       int i = chdir(inputA[1]);
       if (i!=0){
-	       printf("%s is not a directory.",inputA[0]);
-	       free(inputA);
-	       return;
+	printf("%s is not a directory.",inputA[0]);
+	free(inputA);
+	return;
       }
     }
     else{

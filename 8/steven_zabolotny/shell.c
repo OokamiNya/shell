@@ -41,8 +41,8 @@ void *cd(char *input) { // Runs the cd command
    Input: char *input
    Returns: Nothing
 
-   Given the user input processed by main(), it splits up the command by spaces and then forks a process that is used to run these 
-   commands with the appropriate arguments. 
+   Given the user input processed by main(), it splits up the command by spaces and then forks a process that is used to run 
+   these commands with the appropriate arguments. 
    This function is multi-purpose and used to run any commands without pipes, redirection, or semicolons. 
    This is the only function that actually runs commands. */
 void *run(char *input) { // Runs any non-cd command
@@ -111,8 +111,8 @@ void *multi(char *input) {
    Input: char *input (containing at least one > or <), char *r (either < or >)
    Returns: Nothing
 
-   Given the user input processed by main() and the type of redirection determined to be in this command by main, it splits up the command by > or <. 
-   Then, either stdout or stdin are redirected appropriatly, and then the command is run and executed. 
+   Given the user input processed by main() and the type of redirection determined to be in this command by main, 
+   it splits up the command by > or <. Then, either stdout or stdin are redirected appropriatly, and then the command is run and executed. 
    Finally, stdout and stdin are restored to their original values.
    Does not actually execute commands itself, utilizes run() for this purpose. */
 void *redirect(char *input, char *r) {
@@ -165,8 +165,8 @@ void *redirect(char *input, char *r) {
    Returns: Nothing
 
    Given the user input procesed by main(), it splits up the command by |. 
-   Then, the first command is run and it's output is redirected to a temporary file, and the temporary file is redirected as the input 
-   for the second command, which is also run. Finally, the temporary file is removed.
+   Then, the first command is run and it's output is redirected to a temporary file, 
+   and the temporary file is redirected as the input for the second command, which is also run. Finally, the temporary file is removed.
    Does not actually execute commands itself, utilizes run() and redirect() for this purpose. */
 void *piper(char *input) { // Doesn't work yet
   char *args[256];
@@ -213,8 +213,8 @@ void *piper(char *input) { // Doesn't work yet
    Returns: Everything
 
    Runs a permanent while loop which keeps the shell running unless the process is killed. It also interprets input, 
-   adds a space at the end which is necessary for run(), and decides which of the above functions is needed to be run on the input 
-   based on the presence of certain characters (;,<,>,|).
+   adds a space at the end which is necessary for run(), and decides which of the above functions is needed to be run 
+   on the input based on the presence of certain characters (;,<,>,|).
    Also interprets cd and exit, which change directory and exit the shell. */
 int main() {
   pre();

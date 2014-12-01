@@ -28,7 +28,7 @@ int main() {
     /*
     getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
     */
-    printf("%s ^_^ : ", cwd);
+    printf("%s : ", cwd);
     fgets(s,sizeof(s),stdin);
     
     int i=0;
