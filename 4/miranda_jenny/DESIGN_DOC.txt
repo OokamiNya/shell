@@ -7,8 +7,8 @@ Features:
 	Redirects using >, <!
 	Handles pipes.
 	Evaluates basic addition and subtration expressions if a $ is
-	put in front of them(ie. $ 3 + 4 -7)
-	super secret unicorn command
+	Put in front of them(ie. $ 3 + 4 -7)
+	Super secret unicorn command
 	
 Attempted:
 	Multiplication and division were going to happen but level of
