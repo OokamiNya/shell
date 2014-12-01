@@ -123,15 +123,7 @@ void splitcmd(char* s, char** args) {
   args [i] = 0;
 }
 
-void docmd(char** args, int redir_in, int redir_out) {
-  if(redir_in) {
-    dup2(redir_in, STDIN_FILENO);
-    close(redir_in);
-  }
-  if(redir_out) {
-    dup2(redir_out, STDOUT_FILENO);
-    close(redir_out);
-  }
+void docmd(char** args) {
   execvp (args[0], args);
   printf ("LMFAO no such command XDDDDDD q:^)-k\n");
   exit(0);

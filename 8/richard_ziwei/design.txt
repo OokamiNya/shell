@@ -8,9 +8,11 @@ Features:
 	Redirection, > < >>.
 	Single line pipe
 	SIGINT kind of
+	errno
 
 Bugs:
 	Multiline piping does not work
+	Redirection with parameters doesn't work
 	Using ls in pipe in .../shell/8/richard_ziwei will give an extra file named dummy
 	SIGINT will print ^C and will not reprint the prompt. Looks funky and unresponsive, but it works
 	      		    
@@ -39,7 +41,18 @@ shell.c
 	Forks a new fork, and execute arg in that environment by strseping the arguments and putting it in an array.
 	 Execvp is then called on that array. If the said command doesn't exist, "invalid command" is printed.
 	====================*/
+	
+	/*======== int main() ==========
+	Inputs:  char arg[] 
+	Returns: 0.
 
+	The main function. In an infinite loop, the current pathname is printed, and then it waits for input for a command.
+	 It then cchecks the input in order for semicolons, cd & quit command, redirection symbols and execute them respectively.
+	 Otherwise it executes the command.
+	
+	====================*/
+
+redir.c
 	/*======== char pipe_it() ==========
 	Inputs:  char arg[] 
 	Returns: 0 or 1, depends on success or failure.
@@ -55,15 +68,6 @@ shell.c
 	 and the appropriate file descriptor is called. Also implements the ">>" redirection.
 	====================*/
 
-	/*======== int main() ==========
-	Inputs:  char arg[] 
-	Returns: 0.
-
-	The main function. In an infinite loop, the current pathname is printed, and then it waits for input for a command.
-	 It then cchecks the input in order for semicolons, cd & quit command, redirection symbols and execute them respectively.
-	 Otherwise it executes the command.
-	
-	====================*/
 
 helper.c
 	/*======== char* strip ==========
