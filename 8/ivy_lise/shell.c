@@ -38,7 +38,12 @@ void parse_redirect(char * s){
 
     int f = fork();
     if( !f ){
-      parse_string(top_arr[0]);
+      if(strchr(top_arr[0],'|')){
+	piper(top_arr[0]);
+      }
+      else{
+	parse_string(top_arr[0]);
+      }
       exit(-1);
     } else {
       int w = wait( &status );
@@ -105,17 +110,16 @@ void parse_string(char *s){
     if (strlen(token)==0){
       alen--;
       argarray=realloc(argarray,alen*sizeof(char *));
+      token = strsep(&s, " ");
     }
     else{
       argarray[i] = (char*)malloc(256*sizeof(char));
       argarray[i] = token;
       token = strsep(&s, " ");
-      //printf("token[%d]:___%s___",i,token);
       i++;
     }
   }
   argarray[i] = NULL;
-  //printf("token[%d]:%s\n\n",i,token);
   exec(argarray,i);
   free(token);
   free(argarray);
@@ -124,7 +128,7 @@ void parse_string(char *s){
 void exec(char ** argarray, int len){
   //cmd commands
   if (strcmp(argarray[0],"exit")==0){
-    printf("exited.\n");
+    //printf("exited.\n");
     exit(-1);
   }
   else if (strcmp(argarray[0],"cd")==0){
@@ -178,11 +182,14 @@ void shell(){
   char *cmd = (char *)(malloc(10*sizeof(char)));
   while (cmd = strsep(&s,";")){
     cmd = strip(cmd);
-    //printf("cmd:%s  \n\n",cmd);
-    if(strchr(cmd, '>') || strchr(cmd, '<') || strstr(cmd, ">>")){
-      //printf("Redirecting.\n");
+    if (strchr(cmd, '>') || strchr(cmd, '<') || strstr(cmd, ">>")){
       parse_redirect(cmd);
-    } else {
+    }
+    else if (strchr(cmd, '|')){
+      piper(cmd);
+    }
+   
+    else {
       parse_string(cmd);
     }
   }
