@@ -18,7 +18,8 @@ ATTEMPTED FEATURES
 BUGS
 ----------------------------------------------------------------------------
 	* Multiple piping returns funkiness.
-	* attempts to cd higher than the home (~) directory will cause segfaults. 
+	* Attempts to cd .. past the home (~) directory will result in a segfaults.
+	* Attempts to put a random semicolon at the beginning or end of your command will result in a segfault.
 
 
 FILES AND FUNCTION HEADERS
