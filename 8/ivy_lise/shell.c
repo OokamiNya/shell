@@ -12,40 +12,45 @@ char *strip (char *p){
 void parse_redirect(char * s){
   char * tok;
   int len = 2;
-  int i = 0;
-  printf("toparrmalloc\n");
+  int i = 0, append = 0;
   char ** top_arr = (char**)malloc(len*sizeof(char*));
-  printf("strip\n");
   strip(s);
-  //printf("input: %s\n",s);
-  printf("sc: %s\n",strchr(s, '>'));
-  if(strchr(s,'>')){
-    printf("> detected!\n");
+  if(strchr(s,'>') || strstr(s,">>")){
+    if(strstr(s,">>")){
+      append = 1;
+    }
     while(tok = strsep(&s,">")){
       tok = strip(tok);
-      printf("Redir %d: %s\n",i,tok);
       top_arr[i] = tok;
       i++;
     }
-    printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
-    //CHECK FOR VALIDITY
+    //printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
+    
     int fd, tmp_out, status;
-    fd = open(top_arr[1], O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    if(append){
+      printf("Appending.\n");
+      fd = open(top_arr[1], O_WRONLY|O_CREAT|O_APPEND, 0644);
+    } else {
+      fd = open(top_arr[1], O_WRONLY|O_CREAT|O_TRUNC, 0644);
+    }
     tmp_out = dup(STDOUT_FILENO);
     dup2(fd, STDOUT_FILENO);
+
     int f = fork();
-    //if child, execute who cmd
-    //else, change stdout back
     if( !f ){
       parse_string(top_arr[0]);
+      exit(-1);
     } else {
       int w = wait( &status );
       dup2(tmp_out, STDOUT_FILENO);
+      close(fd);
       //printf("finished waiting. w: %d s: %d\n",w,status);
     }
   } else if(strchr(s, '<')){
     //redirin
   }
+
+  free(top_arr);
   printf("ended\n");
 }
 
@@ -90,7 +95,7 @@ void parse_string(char *s){
 void exec(char ** argarray, int len){
   //cmd commands
   if (strcmp(argarray[0],"exit")==0){
-    printf("exit\n");
+    printf("exited.\n");
     exit(-1);
   }
   else if (strcmp(argarray[0],"cd")==0){
@@ -144,11 +149,13 @@ void shell(){
   char *cmd = (char *)(malloc(10*sizeof(char)));
   while (cmd = strsep(&s,";")){
     cmd = strip(cmd);
-    printf("cmd:%s  \n\n",cmd);
-    if(strchr(cmd, '>') || strchr(cmd, '<')){
+    //printf("cmd:%s  \n\n",cmd);
+    if(strchr(cmd, '>') || strchr(cmd, '<') || strstr(cmd, ">>")){
+      printf("Redirecting.\n");
       parse_redirect(cmd);
+    } else {
+      parse_string(cmd);
     }
-    parse_string(cmd);
   }
 }
 

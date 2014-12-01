@@ -5,9 +5,11 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-// Execs a function, parsing the input and running execvp
+// Executes a function, parsing the input and running execvp
 int exec_line(char *input);
+// 
 void runs_command(char *scpy);
+// Removes extraneous white spaces from str
 void trim(char *str);
 
 
@@ -23,7 +25,7 @@ int main() {
   while(1) {
    
     //getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
-    printf("%s ^_^ : ", cwd);
+    printf("%s^_^ : ", cwd);
     fgets(s,sizeof(s),stdin);
     
     int i=0;
@@ -42,13 +44,11 @@ int main() {
       commands[i]=s2;
     }
     commands[i] = NULL;
-    //
 
     for(i=0;scpy;i++) {
       scpy = commands[i];
       if(!scpy) {
 	break;
-
       }
       runs_command(scpy);
     } 
@@ -213,7 +213,7 @@ void runs_command(char *scpy) {
 }
 
 int exec_line(char *s) {
-  printf("exec line: %s\n",s);
+  //printf("exec line: %s\n",s);
   trim(s);
   char* string2;
   char *array[256];

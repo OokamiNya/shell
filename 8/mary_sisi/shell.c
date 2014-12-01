@@ -2,10 +2,9 @@
 
 have to fix:
 - freeing (in main)
-- piping
 
 simple optional features:
-- sighandler for ctrl c
+- sighandler for Ctrl+C (attempted, doesn't work yet)
 - implement >> and <<
 - make parse() work without spaces between everything
 
@@ -34,6 +33,7 @@ non-coding related things to do:
 #include <string.h>
 #include <fcntl.h>
 
+static void sighandler(int signo);
 void print_prompt();
 void print_array(char** args); //for testing purposes
 void parse(char ** a); //parses user input
@@ -43,6 +43,8 @@ int execute(char ** a); //hanldes user input
 
 int main(){
 
+  signal(SIGINT, sighandler);
+
   print_prompt();
   int run = 1;
   while(run){
@@ -51,8 +53,8 @@ int main(){
     args = (char**)malloc(sizeof(char)*64);
     char ** temp = args;
 
-    int i=0;
-    while(i<32){
+    int i = 0;
+    while(i < 32){
       args[i] = (char*)malloc(sizeof(char)*32);
       i++;
     }
@@ -61,7 +63,8 @@ int main(){
     execute(args);
  
     //freeing doesn't work, gotta fix that
-    /* while(i<32){ */
+    /* i = 0; */
+    /* while(i < 32){ */
     /*   free(temp[i]); */
     /*   i++; */
     /* } */
@@ -74,6 +77,13 @@ int main(){
 }
 
 
+//I wish this worked.  It does not.
+static void sighandler(int signo){
+  printf("\n");
+  main();
+}
+
+
 void print_prompt(){
   char path[256];
   getcwd(path, 256);  
@@ -82,12 +92,14 @@ void print_prompt(){
 }
 
 
+//for testing purposes
 void print_array(char ** args){
   int i = 0;
   while(args[i]){
     printf("args[%d]:  %s\t",i,args[i]);
     i++;
   }
+  printf("\n");
 }
 
 
@@ -110,7 +122,7 @@ void parse(char ** args){
   }
 
   //termination
-  args[i] = 0;
+  args[i] = NULL;
 }
 
 
@@ -165,10 +177,11 @@ int execute(char ** args){
       }
 
       execvp(part1[0], part1);
+      //in case execvp doesn't run:
       if(1){
 	kill(getpid(),SIGTERM);
       }
-      //it isn't necessary to reset the file table values, since the child is killed
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
 
     }else{
       wait(&status);
@@ -193,10 +206,11 @@ int execute(char ** args){
       }
 
       execvp(part1[0], part1);
+      //in case execvp doesn't run:
       if(1){
 	kill(getpid(),SIGTERM);
       }
-      //it isn't necessary to reset the file table values, since the child is killed
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
 
     }else{
       wait(&status);
@@ -204,14 +218,58 @@ int execute(char ** args){
 
   }else if((i = contains(args,"|")) != -1  ){
     //printf("COMMAND WITH '|' AT INDEX %d\n",i);
-       
-    //ls -l | wc
-    //==
-    //ls -l > buffer.txt
-    //+
-    //wc < buffer.txt
-    //+
-    //rm buffer.txt
+
+    char ** part1 = (char**)malloc(sizeof(char*) * (i + 3));
+    int j = 0;
+    while(j < i){
+      part1[j] = args[j];
+      j++;
+    }
+    part1[j] = ">";
+    part1[j+1] = "buffer.txt";
+    part1[j+2] = NULL;
+
+    /* printf("part1: "); */
+    /* print_array(part1); */
+
+    args += (i + 1);
+
+    //print_array(args);
+
+    if((i = contains(args,";")) != -1){
+    }else if((i = contains(args, "<")) != -1){
+    }else if((i = contains(args, ">")) != -1){
+    }else if((i = contains(args, "|")) != -1){
+    }else{
+      i = 0;
+      while(args[i]){
+	i++;
+      }
+      //printf("i: %d\n",i);
+    }
+
+    char ** part2 = (char**)malloc(sizeof(char*) * (i + 3));
+
+    j = 0;
+    while(j < i){
+      part2[j] = args[j];
+      j++;
+    }
+
+    part2[j] = "<";
+    part2[j+1] = "buffer.txt";
+    part2[j+2] = NULL;
+
+    /* printf("part2: "); */
+    /* print_array(part2); */
+
+    execute(part1);
+    execute(part2);
+
+    free(part1);
+    free(part2);
+
+    remove("buffer.txt");
 
   }else if((i = contains(args,"cd")) != -1){
     if(!args[1]){
@@ -239,6 +297,7 @@ int execute(char ** args){
     if(!f){
       //print_array(args);
       execvp(args[0], args);
+      //in case execvp doesn't run:
       if(1){
 	kill(getpid(),SIGTERM);
       }
