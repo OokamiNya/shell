@@ -72,31 +72,6 @@ int count (char*s, char *c) {
   return argc;
 }
 
-int countcmds(char* s) {
-  char* temp = malloc(256*sizeof(char));
-  char* starttemp = temp;
-  strncpy(temp, s, 256);
-  int argc = 0;
-  while(strsep(&temp, ";")) {
-    argc++;
-  }
-  free(starttemp);
-  return argc;
-}
-
-
-int countargs(char* s) {
-  char* temp = malloc(256*sizeof(char));
-  char* starttemp = temp;
-  strncpy(temp, s, 256);
-  int argc = 0;
-  while(strsep(&temp, " ")) {
-    argc++;
-  }
-  free(starttemp);
-  return argc;
-}
-
 void splitinput(char* s, char** cmds) {
   char *c = s;
   char *t;
@@ -123,7 +98,15 @@ void splitcmd(char* s, char** args) {
   args [i] = 0;
 }
 
-void docmd(char** args) {
+void docmd(char** args, int redir_in, int redir_out) {
+  if(redir_in) {
+    dup2(redir_in, STDIN_FILENO);
+    close(redir_in);
+  }
+  if(redir_out) {
+    dup2(redir_out, STDOUT_FILENO);
+    close(redir_out);
+  }
   execvp (args[0], args);
   printf ("LMFAO no such command XDDDDDD q:^)-k\n");
   exit(0);
