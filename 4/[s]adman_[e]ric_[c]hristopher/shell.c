@@ -22,6 +22,7 @@ int countchar(char* str,char substr){
 int wrap_with_semicolons_LOL(char* stuff){
   char* semicolon_buffer=calloc(256,sizeof(char));
   while(semicolon_buffer=strsep(&stuff,";")){
+    //printf("buff: -%s-\n", semicolon_buffer);
     doPipeStuff(semicolon_buffer);
   }
   return 0;
@@ -59,9 +60,11 @@ int doPipeStuff(char* arg){
     split_buffer=strsep(&arg,"|");
     int i=0;
     char** addresses= calloc(256,sizeof(char*));
-    while (arg_buffer=strsep(&split_buffer," "))
-      addresses[i++]=arg_buffer;
-    if (! fork()){
+    while (arg_buffer=strsep(&split_buffer," ")){
+      if (arg_buffer[0] > 0){
+	addresses[i++]=arg_buffer;
+      }
+    }if (! fork()){
       if(command_index){//if not at first command
 	file_in = open("piped",O_RDONLY);
 	dup2(file_in,STDIN_FILENO);
