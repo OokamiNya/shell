@@ -269,8 +269,9 @@ char * wrkdir(){
   } else {
     path = getcwd(path, sizeof(path) );
     int i = 0;
-    for(i; i< branches-3 ; i++){
+    while(i<branches-3){
       temp = strsep(&path, "/");
+      i++;
     }
   }
   return path;
