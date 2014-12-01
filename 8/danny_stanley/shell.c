@@ -67,6 +67,14 @@ void cleanup_shell() {
   free(process_pids);
 }
 
+void setup_argv() {
+  argv = (char **) malloc(sizeof(char *));
+  args = 0;
+  tokSize = TOK_INIT_SIZE;
+  tokIndex = 0;
+  tok = (char *) malloc(TOK_INIT_SIZE);
+}
+
 void cleanup_argv() {
   --args; // Initially subtract 1 from args to make it zero-based
   for (; args >= 0; --args) {
@@ -82,14 +90,6 @@ void cleanup_argv() {
     free(tilde_buf);
     tilde_buf = NULL;
   }
-}
-
-void setup_argv() {
-  argv = (char **) malloc(sizeof(char *));
-  args = 0;
-  tokSize = TOK_INIT_SIZE;
-  tokIndex = 0;
-  tok = (char *) malloc(TOK_INIT_SIZE);
 }
 
 void add_null_argv() { // Adds NULL needed for execvp
