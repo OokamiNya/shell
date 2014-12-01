@@ -42,6 +42,7 @@ int main(){
     
     printf("JAVO:%s> ",newcwd);
     fgets(input, sizeof(input), stdin);
+    //my_fgets(input,sizeof(input),stdin);
     input[sizeof(input)] = 0;
     
     char *s1 = input;
@@ -69,3 +70,4 @@ int main(){
   }
   return 0;
 }
+
