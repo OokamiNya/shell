@@ -9,10 +9,9 @@ int count_commands(char input[256]);
 int count_args(char *command);
 
 int main() {
-  
-  char *command;
   char input[256];
   char *comm_array[10];
+  
   int num_commands;
   int pid;
   int *status;
@@ -29,6 +28,7 @@ int main() {
     fgets(input, sizeof(input), stdin);
     input[strlen(input)-1]='\0';
 
+    //Parsing commands
     num_commands = count_commands(input);
     comm_array[0] = strtok(input, ";");
     int i = 1;
@@ -104,23 +104,13 @@ int main() {
         	  return 0;
         	}
         }
-        else {
-          char *file_name = args_array[flag_redir + 1];
-          int input_file = open(file_name, O_RDONLY);
-          //char file_input[256];
-          //fgets(file_input, sizeof(file_input), input_file);
-          char *executable = args_array[flag_redir - 1];
-          printf("executable: %s\n", executable);
-          pid = fork();
-          if (!pid) {
-            dup2(STDIN_FILENO, input_file);
-            execlp(executable, executable, "testing testing", NULL);
-            return 0;
-          }
+        else if (flag_redir_type == 3){ 
+          int input_file = open(args_array[flag_redir + 1], O_RDONLY, 0644);
+          dup2(input_file, STDIN_FILENO);
+          execvp(args_array[flag_redir - 1], NULL);
         }
-
         flag_redir = 0;
-
+        flag_redir_type = 0;
       }
 
       else {

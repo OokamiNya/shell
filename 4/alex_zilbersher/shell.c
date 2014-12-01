@@ -37,46 +37,21 @@ int run_command(char* s){
 	  kill(getpid(),SIGUSR1);
 	}
 	i=0;
-	int redirect=0;
+	int r=0;
 	while(args[i]){
 	  if(strcmp(args[i],">")==0){
-	    redirect=1;
+	    r=1;
 	    break;
 	  } else if(strcmp(args[i],"<")==0){
-	    redirect=2;
+	    r=2;
 	    break;
 	  } else if(strcmp(args[i],"|")==0){
-	    redirect=3;
+	    r=3;
 	    break;
 	  } i++;
 	}
-	if(redirect){
-	  args[i]=0;
-	  char *args2[256];
-	  i++;
-	  int j=i;
-	  while(args[i]){
-	    args2[i-j]=args[i];
-	    i++;
-	  } 
-	  int out;
-	  int fd;
-	  if(redirect==1){
-	    out = dup(STDOUT_FILENO);
-	    fd = open(args2[0], O_WRONLY|O_CREAT|O_TRUNC, 0644 );
-	    dup2(fd, STDOUT_FILENO);
-	    int f2=fork();
-	    if(f2){
-	      wait(&f2);
-	      dup2(out, STDOUT_FILENO);
-	      close(fd);
-	      exit(-1);
-	    }else{
-	      execvp(args[0],args);
-	      printf("Command not found: %s\n",args[0]);
-	      exit(-1);
-	    }
-	  }
+	if(r){
+	  redirect(i,r,args);
 	}
 	execvp(args[0],args);
 	printf("Command not found: %s\n",args[0]);
@@ -98,5 +73,50 @@ int change_directory(char** args){
   char path2[256];
   getcwd(path2,sizeof(path2));
   //printf("current working dir: %s\n",path2);
+  return 0;
+}
+
+int redirect(int i, int r, char** args){
+  args[i]=0;
+  char *args2[256];
+  i++;
+  int j=i;
+  while(args[i]){
+    args2[i-j]=args[i];
+    i++;
+  } 
+  int std;
+  int fd;
+  int f2=fork();
+  if(r==1){
+    std = dup(STDOUT_FILENO);
+    fd = open(args2[0], O_WRONLY|O_CREAT|O_TRUNC, 0644 );
+    dup2(fd, STDOUT_FILENO);
+    if(f2){
+      wait(&f2);
+      dup2(std, STDOUT_FILENO);
+      close(fd);
+      exit(-1);
+    }else{
+      execvp(args[0],args);
+      printf("Command not found: %s\n",args[0]);
+      exit(-1);
+    }
+  }
+  if(r==2){
+    std = dup(STDIN_FILENO);
+    fd = open(args2[0], O_RDONLY, 0644 );
+    dup2(fd, STDIN_FILENO);
+    if(f2){
+      wait(&f2);
+      dup2(std, STDIN_FILENO);
+      close(fd);
+      exit(-1);
+    }else{
+      execvp(args[0],args);
+      printf("Command not found: %s\n",args[0]);
+      exit(-1);
+    }
+  }
   return 0;
 }

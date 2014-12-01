@@ -28,8 +28,8 @@ typedef struct process {
 
 static const char *shell_name = "StD";
 
-void parse_input(char *);
-void execute(char **, int);
+node * parse_input(char *, node *);
+node * execute(char **, int, node *);
 node * change_directory(char *, node *);
 
 void cleanup_argv();
