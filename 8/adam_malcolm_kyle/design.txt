@@ -10,6 +10,7 @@ Features:
 	Changes Directories and exists
 	Saves home direcory (HOME=<path from cur dir>)
 	Pipes multi-arg commands (try "find . -type f -print | wc -l")
+	Pipes multiple commands (try "ls | wc | wc")
 	SIGINT kills the running child process and not the whole
 	terminal, if applicable  (run command flood_my_terminal to test)
 
@@ -22,7 +23,7 @@ Bugs:
 	
 Files & Function Headers:
 program.c
-	Handles everything
+	Handles everything but piping
 
 	/*======== void process() ==========
 	Inputs:  char *start	
@@ -61,15 +62,6 @@ program.c
   	 Allows for <command> > <file1> > <file2> etc. if that's what you'd like
 	====================*/
 
-	/*======== void piping() ==========
-	Inputs:  char * args[], int pipe
-
-	 Takes a char pointer array with command line input and int
-	 locating where "|" is in array 
-	 Runs first commands and uses output as input to next command
-	 Accounts for multiple arguements
-	====================*/
-
 	/*======== void set_home() ==========
 	Inputs:  char *start
 
@@ -83,3 +75,34 @@ program.c
   	Takes the signal number
   	Only kills a process if it has no children
 	====================*/
+
+pipe.c
+	Handles piping
+
+	/*======== void piping() ==========
+	Inputs:  char * args[], int max
+
+	 Takes a an array comprising of commands that were seperated
+	by "|"
+	Processes each command using three methods
+	====================*/
+
+	/*======== void start() ==========
+	Inputs:  char * args
+
+	Processes command normally, except that output goes to a file
+	====================*/
+
+	/*======== void mid() ==========
+	Inputs:  char * args
+
+	Processes command normally, except it uses a file as input and
+	truncates file with output
+	====================*/
+
+	/*======== void end() ==========
+	Inputs:  char * args
+
+	Processes command normally, except it uses a file as input 
+	====================*/
+
