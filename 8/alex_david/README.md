@@ -53,6 +53,18 @@ Returns: NONE<br>
 
 Grabs input from a file when '<' is used in a command<br>
 _______________
+int pipeCommands()<br>
+Inputs: char *left, char *right<br>
+Returns: None<br>
+
+Creates a pipe. Closes read end and parent send output to pipe. Closes write end and child reads from pipe.
+_______________
+int executePipe()<br>
+Inputs: char *s<br>
+Returns: None<br>
+
+Execute Commands that will be used in piping.
+_______________
 int emptyString()<br>
 Inputs: char *s<br>
 Returns: 1 if s contains no commands, 0 otherwise<br>
