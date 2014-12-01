@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "pipes.h"
 
 //takes out leading and trailing spaces / new lines
 char *strip (char *p){
@@ -16,11 +17,11 @@ void parse_string(char *s){
   s = strip(s);
   // count how many args 
   strcpy(token,s);
-  while (token){
+  while (token ){//&& strcmp(token,"|")!=0){
     token=strchr(token+1,' ');
     alen++;
   }
-  
+  //printf("executing command %s\n",s);
   char **argarray = (char **)(malloc(alen*sizeof(char *)));
   //delimiting stuff
   int i=0;
@@ -43,11 +44,10 @@ void parse_string(char *s){
     }
   }
   argarray[i] = NULL;
-  printf("token[%d]:%s\n\n",i,token);
   exec(argarray,i);
-  free(token);
-  free(argarray);
+  
 }
+
 
 void exec(char ** argarray, int len){
   //cmd commands
@@ -82,7 +82,6 @@ void exec(char ** argarray, int len){
 }
 
 void shell(){
-  //printf("begin.\n");
   struct passwd *p = getpwuid(getuid());
   //printf("whoa??\n");
   char * user = p->pw_name;
@@ -105,48 +104,18 @@ void shell(){
   fgets(s,100,stdin);
   char *cmd = (char *)(malloc(10*sizeof(char)));
   while (cmd = strsep(&s,";")){
-    cmd = strip(cmd);
-    printf("cmd:%s  \n\n",cmd);
-    parse_string(cmd);
-  }
-
-  /* // count how many args 
-  token = s;
-  while (token){
-    token=strchr(token+1,' ');
-    alen++;
-  }
-  
-  s = strsep(&s,"\n");
-  redirect(s);
-  char **argarray = (char **)(malloc(alen*sizeof(char *)));
-  //delimiting stuff
-  int i=0;
-  token = strsep(&s," ");
-  argarray[i] = (char*)malloc(256*sizeof(char));
-  argarray[i] = token;
-  while (token){
-    //getting rid of empty tokens btwnXS arguments
-    if (strlen(token)==0){
-      alen--;
-      argarray=realloc(argarray,alen*sizeof(char *));
+    if (strchr(cmd, '|')){
+      piper(cmd);
     }
-    else{
-      argarray[i] = (char*)malloc(256*sizeof(char));
-      argarray[i] = token;
-      token = strsep(&s, " ");
-      i++;
+    else if (cmd){
+      if (cmd != NULL){
+	parse_string(cmd);
+      }
     }
   }
-
-  argarray[i] = NULL;
-  
-  exec(argarray, alen);
-  //printf("done.\n");
+  free(cmd);
   free(s);
-  free(token);
-  free(argarray);
-  */
+  //  free(cmd);
 }
 
 void redirect(char * s){

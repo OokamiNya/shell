@@ -1,0 +1,9 @@
+a.out
+design.txt
+hey.txt
+makefile
+program.c
+program.h
+program.o
+woo.txt
+yo.txt

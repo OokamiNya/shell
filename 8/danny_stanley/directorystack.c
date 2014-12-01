@@ -10,6 +10,7 @@ node * get_prev(node * current_node){
   if(current_node->prev != NULL){
     node * previous_node = current_node->prev;
     printf("TEST: %s\n",get_arg(previous_node));
+    free(current_node);
     return previous_node;
   }
   return current_node;
