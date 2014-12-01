@@ -42,9 +42,8 @@ int execute(char ** a); //hanldes user input
 
 int main(){
 
-  
-
   print_prompt();
+
   int run = 1;
   while(run){
     signal(SIGINT, sighandler);
@@ -121,18 +120,17 @@ void parse(char ** args){
     temp = strsep(&s," ");
   }
 
-  i = 0;
-  
+  //i = 0;
   /* char ** temp_args;
-  while(args[i]){
-    char * part = strsep( &(args[i]) , ">");
-    int j = 0;
-    while(part){
-      strcpy(temp_args[j + i] , part);
-      j++;
-    }
-    i = j + i;
-    }
+     while(args[i]){
+       char * part = strsep( &(args[i]) , ">");
+       int j = 0;
+       while(part){
+         strcpy(temp_args[j + i] , part);
+         j++;
+       }
+       i = j + i;
+     }
   
     targs[i] = 0;*/
 
