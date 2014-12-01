@@ -6,8 +6,9 @@ Features:
 	Parses multiple commands on one line!
 	Redirects using >, <!
 	Handles pipes.
-	Evaluates basic addition and subtration expressions (ie. 3 + 4 -7)
-	super secret unicorn command
+	Evaluates basic addition and subtration expressions if a $ is
+	Put in front of them(ie. $ 3 + 4 -7)
+	Super secret unicorn command
 	
 Attempted:
 	Multiplication and division were going to happen but level of

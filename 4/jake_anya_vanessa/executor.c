@@ -164,30 +164,60 @@ char *replace_string(char *str, char *old, char *rep){
   return buffer;
 }
 
-char * my_fgets(char *s, int size, FILE * stream){
-  int i = size;
-  int j = 0;
-  char * * result;
-  char ch = (char)fgetc(stream);
-  while (!(ch == '\n' || ch == '\t') && i){
-    s[j] = ch;
-    i--;
-    j++;
-    ch = (char)fgetc(stream);
-  }
-  s[j] = 0;
-  if(ch == '\t'){
-    DIR * d = opendir(".");
-    int i = 0;
-    char * * file;
-    struct dirent * entry = readdir(d);
-    while(entry){
-      if(strncmp(s,entry->d_name,strlen(s))){
-	strcat(*result,entry->d_name);
+/* char * my_fgets(char *s, int size, FILE * stream){ */
+/*   int i = size; */
+/*   int j = 0; */
+/*   char * * result; */
+/*   char ch = (char)fgetc(stream); */
+/*   while (!(ch == '\n' || ch == '\t') && i){ */
+/*     s[j] = ch; */
+/*     i--; */
+/*     j++; */
+/*     ch = (char)fgetc(stream); */
+/*   } */
+/*   s[j] = 0; */
+/*   if(ch == '\t'){ */
+/*     DIR * d = opendir("."); */
+/*     int i = 0; */
+/*     char * * file; */
+/*     struct dirent * entry = readdir(d); */
+/*     while(entry){ */
+/*       if(strncmp(s,entry->d_name,strlen(s))){ */
+/* 	strcat(*result,entry->d_name); */
+/*       } */
+/*       entry = readdir(d); */
+/*     } */
+/*   } */
+/*   printf("result(from my_fgets): %s\n",*result); */
+/*   return s; */
+/* } */
+
+
+char * my_fgets(char *buf, int bsize, FILE *fp){
+  int i;
+  char c;
+  int done = 0;
+  if (buf == 0 || bsize <= 0 || fp == 0)
+    return 0;
+  for (i = 0; !done && i < bsize - 1; i++) {
+    c = (char)fgetc(fp);
+    if (c == EOF) {
+      done = 1;
+      i--;
+    } 
+    else {
+      buf[i] = c;
+      if (c == '\n')
+	done = 1;
+      else if(c == '\t'){
+	
+	
       }
-      entry = readdir(d);
     }
   }
-  printf("result(from my_fgets): %s\n",*result);
-  return s;
+  buf[i] = 0;
+  if (i == 0)
+    return 0;
+  else
+    return buf;
 }
