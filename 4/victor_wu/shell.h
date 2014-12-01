@@ -14,4 +14,4 @@ int redirect(char*, char*);
 char* remove_newline(char*);
 
 //int redirect_append(char*, char*);
-//int pipiing(char*, char*);
+//int piping(char*, char*);
