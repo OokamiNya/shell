@@ -1,2 +1,9 @@
-all: shell.c
-	gcc shell.c shell.h
+all: shell.o
+	gcc -o turtle shell.o
+
+shell.o: shell.c shell.h
+	gcc -c shell.c
+
+clean:
+	rm *.gch
+	rm *~
