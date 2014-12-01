@@ -18,7 +18,7 @@ Attempted:
 	to insert a different character, but decided against implementation
 
 Bugs:
-	
+	| needs white space
 	
 Files & Function Headers:
 program.c
@@ -59,6 +59,15 @@ program.c
 	 Takes a char pointer array with command line input and int representing type of redirection
   	 Performs appropriate redirection depending on ">", "<", or ">>"
   	 Allows for <command> > <file1> > <file2> etc. if that's what you'd like
+	====================*/
+
+	/*======== void piping() ==========
+	Inputs:  char * args[], int pipe
+
+	 Takes a char pointer array with command line input and int
+	 locating where "|" is in array 
+	 Runs first commands and uses output as input to next command
+	 Accounts for multiple arguements
 	====================*/
 
 	/*======== void set_home() ==========
