@@ -1,7 +1,6 @@
 #include "program.h"
 
 char home[256] = "/";
-int f = 0;
 
 void process(char * start){
   //site of user input processing
@@ -119,7 +118,7 @@ void child_process(char * args[]){
 }
 
 
-
+/*
 //////////////////////////   The next chunk is dedicated to piping   //////////////////////////
 
 void piping(char * args[], int max){
@@ -239,7 +238,7 @@ void end(char * command){
 
 
 //////////////////////////   End of piping   //////////////////////////
-
+*/
 
 void redirect(char * args[], int redir){
   //redirect: Takes a char pointer array with command line input and int representing type of redirection

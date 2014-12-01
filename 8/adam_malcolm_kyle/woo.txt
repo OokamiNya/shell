@@ -1,10 +1,1 @@
-total 112
--rwxr-xr-x  1 adamdeho  staff  14072 Nov 30 22:21 a.out
--rw-r--r--  1 adamdeho  staff   2390 Nov 30 22:12 design.txt
--rw-r--r--  1 adamdeho  staff     21 Nov 30 20:26 hey.txt
--rw-r--r--  1 adamdeho  staff    103 Nov 30 15:03 makefile
--rw-r--r--  1 adamdeho  staff   6105 Nov 30 22:21 program.c
--rw-r--r--  1 adamdeho  staff    414 Nov 30 21:45 program.h
--rw-r--r--  1 adamdeho  staff   8820 Nov 30 22:21 program.o
--rwxr-xr-x  1 adamdeho  staff      0 Nov 30 22:22 woo.txt
--rw-r--r--  1 adamdeho  staff    679 Nov 30 17:50 yo.txt
+       0       0       0

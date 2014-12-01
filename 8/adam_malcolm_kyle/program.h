@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 
+int f = 0;
 
 void process(char * start);
 void execute(char * start);

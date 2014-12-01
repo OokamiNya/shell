@@ -1,15 +1,9 @@
-#include "pipe.h"
+#include "program.h"
 
 void piping(char * args[], int max){
   //piping: Takes a char pointer array with commands that were split by "|"                                              
   //Sends each command to appropriate methods                                                                            
   //Returns nothing                                                                                                      
-  int d = 0;
-  while (args[d]){
-    printf("|%s|\n",args[d]);
-    d++;
-  }
-  printf("here\n");
   start(args[0]);
 
   int step = 1;
