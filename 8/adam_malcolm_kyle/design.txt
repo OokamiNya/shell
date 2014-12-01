@@ -51,7 +51,7 @@ program.c
 	/*======== void redirect() ==========
 	Inputs:  char * args[]
 
-	[INSERT DESCRIPTION]
+	Handles redirection operators (<, >, >>)
 	====================*/
 
 	/*======== void set_home() ==========
