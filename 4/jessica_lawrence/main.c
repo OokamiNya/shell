@@ -32,6 +32,38 @@ int main () {
       argc = count(cmds[i], " ");
       args = malloc((argc+1) * sizeof(char*)); //+1 for NULL
       
+      if (strchr (cmds[i], '|')) {
+	char* temp = cmds[i];
+        strsep(&temp, "|");
+	//printf ("%s\n", cmds[i]);
+	//printf ("%s", temp);
+	//execvp ("ls", "ls");
+	splitcmd(cmds[i],args);
+	redir_out = open("foo", O_WRONLY|O_CREAT, 0666);
+	int f1 = fork();
+	if (f1 == 0) {
+	  docmd(args,redir_in,redir_out);
+        } else {
+          wait(1);
+        }
+	splitcmd(temp,args);
+	redir_out = 0;
+        redir_in = open("foo", O_RDONLY, 0666);
+	int f2 = fork();
+	if (f2 == 0) {
+	  docmd(args,redir_in,redir_out);
+        } else {
+          wait(1);
+        }
+	int f = fork();
+	if (f == 0) {
+	  execlp ("rm", "rm", "foo", NULL);
+	} else {
+	  wait(1);
+	}
+	
+      }
+      else {
       if (strchr (cmds[i], '>')) {
         char* temp = cmds[i];
         strsep(&temp, ">");
@@ -61,8 +93,10 @@ int main () {
           wait(1);
         }
       }
+      }
       i++;
     }
+
     free(args);
     free(cmds);
   }
