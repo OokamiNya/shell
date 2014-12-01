@@ -110,6 +110,7 @@ void piping(char * args[], int pipe){
   //piping: Takes a char pointer array with command line input and int locating where "|" is in array
   //Runs first commands and uses output as input to next command
   //Returns nothing
+
   int c;
   f = fork();
   if (!f){
