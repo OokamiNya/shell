@@ -89,6 +89,7 @@ void redirpipe(char** args, char ** args2) {
 		execvp(args[0], args);
   }
 	else{
+    wait(NULL);
 		dup2(fd[1], 1);
 		close(fd[0]);
 		execvp(args2[0], args2);
@@ -173,7 +174,7 @@ void run(char *input){
       	  inputA[1][c]=b[c];
       	  //printf("%c\n",b[c]);
         }
-      	printf("%s\n",inputA[1]);
+      	//printf("%s\n",inputA[1]);
       	char *env;
       	strcpy(env,getenv("HOME"));
       	chdir(strcat(env,inputA[1]));

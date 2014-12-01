@@ -5,12 +5,17 @@ Features:
 	Forks and executes commands
 	Parses multiple commands on one line using ';' (handles multiple ;)
 	Ignores extra white space
-	Redirects using >, <, >>
+	Redirects using >, <, >> (ls > hey.txt > yo.txt etc. is valid
+	syntax)
 	Changes Directories and exists
 	Saves home direcory (HOME=<path from cur dir>)
+	Pipes multi-arg commands (try "find . -type f -print | wc -l")
+	SIGINT kills the running child process and not the whole
+	terminal, if applicable
 
 Attempted:
-
+	Would have liked to account for "\ " char, or allow the user
+	to insert a different character, but decided against implementation
 
 Bugs:
 	
@@ -49,9 +54,11 @@ program.c
 	====================*/
 
 	/*======== void redirect() ==========
-	Inputs:  char * args[]
+	Inputs:  char * args[], int redir
 
-	Handles redirection operators (<, >, >>)
+	 Takes a char pointer array with command line input and int representing type of redirection
+  	 Performs appropriate redirection depending on ">", "<", or ">>"
+  	 Allows for <command> > <file1> > <file2> etc. if that's what you'd like
 	====================*/
 
 	/*======== void set_home() ==========
@@ -61,3 +68,9 @@ program.c
 	Can be accessed with '~'
 	====================*/
 	
+	/*======== void sighandler() ==========
+	Inputs:  int signo
+
+  	Takes the signal number
+  	Only kills a process if it has no children
+	====================*/

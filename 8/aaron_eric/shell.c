@@ -21,6 +21,7 @@
 
 char origin[256];
 char * table;
+int history_len = 0;
 
 char ** parse_string(char * s, char * parser) {
   char ** parsed = NULL;
@@ -72,8 +73,7 @@ char hash() {
 
 interino main() {
 
-  char ** history = (char **)malloc(256);
-  int history_len = 0;
+  //char ** history = (char **)malloc(sizeof(char *));
 
   getcwd(origin, sizeof(origin));
   table = strcat(origin,"/dongers.txt");
@@ -91,19 +91,12 @@ interino main() {
     int i = 0;
     
     for (;semicolon_parsed[i];++i) {
-      //printf("MY ASS\n");
       char ** command = parse_string(semicolon_parsed[i]," ");
-      printf("MY ASS\n");
-      history = (char **)realloc(history,256*++history_len);
-      printf("MY ASS\n");
-      printf("%s",history[history_len-1]);
-      printf("MY ASS\n");
-      printf("%d\n",sizeof(input));
-      strncpy(history[history_len-1], input, 256);
+      //realloc(history,sizeof(char *)*++history_len);
+      //history[history_len-1] = command;
       //int j = 0;
       //for (;j<history_len;++j)
       //printf("j is %d, command |%s|\n",j,history[j]);
-
       if (command[0][0] == 'c' && command[0][1] == 'd' && ((command[0][2] == ' ' || command[0][2] == '\n') || !command[0][2])) {//check for cd
 	if (command[1])
 	  chdir(command[1]);
@@ -112,14 +105,6 @@ interino main() {
 	  chdir(home);
 	}
       }
-
-      if (command[0][0] == 'h' && command[0][1] == 'i' && command[0][2] == 's' && command[0][3] == 't'  && command[0][4] == 'o' && command[0][5] == 'r' && command[0][6] == 'y' && ((command[0][7] == ' ' || command[0][7] == '\n') || !command[0][7])) {
-	int j = 0;
-	for (;j<history_len;++j) {
-	  printf("%d\t%s\n",j,history[j]);
-	}
-      }
-
       done = 0;
       int j = 0;
       char **subcommand = NULL; 
