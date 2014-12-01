@@ -1,0 +1,15 @@
+Normandy Shell
+
+HOW TO COMPILE
+make
+
+HOW TO RUN
+make run
+--or--
+./normandy
+
+CLEANUP
+make clean
+
+DOCUMENTATION
+Located in documentation/ directory (PDF)

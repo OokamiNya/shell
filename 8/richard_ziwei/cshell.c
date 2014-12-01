@@ -1,21 +1,39 @@
-//HAHAHAHAHAHAH
 #include"heads.h"
+#include"helper.c"
 
+int id;
 
-void dumb_exceptions(char arg[]){
-  if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){
-    strsep(&arg," ");
-    chdir(arg);
-    if (!arg){
-      chdir(getenv("HOME"));//WE WIN 10/10
+//handles the SIGINT
+static void sighandler(int signo){
+  if (signo == SIGINT){
+    if (getpid() != id){
+      kill(getpid(),SIGINT);
     }
+  }
+}
+
+
+
+//HANDLES THE CD AND EXIT EXCEPTIONS
+char dumb_exceptions(char arg[]){
+  if (arg[0] == 'c' && arg[1] == 'd' && (arg[2] == 0 || arg[2] == ' ')){//got lazy, didn't want to parse
+    strsep(&arg," ");
+    if (!arg || strcmp(arg,"~")==0){
+      chdir(getenv("HOME"));
+    }
+    else{
+      chdir(arg);
+    }
+    return 1;
   }
   else if (!strcmp(arg,"exit")){
     printf("BYE\n");
     exit(-1);
   }
+  return 0;
 }
 
+//HANDLES THE NORMAL COMMANDS WITH ARGUEMENTS
 void normal_stuff(char arg[]){
   int pid = fork();
   if (!pid){
@@ -27,31 +45,62 @@ void normal_stuff(char arg[]){
       i++;
     }
     argarr[i] = NULL;
-    execvp(argarr[0], argarr);
+    if (execvp(argarr[0], argarr) < 0){
+      //printf("Invalid command\n");
+      printf("Invalid command: %d %s\n",errno,strerror(errno));
+      exit(-1);
+    }
   }
   wait(&pid);
 }
+
+//PIPING
 char pipe_it(char arg[]){
-  int in = STDIN_FILENO;
-  dup2(STDIN_FILENO,STDOUT_FILENO);
-  dup2(STDOUT_FILENO,in);
-  while(strchr(arg,'|')){
-    char * orig;
-    orig = strsep(&arg,"|");
+  
+  //after many attempts, time to cheese it
+  
+  char * orig;
+  char * args = &arg[0];
+  int out = dup(STDOUT_FILENO);
+  while (strchr(args,'|')){
+    orig = strsep(&args,"|");
     orig[strlen(orig)-1]=0;
-    arg++;
-    printf("orig:<%s>\targ:<%s>\n",orig,arg);
-    normal_stuff(orig);
-    pipe_it(arg);
+    args++;
+    if (access("dummy",F_OK)!=-1){
+      //multi line piping doesnt work
+      char dummy1[256];
+      sprintf(dummy1,"%s < dummy",orig);
+      int fd = open("dummy",O_WRONLY | O_TRUNC);
+      dup2(fd,STDOUT_FILENO);
+      redirection(dummy1);
+      close(fd);
+      dup2(out,STDOUT_FILENO);
+    }
+    else{
+      char dummy1[256];
+      sprintf(dummy1,"%s > dummy",orig);
+      redirection(dummy1);
+    }
   }
-  arg++;
-  normal_stuff(arg);
+  char dummy1[256];
+  sprintf(dummy1,"%s < dummy",args);
+  redirection(dummy1);
+  char dummy2[16]="rm dummy";
+  normal_stuff(dummy2);
+
+      
+  
+
+  
   return 1;
 }
-      
+
+//REDIRECTION > < >>
+//WILL CALL PIPE_IT
 char redirection(char arg[]){
-  //Multiple pipes and redirects?
   if (strchr(arg,'>') || strchr(arg,'<')){
+    //int out = STDOUT_FILENO;
+    // int in = STDIN_FILENO;
     int pid = fork();
     if (!pid){
       char * orig;
@@ -61,6 +110,9 @@ char redirection(char arg[]){
 	int mode;
 	if (arg[1] == '>'){
 	  mode = O_APPEND;
+	}
+	else{
+	  mode = O_TRUNC;
 	}
 	strsep(&arg," ");
 	fd=open(arg, O_CREAT | O_WRONLY | mode, 0644);
@@ -73,19 +125,25 @@ char redirection(char arg[]){
 	dup2(fd,STDIN_FILENO);
       }
       close(fd);
+      //normal_stuff(orig); does not work
       execlp(orig,orig,NULL);//FIX THIS TO ACCEPT ARGS
     }
+    //dup2(out,STDOUT_FILENO);
+    //dup2(in,STDIN_FILENO);
     wait(&pid);
     return 1;
   }
-  else if (strchr(arg,'|')){
-    return pipe_it(arg);
+  else if (strchr(arg, '|')){
+    pipe_it(arg);
+    return 1;
   }   
-  return 0;
-  
+  return 0;  
 }
+
+
 int main(){
-  //should probably factor this so ; works
+  id=getpid();
+  signal(SIGINT,sighandler);
   while (1){
     char input[256];
     char direct[256];
@@ -93,9 +151,19 @@ int main(){
     printf("%s$ ",direct);
     fgets(input,sizeof(input),stdin);
     input[strlen(input)-1]=0;
-    dumb_exceptions(input);
-    if (!redirection(input)){
-      normal_stuff(input);
+    char * ipointer = &input[0];
+    char * orig = &input[0];
+    while (strchr(ipointer,';')){
+      orig = strsep(&ipointer,";");
+      orig = strip(orig); //MALLOCS MEMORY, comment out if you don't want memory leak
+      //strip is found in helper.c
+      if (!dumb_exceptions(orig) && !redirection(orig)){
+	normal_stuff(orig);
+      }
+    }
+    ipointer=strip(ipointer);
+    if (!dumb_exceptions(ipointer) && !redirection(ipointer)){
+	normal_stuff(ipointer);
     }
   }
   return 0;

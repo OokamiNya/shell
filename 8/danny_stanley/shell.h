@@ -1,27 +1,43 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/types.h>
-#include <uuid/uuid.h>
 #include <pwd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "link_list.h"
+#include "directorystack.h"
 
-#define PROMPT_SIZE 2014
-#define PATH_SIZE 1024
 #define TOK_INIT_SIZE 512
-#define USER_SIZE 128
-#define OUTPUT_FILENAME_SIZE 256
+#define FILE_SIZE 256
 
-const char *shell_name = "StD";
+#define FG_PROCESS 0
+#define BG_PROCESS 1
 
-void shell();
-void parse_input(char *);
-void execute(char **);
-node* change_directory(char*,node*);
+typedef struct process {
+    char *cmd;
+    int pid;
+    int index;
+} process;
+
+static const char *shell_name = "StD";
+
+node * parse_input(char *, node *);
+node * execute(char **, int, node *);
+node * change_directory(char *, node *);
+
+void cleanup_argv();
+void setup_argv();
+void add_null_argv();
+
+void setup_shell();
+void cleanup_shell();
+
+static int global_stdin_backup = STDIN_FILENO;
+static int global_stdout_backup = STDOUT_FILENO;

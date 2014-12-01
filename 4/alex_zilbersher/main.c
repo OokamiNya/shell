@@ -12,6 +12,15 @@ static void sighandler(int signo) {
       exit(-1);
     }
   }
+  if (signo==SIGUSR1){
+    if(f){
+      wait(&f);
+      kill(getppid(),SIGKILL);
+    }else{
+      kill(getppid(),SIGUSR1);
+      exit(-1);
+    }
+  }
 }
 
 int main(){

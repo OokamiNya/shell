@@ -3,93 +3,87 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
-
+#include <fcntl.h>
+#include "parse.c"
+#include "pipe.c"
+#include "redirect.c"
 int main() {
-  
-  char command[256];
   char input[256];
-  char *args_array[10];
-  char *comm_array[10];
-  int num_args = 0;
+  char **commands;
+  char **args;
+  char *flag_redir = NULL;
+  int flag_redir_index = 0;
   int pid;
   int *status;
   siginfo_t *infop;
   char cwd[256];
+  FILE * fout = NULL;
+  int exit_val = 105;
+  int file;
   
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(input, sizeof(input), stdin);
     input[strlen(input)-1]='\0';
-    
-    char *count_commands = input;
-    int num_commands;
 
-    while(*count_commands) {
-      if (*count_commands == ';')
-	num_commands++;
-      count_commands++;
-    }
+    //Parsing commands
+    commands = parse_commands(input);
 
-    comm_array[0] = strtok(input, ';');
-    int i = 1;
-    while (i < num_commands) {
-      comm_array[i] = strtok(NULL, ';');
-      i++;
-    }
-    
-    for( i = 0; i < num_commands; i++)
-    {
+    int i = 0;
+    while (commands[i]) {
       
-      command = comm_array[i];
-      char *p = command;
+      args = parse_args(commands[i]);
 
-      while (*p){
-	if (*p == ' '){
-	  num_args++;
-	}
-	p++;
+      if (!strcmp(args[0],"exit")) {
+	      exit(0);
+      }
+    
+      else if (!strcmp(args[0],"cd")) {
+        if (!args[1]) {
+           chdir(getenv("HOME"));
+        }
+        chdir(args[1]);
+      }
+      int j = 0;
+      while (args[j]) {
+    	  if (!strcmp(args[j], ">")) {
+          flag_redir_index = j;
+    	    flag_redir = ">";
+  	    }
+        else if (!strcmp(args[j],">>")) {
+          flag_redir_index = j;
+          flag_redir = ">>";
+        }
+        else if (!strcmp(args[j],"<")) {
+          flag_redir = "<";
+        }
+    	  j++;
+      }  
+
+      if (flag_redir) {
+        if (!strcmp(flag_redir, "<")){ 
+          redir_in(args);
+        }
+        else {
+          redir_out(args, flag_redir_index);
+        }
+        flag_redir = 0;
+        flag_redir_index = 0;
       }
 
-      char *comm = strtok(command, " ");
-    
-      if (!strcmp(comm,"exit")) {
-	//printf(":%s:", comm);
-	exit(0);
-      }
-    
-      args_array[0] = comm;
-    
-      if (num_args== 0) {
-	args_array[1]=NULL;
-      }
-    
       else {
-	i = 1;
-	while (i <= num_args) {
-	  args_array[i] = strtok(NULL, " ");
-	  i++;
-	}
-	args_array[i]=NULL;
+        pid = fork();
+        if(!pid) {
+          execvp(args[0], args);  
+          return WEXITSTATUS(exit_val);
+        }
+        waitid(P_PID, pid, infop, WEXITED);
       }
-
-      if (!strcmp(comm,"cd")) {
-	if (!args_array[1]) {
-	  chdir(getenv("HOME"));
-	}
-	chdir(args_array[1]);
-	//execvp(args_array[0], args_array);
-      }
-      else {
-	pid = fork();
-	if(!pid) {
-	  execvp(args_array[0], args_array);	
-	  return WEXITSTATUS(105);
-	  exit(0);
-	}
-	waitid(P_PID, pid, infop, WEXITED);
-      }
+      i++;
+      free(args);
     }
+    free(commands);
   }
-  return 0;
 }
+
 

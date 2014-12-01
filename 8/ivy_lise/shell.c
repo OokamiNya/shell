@@ -1,15 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <fcntl.h>
+#include "shell.h"
 
-//takes out leading and trailing spaces / new lines
+/*======== char * strip(char * p) ==========
+Inputs:  char * p
+Returns: A char array [string] with the spaces and new lines 'stripped' from the front and ends of the inputted string
+
+Takes out leading and trailing spaces / new lines
+====================*/ 
 char *strip (char *p){
+  if (strcmp(p, "\n")==0){
+    return "\n";
+  }
   while (p[0] == ' ' || p[0] == '\n')
     p++;
   while(p[strlen(p)-1] == ' ' || p[strlen(p)-1] == '\n')
@@ -17,10 +17,152 @@ char *strip (char *p){
   return p;
 }
 
+/*======== void parse_redirect(char * s) ==========
+Inputs: char * s
+Returns: Nothing
+
+Deals with redirection > , <
+====================*/
+void parse_redirect(char * s){
+  char * tok;
+  int len = 2;
+  int i = 0, append = 0;
+  char ** top_arr = (char**)malloc(len*sizeof(char*));
+  strip(s);
+  if(strchr(s,'>') || strstr(s,">>")){
+    if(strstr(s,">>")){
+      append = 1;
+    }
+    while(tok = strsep(&s,">")){
+      tok = strip(tok);
+      top_arr[i] = tok;
+      i++;
+    }
+    //printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
+    
+    int fd, tmp_out, status;
+    if(append){
+      printf("Appending.\n");
+      fd = open(top_arr[1], O_WRONLY|O_CREAT|O_APPEND, 0644);
+    } else {
+      fd = open(top_arr[1], O_WRONLY|O_CREAT|O_TRUNC, 0644);
+    }
+    tmp_out = dup(STDOUT_FILENO);
+    dup2(fd, STDOUT_FILENO);
+
+    int f = fork();
+    if( !f ){
+      if(strchr(top_arr[0],'|')){
+	piper(top_arr[0]);
+      }
+      else{
+	parse_string(top_arr[0]);
+      }
+      exit(-1);
+    } else {
+      int w = wait( &status );
+      dup2(tmp_out, STDOUT_FILENO);
+      close(fd);
+      //printf("finished waiting. w: %d s: %d\n",w,status);
+    }
+  } else if(strchr(s, '<')){
+    //redirin
+    char * tok;
+    int len = 2;
+    int i = 0;
+    char ** top_arr = (char**)malloc(len*sizeof(char*));
+    strip(s);
+    if(strchr(s,'<')){
+      while(tok = strsep(&s,"<")){
+	tok = strip(tok);
+	top_arr[i] = tok;
+	i++;
+      }
+      //printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
+      int fd = open(top_arr[1], O_RDONLY);
+      int tmp_in, status;
+      
+      tmp_in = dup(STDIN_FILENO);
+      dup2(fd, STDIN_FILENO);
+
+      int f = fork();
+      if( !f ){
+	if(strchr(top_arr[0],'|')){
+	  piper(top_arr[0]);
+	}
+	else{
+	  parse_string(top_arr[0]);
+	}
+	exit(-1);
+      } else {
+	int w = wait( &status );
+	dup2(tmp_in, STDIN_FILENO);
+	close(fd);
+	//printf("finished waiting. w: %d s: %d\n",w,status);
+      }
+    }
+  }
+  
+  free(top_arr);
+  //printf("ended\n");
+}
+
+/*======== void parse_string(char * s) ==========
+Inputs: char * s
+Returns: Nothing
+
+Parses the command s into an argument array [for execvp] 
+and calls exec which executes the command
+====================*/    
+void parse_string(char *s){
+  char *token = (char *)(malloc(sizeof(char)*256));
+  int alen = 1;
+  s = strip(s);
+  // count how many args 
+  strcpy(token,s);
+  while (token){
+    token=strchr(token+1,' ');
+    alen++;
+  }
+  
+  char **argarray = (char **)(malloc(alen*sizeof(char *)));
+  //delimiting stuff
+  int i=0;
+  token = strsep(&s," ");
+  argarray[i] = (char*)malloc(256*sizeof(char));
+  strcpy(argarray[i],token);
+  while (token){
+    //getting rid of empty tokens btwnXS arguments
+    if (strlen(token)==0){
+      alen--;
+      argarray=realloc(argarray,alen*sizeof(char *));
+      token = strsep(&s, " ");
+    }
+    else{
+      argarray[i] = (char*)malloc(256*sizeof(char));
+      argarray[i] = token;
+      token = strsep(&s, " ");
+      i++;
+    }
+  }
+  argarray[i] = NULL;
+  exec(argarray,i);
+  free(token);
+  free(argarray);
+}
+
+/*======== void exec(char ** argarray, int len) ==========
+Inputs: char ** argarray
+    int len
+Returns: Nothing
+
+forks and execvp the commands with the exception of
+cd and exit which the function executes manually
+====================*/
 void exec(char ** argarray, int len){
   //cmd commands
   if (strcmp(argarray[0],"exit")==0){
-    printf("exit\n");
+    //printf("exited.\n");
     exit(-1);
   }
   else if (strcmp(argarray[0],"cd")==0){
@@ -49,6 +191,12 @@ void exec(char ** argarray, int len){
   }
 }
 
+/*======== void shell() =========
+Inputs: None
+Returns: Nothing
+
+Asks user for the command and parses through the command for semi-colons, and redirection symbols and calls the parse commands needed
+====================*/
 void shell(){
   //printf("begin.\n");
   struct passwd *p = getpwuid(getuid());
@@ -57,7 +205,6 @@ void shell(){
   
   //printf("mallocs here\n");
   char *s = (char *)(malloc(10*sizeof(char)));
-  char *command = (char *)(malloc(10*sizeof(char)));
   char *token = (char *)(malloc(10*sizeof(char)));
   int alen = 1; //+1 for NULL
   
@@ -72,53 +219,27 @@ void shell(){
     printf("%s:%s$ ",user,cwd);
   }
   fgets(s,100,stdin);
-
-  s = strip(s);
-  command = s;
-  // count how many args 
-  token = s;
-  while (token){
-    token=strchr(token+1,' ');
-    alen++;
-  }
-  
-  s = strsep(&s,"\n");
-  char **argarray = (char **)(malloc(alen*sizeof(char *)));
-  //delimiting stuff
-  int i=0;
-  token = s;
-  token = strsep(&s," ");
-  argarray[i] = (char*)malloc(256*sizeof(char)+1);
-  argarray[i] = token;
-  while (token){
-    //getting rid of empty tokens btwnXS arguments
-    if (strlen(token)==0){
-      alen--;
-      argarray=realloc(argarray,alen*sizeof(char *));
+  char *cmd = (char *)(malloc(10*sizeof(char)));
+  while (cmd = strsep(&s,";")){
+    cmd = strip(cmd);
+    if (strchr(cmd, '>') || strchr(cmd, '<') || strstr(cmd, ">>")){
+      parse_redirect(cmd);
     }
-    else{
-      argarray[i] = (char*)malloc(256*sizeof(char)+1);
-      argarray[i] = token;
-      token = strsep(&s, " ");
-      i++;
+    else if (strchr(cmd, '|')){
+      piper(cmd);
+    }   
+    else {
+      parse_string(cmd);
     }
   }
-
-  argarray[i] = NULL;
-  
-  exec(argarray, alen);
-  //printf("done.\n");
-  free(s);
-  free(token);
-  free(command);
-  //printf("freeing argarray\n");
-  free(argarray); //works until you try to enter 2+ args
-  
-  
-  
 }
 
+/*======== static void sighandler(int signo) ==========
+Inputs: int signo
+Returns: Nothing
 
+Deals with Keyboard Interruptions - allows keyboard interruptions to exit processes run in the shell
+====================*/
 static void sighandler(int signo){
   if (signo == SIGINT){
     //SIGINT is keyboard interrupt
@@ -126,8 +247,15 @@ static void sighandler(int signo){
   }
 }  
   
+/*======== int main() ==========
+Inputs: None
+Returns: 0
+
+Runs the shell in a while loop
+====================*/
 int main(){
   while(1){
     shell();
   }
+  return 0;
 }
