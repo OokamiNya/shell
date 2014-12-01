@@ -1,6 +1,11 @@
 #include "shell.h"
 
-//takes out leading and trailing spaces / new lines
+/*======== char * strip(char * p) ==========
+Inputs:  char * p
+Returns: A char array [string] with the spaces and new lines 'stripped' from the front and ends of the inputted string
+
+Takes out leading and trailing spaces / new lines
+====================*/ 
 char *strip (char *p){
   if (strcmp(p, "\n")==0){
     return "\n";
@@ -12,6 +17,12 @@ char *strip (char *p){
   return p;
 }
 
+/*======== void parse_redirect(char * s) ==========
+Inputs: char * s
+Returns: Nothing
+
+Deals with redirection > , <
+====================*/
 void parse_redirect(char * s){
   char * tok;
   int len = 2;
@@ -96,6 +107,13 @@ void parse_redirect(char * s){
   //printf("ended\n");
 }
 
+/*======== void parse_string(char * s) ==========
+Inputs: char * s
+Returns: Nothing
+
+Parses the command s into an argument array [for execvp] 
+and calls exec which executes the command
+====================*/    
 void parse_string(char *s){
   char *token = (char *)(malloc(sizeof(char)*256));
   int alen = 1;
@@ -133,6 +151,14 @@ void parse_string(char *s){
   free(argarray);
 }
 
+/*======== void exec(char ** argarray, int len) ==========
+Inputs: char ** argarray
+    int len
+Returns: Nothing
+
+forks and execvp the commands with the exception of
+cd and exit which the function executes manually
+====================*/
 void exec(char ** argarray, int len){
   //cmd commands
   if (strcmp(argarray[0],"exit")==0){
@@ -165,6 +191,12 @@ void exec(char ** argarray, int len){
   }
 }
 
+/*======== void shell() =========
+Inputs: None
+Returns: Nothing
+
+Asks user for the command and parses through the command for semi-colons, and redirection symbols and calls the parse commands needed
+====================*/
 void shell(){
   //printf("begin.\n");
   struct passwd *p = getpwuid(getuid());
@@ -202,6 +234,12 @@ void shell(){
   }
 }
 
+/*======== static void sighandler(int signo) ==========
+Inputs: int signo
+Returns: Nothing
+
+Deals with Keyboard Interruptions - allows keyboard interruptions to exit processes run in the shell
+====================*/
 static void sighandler(int signo){
   if (signo == SIGINT){
     //SIGINT is keyboard interrupt
@@ -209,8 +247,15 @@ static void sighandler(int signo){
   }
 }  
   
+/*======== int main() ==========
+Inputs: None
+Returns: 0
+
+Runs the shell in a while loop
+====================*/
 int main(){
   while(1){
     shell();
   }
+  return 0;
 }

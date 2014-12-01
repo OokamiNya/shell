@@ -1,4 +1,14 @@
 #include "pipes.h"
+
+/*======== void piper(char * s) ==========
+Inputs: char * s
+Returns: Nothing
+
+Pipes the stdout of one command to the stdin of another command
+Multiple pipings will not work
+Uses a temporary file to store stdout to put into stdin
+Calls remove_file to remove that file
+====================*/
 void piper(char *s){
   char *cmd = (char *)(malloc(10*sizeof(char)));
   char **piparray = (char **)(malloc(10*sizeof(char)));
@@ -32,6 +42,12 @@ void piper(char *s){
   }
 }
 
+/*======== void remove_file(char *f) ==========
+Inputs: char * f
+Returns: Nothing
+
+Removes file with name f
+====================*/
 void remove_file(char* f){
   execlp("rm","rm", f, NULL);
 }
