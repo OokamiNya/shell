@@ -4,8 +4,8 @@ have to fix:
 - freeing (in main)
 
 simple optional features:
-- sighandler for Ctrl+C (attempted, doesn't work yet)
-- implement >> and <<
+- sighandler for Ctrl+C (attempted, doesn't work yet) i think this is working, it just has ^C printed, but it doesn't exit.
+
 - make parse() work without spaces between everything
 
 not-so-simple optional features:
@@ -138,6 +138,44 @@ int contains(char ** args, char * c){
 }
 
 
+void redirect(int type,int i, char ** args){
+
+    int f = fork();
+    int status;
+
+    if (!f){
+
+      if (type == 0){ // <
+	int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+	dup2(fd, STDIN_FILENO);
+      }else if (type == 2){ // >
+	int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+	dup2(fd, STDOUT_FILENO);
+      }else if(type == 1){ //>>
+	int fd = open(args[i+1], O_RDWR | O_CREAT | O_APPEND , 0644);
+	dup2(fd, STDOUT_FILENO);
+      }
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      execvp(part1[0], part1);
+      //in case execvp doesn't run:
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
+
+    }else{
+      wait(&status);
+    }
+
+}
+
 int execute(char ** args){
 
   int i;
@@ -160,61 +198,15 @@ int execute(char ** args){
     
   }else if((i = contains(args,"<")) != -1  ){
     //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    redirect( 0,i,args );
     
-    int f = fork();
-    int status;
-
-    if (!f){
-      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2(fd, STDIN_FILENO);
-
-      char ** part1 = (char**)malloc(sizeof(char*) * i);
-      
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-
-      execvp(part1[0], part1);
-      //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
-      //it isn't necessary to free part1 or reset the file table values, since the child is killed
-
-    }else{
-      wait(&status);
-    }
+  }else if((i = contains(args,">>")) != -1  ){
+    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    redirect( 1,i,args );
 
   }else if((i = contains(args,">")) != -1  ){
     //printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
-    
-    int f = fork();
-    int status;
-
-    if (!f){
-      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2(fd, STDOUT_FILENO);
-
-      char ** part1 = (char**)malloc(sizeof(char*) * i);
-      
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-
-      execvp(part1[0], part1);
-      //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
-      //it isn't necessary to free part1 or reset the file table values, since the child is killed
-
-    }else{
-      wait(&status);
-    }
+    redirect( 2,i,args );    
 
   }else if((i = contains(args,"|")) != -1  ){
     //printf("COMMAND WITH '|' AT INDEX %d\n",i);
