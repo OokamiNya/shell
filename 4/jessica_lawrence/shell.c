@@ -88,8 +88,6 @@ void splitcmd(char* s, char** args) {
   char *t;
   int i = 0; 
   
-  c = strsep(&c,"\n");
-  
   while ((t = strsep(&c, " "))) {
     args[i] = t;
     i++;
