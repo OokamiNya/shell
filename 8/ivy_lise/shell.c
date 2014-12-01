@@ -2,6 +2,9 @@
 
 //takes out leading and trailing spaces / new lines
 char *strip (char *p){
+  if (strcmp(p, "\n")==0){
+    return "\n";
+  }
   while (p[0] == ' ' || p[0] == '\n')
     p++;
   while(p[strlen(p)-1] == ' ' || p[strlen(p)-1] == '\n')
@@ -73,7 +76,12 @@ void parse_redirect(char * s){
 
       int f = fork();
       if( !f ){
-	parse_string(top_arr[0]);
+	if(strchr(top_arr[0],'|')){
+	  piper(top_arr[0]);
+	}
+	else{
+	  parse_string(top_arr[0]);
+	}
 	exit(-1);
       } else {
 	int w = wait( &status );
@@ -187,8 +195,7 @@ void shell(){
     }
     else if (strchr(cmd, '|')){
       piper(cmd);
-    }
-   
+    }   
     else {
       parse_string(cmd);
     }

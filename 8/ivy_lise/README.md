@@ -8,7 +8,7 @@
 	      BUT ( ls   -    a   ) WILL break the shell
 	Redirects with >, < (simple redirection)
 	Redirects with | (simple piping) 
-	You can combine a single pipe with a redirection call (i.e. ls | wc > foo)
+	You can combine a single pipe with a > redirection call (i.e. ls | wc > foo)   [may not work with <   a slight bug...]
 
 ##Attempted:
 	Multiple |

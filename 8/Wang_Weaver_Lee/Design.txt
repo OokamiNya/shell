@@ -9,6 +9,7 @@ Features:
 	  Shell handles multiple pipes 
 
 Attemped: 
+	Implementing >> and << (ran out of time)
 
 Bugs: 
       Redirection needs exactly one space after > or < 
