@@ -215,7 +215,11 @@ int executePipe(char *s){
 	}  
   }
   params[n] = NULL;
-  execvp(params[0],params);
+  int t = execvp(params[0],params);
+  if (t == -1) {
+    printf("error\n");
+    exit (0);
+  }
 }
 
 int emptyString(char *s){
