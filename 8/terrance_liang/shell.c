@@ -147,7 +147,7 @@ void shell(){
   getcwd(currdir,sizeof(currdir));
   char hostname[500];
   gethostname(hostname,sizeof(hostname));
-  printf("<CShell> %s@%s: %s $",getlogin(),hostname,currdir);
+  printf("<CShell> %s@%s: %s$",getlogin(),hostname,currdir);
   char uinput[5000];
   fgets(uinput,sizeof(uinput),stdin);
   char *temp = uinput;
@@ -164,6 +164,7 @@ void shell(){
 }
 
 int main(){
+  printf("She sells CShells by the CShore ~\n");
   printf("Welcome %s!\n", getlogin());
   shell();
   return 0;
