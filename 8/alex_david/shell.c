@@ -176,18 +176,22 @@ int inputFrom(char **params,int n){
   execvp(params[0],params);
 }
 
-int pipeCommands(char *left, char *right){
+int pipeCommands(char *left, char *right){//limited to a single pipe
   int fd[2];
-  pipe(fd);
+  pipe(fd);//creates pipe
   int f = fork();
-  if (!f){
-	dup2(fd[1],STDOUT_FILENO);
-	executePipe(left);
-  }else{
+  if(f == -1) {
+    printf("error in forking\n");
+    exit(0);
+  }
+  if (!f){//child process
+    dup2(fd[1],STDOUT_FILENO);//writes to pipe
+    executePipe(left);
+  }else{//parent process
     int status;
     wait(&status);
-    close(fd[1]);
-    dup2(fd[0],STDIN_FILENO);
+    close(fd[1]);//close write end
+    dup2(fd[0],STDIN_FILENO);//reads in from pipe
     executePipe(right);
   }
 }

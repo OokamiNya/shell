@@ -6,12 +6,12 @@ by Alex Libman and David Bang (Period 8 Systems)
 Forks and executes commands<br>
 Parses multiple commands with ;<br>
 Redirects with >, >>, and <<br>
-Piping with | (*TO DO*)<br>
+Piping with | (single pipe only)<br>
 
 ## Attempted:
 
 ## Bugs:
-Cd to folders with "~/" broken (*FIX*)<br>
+Cd to folders with "~/" is broken <br>
 
 ## Files and Function Headers:
 #shell.c
