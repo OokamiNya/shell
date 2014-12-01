@@ -124,13 +124,11 @@ void splitcmd(char* s, char** args) {
 }
 
 void docmd(char** args, int redir_in, int redir_out) {
-  printf("OUT: %d\n", redir_out);
   if(redir_in) {
     dup2(redir_in, STDIN_FILENO);
     close(redir_in);
   }
   if(redir_out) {
-    printf("ROUT\n");
     dup2(redir_out, STDOUT_FILENO);
     close(redir_out);
   }
