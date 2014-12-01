@@ -7,14 +7,16 @@
 	Deals with Extra Spaces in between commands ?(i.e.  ls       -a  -l)
 	      BUT ( ls   -    a   ) WILL break the shell
 	Redirects with >, < (simple redirection)
-	Redirects with | (simple piping)
+	Redirects with | (simple piping) 
+	You can combine a single pipe with a redirection call (i.e. ls | wc > foo)
 
 ##Attempted:
 	Multiple |
+	>>
 
 ##Bugs:
 	Putting two ;'s next to each other causes a seg fault (this doesn't normally work on a regular terminal anyway)
-	Multiple |'s in a row doesn't run all the pipes
+	Multiple |'s in a row doesn't run all the pipes (i.e. ls | head -2 | tail -1)
 
 ##Files & Function Headers:
 ###shell.c
