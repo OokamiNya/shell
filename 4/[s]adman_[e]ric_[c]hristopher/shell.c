@@ -10,7 +10,7 @@
 
 int currentPID;
 //counts the num of substr in string
-int countchar(char* str, int substr){
+int countchar(char* str,char substr){
   int ans=0;
   int index=0;
   while(str[index]){
@@ -46,16 +46,16 @@ int doPipeStuff(char* arg){
     while (arg_buffer=strsep(&split_buffer," "))
       addresses[i++]=arg_buffer;
     if (! fork()){
-      if (!command_index && boolleft==1){
-	char* split_buffer2 = calloc(256,sizeof(char));
-	split_buffer2 = strsep(&split_buffer, "<"); 
-	split_buffer2 = strsep(&split_buffer, "<"); 
-	file_in = open(split_buffer2, O_RDONLY);//strsep for spaces
-	dup2(file_in,STDIN_FILENO);
-	close(file_in);
-      }
       if(command_index){//if not at first command
 	file_in = open("piped",O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
+      }else if (boolleft==1){
+	printf("ran\n");
+	char* split_buffer2 = calloc(256,sizeof(char));
+	split_buffer2 = strsep(&split_buffer,"<");
+	split_buffer2 = strsep(&split_buffer,"<");
+	file_in = open(split_buffer2,O_RDONLY);
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
       }
@@ -63,17 +63,17 @@ int doPipeStuff(char* arg){
 	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
-      }else{
-      	if (boolright == 1 ){
-	  char* split_buffer2 = calloc(256,sizeof(char));
-	  split_buffer2 = strsep(&split_buffer, ">"); 
-	  split_buffer2 = strsep(&split_buffer, ">");
-	  //strsep for spaces
-	  file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC);
-	  dup2(file_out,STDOUT_FILENO);
-	  close(file_out);
-	}
+      }else if (boolright == 1){
+	printf("ran\n");
+	char* split_buffer2 = calloc(256,sizeof(char));
+	split_buffer2 = strsep(&split_buffer, ">"); 
+	split_buffer2 = strsep(&split_buffer, ">");
+	//strsep for spaces
+	file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC);
+	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
       }
+      
       execvp(addresses[0],addresses);
     }else{
       wait(-1);

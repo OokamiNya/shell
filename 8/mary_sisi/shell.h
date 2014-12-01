@@ -1,12 +1,8 @@
 //int main()
 /*
 Returns 0 for no reason whatsoever.
-Uses a variable 'run' to run an infinite while loop for no reason whatsoever.  (while(run) may be replaced with while(1).  I suppose the rhyme held appeal.)
 
 In the infinite loop, an array of strings (char ** args) is allocated to hold user input (see parse() below) and handle said user input (see execute() below).  Since fgets() is called in parse(), the loop will pause and wait for user input each time through.
-
-Major major major major issue: failed to free aforementioned allocated memory.
-Major major major major issue.  Will work on fixing it.
  */
 
 static void sighandler(int signo);
@@ -16,7 +12,8 @@ It would work the first time but thereafter would erupt.
 (kinda)
 (it just failed to cancel a subprocess after more than one Ctrl+C)
 (and then there was no way to escape)
-(so we just commented it out in main())
+
+**UPDATE** - ---------------------------------------------------------------
  */
 
 void print_prompt();
