@@ -28,21 +28,14 @@ non-coding related things to do:
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-
-static void sighandler(int signo);
-void print_prompt();
-void print_array(char** args); //for testing purposes
-void parse(char ** a); //parses user input
-int contains(char ** a, char * c); //helper
-int execute(char ** a); //hanldes user input
+#include "shell.h"
 
 
 int main(){
 
   print_prompt();
 
-  int run = 1;
-  while(run){
+  while(1){
     signal(SIGINT, sighandler);
 
     char ** args; //allocate space for up to 64 strings of up to 32 characters each
@@ -177,9 +170,7 @@ void redirect(int type,int i, char ** args){
 
       execvp(part1[0], part1);
       //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
+      kill(getpid(),SIGTERM);
       //it isn't necessary to free part1 or reset the file table values, since the child is killed
 
     }else{
@@ -302,9 +293,8 @@ int execute(char ** args){
       //print_array(args);
       execvp(args[0], args);
       //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
+      printf("Not today, lad.\n");
+      kill(getpid(),SIGTERM);
     }else{
       wait(&status);
     }
