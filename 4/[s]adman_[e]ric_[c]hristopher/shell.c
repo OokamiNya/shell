@@ -26,6 +26,22 @@ int wrap_with_semicolons_LOL(char* stuff){
   }
   return 0;
 }
+//removes whitespace
+char * strip(char * src){
+  //removes leading whitespace
+  while(src[0] == ' '){
+    *src++;
+  }
+  //removes trailing whitespace
+  int index = (int)strlen(src) - 1;
+  while (src[index] == ' '){
+    src[index] = '\0';
+    index--;
+  }
+  return src;
+}
+
+
 //pipe accepts the whole line of args, 
 int doPipeStuff(char* arg){
   char* split_buffer=calloc(256,sizeof(char));
@@ -109,6 +125,7 @@ int main(){
     printf("(ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
     fgets(args,256,stdin);
     args = strsep(&args,"\n");
+    args = strip(args);
     char* p;
     for(p=args;*p;++p) *p= tolower(*p);
     //exit
