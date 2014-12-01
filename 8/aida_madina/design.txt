@@ -4,15 +4,14 @@ by Aida Piccato and Madina Radjabova
 Features:
 	Forks and executes commands! Accounts for 'cd' and 'exit'
 	Parses multiple commands on one line and executes each one 
-	Can summon a winged unicorn for fast & magical transit!
+	> , < , and >> functionality implemented
+	Can create an army of wizards to battle the horrible orcs.
+	
 
 Attempted:
 
 Bugs:
-	At times, Aida's behavior is malfunctional. She gets sassy when
-	in presence of her chapstick. She insists that I mention it is
-	Burt's Bees "minty fresh" flavored chapstick. Upon smelling it,
-	I concur that it does indeed smell nice.
+	
 
 
 	
