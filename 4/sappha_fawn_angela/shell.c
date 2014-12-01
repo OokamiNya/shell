@@ -133,7 +133,7 @@ void printprompt() {
   //printf("get_id: %s\n", get_id());
   char *s_wd;
   s_wd = strstr(wd, get_id()) + strlen(get_id());
-  printf("%s:~%s$ ", get_id(), s_wd);
+  printf("%s@OWL:~%s$ ", get_id(), s_wd);
 }
 
 /*======== void execute() =======================
