@@ -166,14 +166,24 @@ void exec(char ** argarray, int len){
     exit(-1);
   }
   else if (strcmp(argarray[0],"cd")==0){
-    if(len < 3 || strcmp(argarray[1],"~")==0){
+    //printf("%s\n", argarray[1]);
+    //printf("%d\n",strcmp(argarray[1],"~"));
+    if(len < 2 || strcmp(argarray[1],"~")==0){
       chdir(getenv("HOME"));
     } else if(strncmp(argarray[1],"~/",2)==0){
       char * path = strdup(argarray[1]+2);
       chdir(getenv("HOME"));
-      chdir(path);
+      int d = chdir(path);
+      if (d<0){
+	printf("bash: cd: %s: No such file or directory\n",argarray[1]);
+      }
+    }else{
+      int r = chdir(argarray[1]);
+      if (r<0){
+      	printf("bash: cd: %s: No such file or directory\n",argarray[1]);
+      }
     }
-    chdir(argarray[1]);
+    
   }
   else{
     int f = fork();

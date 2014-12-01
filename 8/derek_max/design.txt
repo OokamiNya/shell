@@ -12,6 +12,7 @@ Attempted:
 
 Bugs:
   - pipe actually makes "tempfile", really primitive
+  - seg fault if no function before redirect symbol
 
 Files & Function Headers:
 shell.c
