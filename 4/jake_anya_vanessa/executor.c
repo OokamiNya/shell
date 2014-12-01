@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <dirent.h>
+
 int f;
 extern int cont;
 
@@ -125,18 +127,47 @@ int executef(char** arg){
   }
 }
 
-char *replace_string(char *str, char *orig, char *rep){
+char *replace_string(char *str, char *old, char *rep){
 
-  static char buffer[4096];
+  static char buffer[256];
   char *p;
 
-  if(!(p = strstr(str, orig)))
+  if(!(p = strstr(str, old)))
     return str;
 
   strncpy(buffer, str, p-str);
   buffer[p-str] = '\0';
 
-  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
+  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(old));
 
   return buffer;
+}
+
+char * my_fgets(char *s, int size, FILE * stream){
+  int i = size;
+  int j = 0;
+  char * * result;
+  char ch = (char)fgetc(stream);
+  while (!(ch == '\n' || ch == '\t') && i){
+    s[j] = ch;
+    i--;
+    j++;
+    ch = (char)fgetc(stream);
+  }
+  s[j] = 0;
+  if(ch == '\t'){
+    DIR * d = opendir(".");
+    char * dirarray[256];
+    int i = 0;
+    char * * file;
+    struct dirent * entry = readdir(d);
+    while(entry){
+      if(strncmp(s,entry->d_name,strlen(s))){
+	strcat(*result,entry->d_name);
+      }
+      entry = readdir(d);
+    }
+  }
+  printf("result(from my_fgets): %s\n",*result);
+  return s;
 }
