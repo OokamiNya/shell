@@ -5,14 +5,7 @@
 #include <signal.h>
 #include <fcntl.h>
 char **parse_args(char *command) {
-  char *p = command;
-  int num_args = 0;
-    while (*p){
-      if (*p == ' ') {
-        num_args++;
-      }
-      p++;
-    }
+  int num_args = count_tokens(command,' ');
     char **args_array = (char**)malloc(sizeof(char)*64);
     int j = 0;
     while (j < 32) {
@@ -30,14 +23,8 @@ char **parse_args(char *command) {
  }
 
 char** parse_commands(char input[256]) {
-  int num_commands = 1;
   char *commands = input;
-  while (*commands) {
-  if (*commands == ';'){
-      num_commands++;
-    }
-    commands++;
-  }
+  int num_commands = count_tokens(commands,';');
   char **comm_array = (char**)malloc(sizeof(char)*64);
   int j = 0;
   while (j < 32) {
@@ -55,4 +42,16 @@ char** parse_commands(char input[256]) {
   }
   comm_array[k] = NULL;
   return comm_array;
+}
+
+int count_tokens(char *line, char delim) {
+  char *p = line;
+  int count = 0;
+  while (*p) {
+    if (*p == delim) {
+      count++;
+    }
+    p++;
+  }
+  return count;
 }
