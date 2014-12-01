@@ -4,15 +4,17 @@ by Alex Zilbersher
 Features:
 	Forks and executes commands
 	Parses multiple commands on one line
+	Will print out a new line between the outputs of multiple commands
 	Can use exit command
 	Can change directory and do another command on one line using ;
 	Prints out "Exited Zilbash" if it receives a kill -2 (SIGINT)
 	Recognizes and states bad commands
 	Redirects using >, < and |
+	Would have addd more features, but since I was working alone, there
+	was too much turkey to be eaten to have time to do that as well.
 
 Attempted:
-	The following did not end up working, but have been left
-	in the code, commented out.
+	All that was attempted was accomplished. 
 
 Bugs:
 	-Putting two ;'s next to each other will break the parser
