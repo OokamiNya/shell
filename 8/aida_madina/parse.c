@@ -13,12 +13,7 @@ char **parse_args(char *command) {
       }
       p++;
     }
-    char **args_array = (char**)malloc(sizeof(char)*64);
-    int j = 0;
-    while (j < 32) {
-      args_array[j] = (char *)malloc(sizeof(char)*32);
-      j++;
-    }
+    char **args_array[256];
     args_array[0] = strtok(command," ");
     int i = 1;
     while (i <= num_args) {

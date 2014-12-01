@@ -6,12 +6,13 @@ by Alex Libman and David Bang (Period 8 Systems)
 Forks and executes commands<br>
 Parses multiple commands with ;<br>
 Redirects with >, >>, and <<br>
-Piping with | (*TO DO*)<br>
+Piping with | (single pipe only)<br>
 
 ## Attempted:
 
 ## Bugs:
-Cd to folders with "~/" broken (*FIX*)<br>
+Cd to folders with "~/" is broken <br>
+Multiple Piping in sucession does not work.
 
 ## Files and Function Headers:
 #shell.c
@@ -57,13 +58,13 @@ int pipeCommands()<br>
 Inputs: char *left, char *right<br>
 Returns: None<br>
 
-Creates a pipe. Closes read end and parent send output to pipe. Closes write end and child reads from pipe.
+Creates a pipe. Parent process send output to pipe. Closes write end and child process reads from pipe.
 _______________
 int executePipe()<br>
 Inputs: char *s<br>
 Returns: None<br>
 
-Execute Commands that will be used in piping.
+Execute Commands that will be used in piping, works like execute but has slight modifications.
 _______________
 int emptyString()<br>
 Inputs: char *s<br>
