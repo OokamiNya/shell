@@ -8,7 +8,7 @@ Features:
 	Can change directory and do another command on one line using ;
 	Prints out "Exited Zilbash" if it receives a kill -2 (SIGINT)
 	Recognizes and states bad commands
-	Redirects using >, <
+	Redirects using >, < and |
 
 Attempted:
 	The following did not end up working, but have been left

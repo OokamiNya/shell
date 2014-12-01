@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "pipes.h"
 
 //takes out leading and trailing spaces / new lines
 char *strip (char *p){
@@ -20,7 +21,7 @@ void parse_string(char *s){
     token=strchr(token+1,' ');
     alen++;
   }
-  printf("executing command %s\n",s);
+  //printf("executing command %s\n",s);
   char **argarray = (char **)(malloc(alen*sizeof(char *)));
   //delimiting stuff
   int i=0;
@@ -44,8 +45,7 @@ void parse_string(char *s){
   }
   argarray[i] = NULL;
   exec(argarray,i);
-//free(token);
-//free(argarray);
+  
 }
 
 
@@ -82,7 +82,6 @@ void exec(char ** argarray, int len){
 }
 
 void shell(){
-  //printf("begin.\n");
   struct passwd *p = getpwuid(getuid());
   //printf("whoa??\n");
   char * user = p->pw_name;
@@ -105,63 +104,19 @@ void shell(){
   fgets(s,100,stdin);
   char *cmd = (char *)(malloc(10*sizeof(char)));
   while (cmd = strsep(&s,";")){
-    cmd = strip(cmd);
-    printf("cmd:%s  \n",cmd);
-    //    parse_string(cmd);
     if (strchr(cmd, '|')){
       piper(cmd);
     }
-    else{
-      parse_string(cmd);
+    else if (cmd){
+      if (cmd != NULL){
+	parse_string(cmd);
+      }
     }
   }
-  //free(cmd);
-}
-
-void piper(char *s){
-  char *cmd = (char *)(malloc(10*sizeof(char)));
-  char **piparray = (char**)malloc(10*sizeof(char));
-  int i = 0;
-  while (cmd = strsep(&s,"|")){
-    piparray[i] = strip(cmd);
-    printf("#%d:------%s-----\n",i,piparray[i]);
-    i++;
-  }
-  int fd,tempstd;
-  
-  fd= open("pin",  O_WRONLY|O_CREAT|O_TRUNC,0777);//O_RDONLY, 0444);
-  tempstd= open("pin", O_RDONLY,0444);
-
-  //fd= dup(STDOUT_FILENO);
-  int f = fork();
-  int status;
-  if (f){ 
-    int w = wait(&status);  
-    printf("parenting peeps\n");
-    dup2(tempstd, STDIN_FILENO);	
-    parse_string(piparray[1]);
-   
-  }
-  else{
-    printf("kiddy yawnings\n");  
-    dup2(fd, STDOUT_FILENO);	
-    parse_string(piparray[0]);
-    exit(-1);
-    //close(fd);
-   
-  }
-  
-  //  printf("forking done... yes\n");
-  //  dup2(fd, STDOUT_FILENO);
-  printf("THE END- FINISHED\n");
- 
-  close(tempstd);
-  close(fd);
   free(cmd);
-  
-  
+  free(s);
+  //  free(cmd);
 }
-  //free(cmd);
 
 void redirect(char * s){
   char * tok;

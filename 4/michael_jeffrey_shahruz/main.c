@@ -5,13 +5,14 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-// Executes a function, parsing the input and running execvp
+// Executes a specific function, parsing the input and running execvp
 int exec_line(char *input);
-// 
+// Handles all commands given by main()
 void runs_command(char *scpy);
 // Removes extraneous white spaces from str
 void trim(char *str);
-
+// Returns the cwd in a presentable string
+char * wrkdir(char * s);
 
 int main() {
   int status;
@@ -20,12 +21,14 @@ int main() {
   char *s1;
   char *s2;
   char *commands[1024];
-  char cwd[512] = "";
+  char *cwd;
   
   while(1) {
-   
-    //getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
-    printf("%s^_^ : ", cwd);
+   cwd = wrkdir(cwd);
+    /*
+    getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
+    */
+    printf("%s ^_^ : ", cwd);
     fgets(s,sizeof(s),stdin);
     
     int i=0;
@@ -52,8 +55,6 @@ int main() {
       }
       runs_command(scpy);
     } 
-
-   
   }
 }
 
@@ -77,7 +78,7 @@ void runs_command(char *scpy) {
       getcwd(direct,sizeof(direct));
       printf("Current Directory: %s\n",direct);
     }
-    
+    //> and >>
     else if(strchr(s,'>')) {
       char *scpy2 = (char *)malloc(1024);
       strcpy(scpy2, s);
@@ -121,7 +122,7 @@ void runs_command(char *scpy) {
       free(&tmp);
       */
     }
-    
+    //<
     else if(strchr(s,'<')) {
       char *scpy2 = (char *)malloc(1024);
       strcpy(scpy2, s);
@@ -152,7 +153,7 @@ void runs_command(char *scpy) {
       } 
 
     }
-    
+    // | pipes
     else if(strchr(s,'|')) {
     	int stdin_copy;
     	char *s1;
@@ -197,7 +198,7 @@ void runs_command(char *scpy) {
     	
     	
     }
-    
+    // ALL OTHER COMMANDS
     else {
       
       int f = fork();
@@ -252,4 +253,24 @@ void trim(char *str) {
         str[i - begin] = str[i];
 
     str[i - begin] = '\0';
+}
+
+char * wrkdir(){
+  char *path;
+  path = getcwd( path, 512 );
+  char * temp = (char *)malloc(512);
+  temp = getcwd(temp, sizeof(temp) );
+  int branches = 0;
+  while( (temp = strsep(&path, "/")) ){
+    branches++;
+  }
+  if( branches <= 3 ){
+    path = getcwd(path, sizeof(path) );
+  } else {
+    path = getcwd(path, sizeof(path) );
+    for(int i = 0; i< branches-3 ; i++){
+      temp = strsep(&path, "/");
+    }
+  }
+  return path;
 }
