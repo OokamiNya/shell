@@ -14,7 +14,7 @@ int main() {
   while(1) {
     printprompt();    
     int i;
-    char ** parsed = execute_all();//array of commands
+    char ** parsed = parser();//array of commands
     
     for (i = 0; parsed[i]; i++){
       //printf("parsed[%d]:%s\n",i, parsed[i]);
@@ -41,13 +41,13 @@ void cd(char* path){
   
   //given path
   else {
-    printf("original path: %s\n", path);
+    //printf("original path: %s\n", path);
     //printf("getenv('HOME'):%s\n", getenv("HOME"));
     char *sep;
     sep = strsep(&path, "~");
     //if there was a ~, we must format before chdir-ing
     if ((sep && sep[0] == '\0')) { //this means that there was a ~
-      printf("path: %s\n", path);
+      //printf("path: %s\n", path);
       //printf("sep: %s\n", sep);
       char* home;
       home = getenv("HOME"); 
@@ -82,11 +82,10 @@ void cd(char* path){
   }  
 }
 
-char** execute_all(){
+char** parser(){
   char s[256];
   fgets(s, sizeof(s), stdin);//command-line arg
-  
-  char* s1 = s;
+    char* s1 = s;
   char *sep;
   char** args = (char**)(malloc(sizeof(char*)));
   int i = 0;
@@ -119,7 +118,7 @@ void printprompt() {
   printf("%s:~%s$ ", get_id(), s_wd);
 }
 
-int execute(char a[256]){
+void execute(char a[256]){
   char *s1 = a;
   //printf("s1: %s\n", s1);
   char *sep;
@@ -188,7 +187,7 @@ int execute(char a[256]){
 }
 
 //gets rid of trailing and leading white space 
-char * trim (char * s) {
+char* trim (char * s) {
   int l = strlen(s);
   //trailing white space -- backwards
   while(isspace(s[l - 1])) {

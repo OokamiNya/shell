@@ -44,7 +44,6 @@ void redirect_err(char * command, char * file, int mode){
   }
   fd1 = dup(STDERR_FILENO);//set fd1 to stderr
   dup2(fd, STDERR_FILENO);//redirect fd to stderr
-  execute(command);
   dup2(fd1, STDERR_FILENO);//reset: redirect fd1 to stderr
 }
 
