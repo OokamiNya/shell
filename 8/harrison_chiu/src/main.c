@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "ex/execute.h"
 #include "par/parse.h"
 #include "out/output.h"
@@ -38,6 +41,12 @@ int main()
       	  int pid = fork();
       	  if (pid == 0)
       	    {
+	      umask(0000);
+	      printf("cmd: (%s)\nin:  (%s)\nout: (%s)\n", cmds[count]->execstr, cmds[count]->f_in, cmds[count]->f_out);
+	      if (cmds[count]->f_in)
+		dup2(open(cmds[count]->f_in, O_RDONLY | O_CREAT, 0644), STDIN_FILENO);
+	      if (cmds[count]->f_out)
+		dup2(open(cmds[count]->f_out, O_WRONLY | O_CREAT | O_TRUNC, 0644), STDOUT_FILENO);
       	      execstr(cmds[count]->execstr);
       	    }
       	  else
