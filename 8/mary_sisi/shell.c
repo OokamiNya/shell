@@ -1,10 +1,7 @@
 /*
 
-have to fix:
-- freeing (in main)
-
-simple optional features:
-- sighandler for Ctrl+C (attempted, doesn't work yet)
+simple optional features/improvements:
+- improve sighandler for Ctrl+C (kinda sorta works)
 - make parse() work without spaces between everything // might be harder than i though
 
 not-so-simple optional features:
@@ -13,12 +10,12 @@ not-so-simple optional features:
 - * as a wildcard
 - & to run things in the background
 - ~ as a directory shortcut
-- assign values to variables and such
+- assign values to variables and such (not happening)
 
 non-coding related things to do:
-- write readme.txt about project, when we're done
-- makefile
-- header file?
+- finish readme.txt about project
+- finish header file
+- finish makefile
 
  */
 
@@ -49,8 +46,8 @@ int main(){
     signal(SIGINT, sighandler);
 
     char ** args; //allocate space for up to 64 strings of up to 32 characters each
-    args = (char**)malloc(sizeof(char ) * 64); //should we change this?
-    //char ** temp = args;
+    args = (char**)malloc(sizeof(char *) * 64); //should we change this?
+    char ** temp = args;
 
     int i = 0;
     while(i < 32){
@@ -60,14 +57,15 @@ int main(){
 
     parse(args);
     execute(args);
- 
-    /*i = 0;
+
+    i = 0;
     while(i < 64){
-      free(args[i]);
+      free(temp[i]);
       i++;
     }
-    free(args);*/
-
+    
+    free(temp);
+    
     print_prompt();
   }
 
