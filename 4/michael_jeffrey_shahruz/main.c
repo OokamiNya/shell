@@ -194,8 +194,8 @@ void runs_command(char *scpy) {
     	if (in != 0) {
     		dup2(in,0);
     	}
-    	exec_line(commands[i]);
     	
+	exec_line(commands[i]);
     	
     }
     // ALL OTHER COMMANDS
