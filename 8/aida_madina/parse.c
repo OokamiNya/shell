@@ -57,7 +57,8 @@ void free_array(char **array) {
   while (j < 64) {
     k = 0;
     while (k < 32) {
-      free(array[j][k]);
+      if(array[j][k])
+	free(array[j][k]);
       k++;
     }
     free(array[j]);
@@ -65,3 +66,4 @@ void free_array(char **array) {
   }
   free(array);
 }
+
