@@ -53,7 +53,6 @@ void redirect_out(char * command, char * file, int mode){
 /*======== void redirect_err() =======================
   Inputs:  char *command, char* file, int mode
   Returns: N/A
-  ***************CURRENTLY BROKEN**********************
   Redirects stderr from executing the given command to the given file. 
   --> If mode == 1, we will create (if necessary) or rewrite
   the file if it already exists.
@@ -63,15 +62,20 @@ void redirect_out(char * command, char * file, int mode){
 void redirect_err(char * command, char * file, int mode){
   command = trim(command);
   file = trim(file);
+  //printf("command: %s\n", command);
+  //printf("file: %s\n", file);
   int fd, fd1;
   if (mode == 1){ // 2>
+    //printf("opening in trunc mode\n");
     fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
   }
   else if (mode == 2){ // 2>>
+    //printf("opening in append mode\n");
     fd = open(file, O_CREAT | O_APPEND | O_WRONLY, 0644);
   }
   fd1 = dup(STDERR_FILENO);//set fd1 to stderr
   dup2(fd, STDERR_FILENO);//redirect fd to stderr
+  execute(command);
   dup2(fd1, STDERR_FILENO);//reset: redirect fd1 to stderr
 }
 
@@ -140,7 +144,7 @@ void redirection(char *s, int mode){
       printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
-      redirect_in(sep, in, 1);
+      redirect_in(sep, in);
     }
   }
   else if (mode == 3){ // >
@@ -178,7 +182,6 @@ void redirection(char *s, int mode){
       pipeify(sep, in);
     }
   }
-  /* STRERROR REDIRECTION ATTEMPT: FAILED
   else if (mode == 6){ //2>
     char* temp = (char*)malloc(sizeof(char)*256);
     strcpy(temp, in);
@@ -188,15 +191,14 @@ void redirection(char *s, int mode){
     strsep(&temp, ">");
     temp = trim(temp);
     //printf("temp: %s\n", temp);
-    // printf("cmd: %s\n", cmd);
+    //printf("cmd: %s\n", cmd);
     if (temp == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
       redirect_err(cmd, temp, 1);
     }
-  }
- 
+  } 
   else if (mode == 7){
     char* temp = (char*)malloc(sizeof(char)*256);
     strcpy(temp, in);
@@ -204,9 +206,10 @@ void redirection(char *s, int mode){
     char* cmd = strsep(&temp, "2");
     cmd = trim(cmd);
     strsep(&temp, ">");
+    strsep(&temp, ">");
     temp = trim(temp);
     //printf("temp: %s\n", temp);
-    // printf("cmd: %s\n", cmd);
+    //printf("cmd: %s\n", cmd);
     if (temp == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token newline'\n");
     }
@@ -215,7 +218,7 @@ void redirection(char *s, int mode){
     }
     
   }
-  */
+  
 }
 /*======== int has_redirect() =======================	
   Inputs:  char *i

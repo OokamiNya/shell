@@ -13,9 +13,8 @@ FEATURES
 
 ATTEMPTED FEATURES
 ----------------------------------------------------------------------------
-	* Was unable to get 2> to redirect stderr to a new file
-	* Was also unable to get 2>> to redirect stderr and append to a new file
 	* Multiple piping clearly does not adhere to bash's multiple piping.
+
 BUGS
 ----------------------------------------------------------------------------
 	* Multiple piping returns funkiness.
@@ -179,7 +178,7 @@ redirect.c: home of our redirection functions and magical creatures!
 	/*======== void redirect_err() =======================
 	Inputs:  char *command, char* file, int mode
 	Returns: N/A
-	***************CURRENTLY BROKEN**********************
+
 	Redirects stderr from executing the given command to the
 	given file. 
 	--> If mode == 1, we will create (if necessary) or rewrite
