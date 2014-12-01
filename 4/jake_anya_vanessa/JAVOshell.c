@@ -19,6 +19,9 @@ static void sighandler(int signo){
     if (f){
       exit(0);
     }
+    else{
+      printf("\n");
+    }
   }
 }
 
@@ -30,7 +33,7 @@ int main(){
   chdir(getenv("HOME"));
   
   while(cont){
-    printf("pid: %d\n", getpid());
+    //    printf("pid: %d\n", getpid());
 
     char input[256];
     char cwd[256];
