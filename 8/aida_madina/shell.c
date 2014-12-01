@@ -5,9 +5,8 @@
 #include <signal.h>
 #include <fcntl.h>
 #include "parse.c"
-#include "redirect.c"
 #include "pipe.c"
-
+#include "redirect.c"
 int main() {
   char input[256];
   char **commands;

@@ -2,16 +2,10 @@ seashell
 by Aida Piccato and Madina Radjabova
 
 Features:
-<<<<<<< HEAD
 	Accounts for 'cd' and 'exit'
 	Can execute a command with multiple arguments
 	Can parse and read multiple commands on a line, separated by a semicolon.
 	Implements simple redirection ('<','>','>>'). When redirecting output, correctly redirect the output of a command with multiple arguments!
-=======
-	Forks and executes commands! Accounts for 'cd' and 'exit'
-	Parses multiple commands on one line and executes each one 
-	> , < , and >> functionality implemented
-	Can create an army of wizards to battle the horrible orcs.
 
 Attempted:
 

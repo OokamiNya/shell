@@ -51,6 +51,10 @@ For automated testing:
 - Background Processes (VERY BAD)
     - `jobs` gives a list of all background processes whether they are currently running or not
 
+## Documentation
+
+Explanation of each file and function can be found [here](https://github.com/mks65-dw/shell/blob/master/8/danny_stanley/DESIGN.md).
+
 ## TODO: (We didn't have enough time to implement these ☹)
 
 - Clear input buffer when handling SIGINT

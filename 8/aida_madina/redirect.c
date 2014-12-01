@@ -4,12 +4,12 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
-
+#include "redirect.h"
 int redir_in(char **args) {
 	int input_file = open(args[2], O_RDONLY, 0644);
 	dup2(input_file, STDIN_FILENO);
     execvp(args[0], NULL);
-    returns 0;
+    return 0;
 }
 
 int redir_out(char **args, int index) {
