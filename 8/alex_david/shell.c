@@ -23,7 +23,11 @@ int main(){
 
 int cd (char* s) {
   if (!strcmp(s,"/")) return chdir(s);
-  if (!strcmp(s,"~")) return chdir(getenv("HOME"));
+  if (s[0] == '~'){
+    chdir(getenv("HOME"));
+    s++;
+    return cd(s);
+  }
   char path[1000];
   strcpy (path, s);
   char cwd [256];
