@@ -1,2 +1,3 @@
 all: shell.c
-	gcc -o turtle shell.c
+	gcc shell.c
+	./a.out
