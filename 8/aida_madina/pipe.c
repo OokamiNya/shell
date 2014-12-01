@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <signal.h>
-#include <fcntl.h>
 #include "pipe.h"
 
 int pipes(char **args, int index, int end) {
