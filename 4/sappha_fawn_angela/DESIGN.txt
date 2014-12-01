@@ -9,6 +9,7 @@ FEATURES
 	* Redirects using >, <, >>!
 	* Can make you almost forget you're not using bash!
 	* Attempts to fight against User Silliness Syndrome! 'ls           -l' can't fight us!
+	* Handles empty commands (" ; ")
 
 
 ATTEMPTED FEATURES
@@ -104,7 +105,7 @@ shell.c: where our fantastical magic begins!
 	
 	Takes the user input and parses along the semicolons (;), adding
 	each element into the args array of strings. Then, we return this
-	array of strings.	
+	array of strings. Handles extraneous semicolons.	
 
 	==============================================*/ 
 
