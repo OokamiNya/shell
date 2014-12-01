@@ -155,47 +155,55 @@ void runs_command(char *scpy) {
     }
     // | pipes
     else if(strchr(s,'|')) {
-    	int stdin_copy;
-    	char *s1;
-    	char *s2;
-    	char *commands[1024];
-    	char *jscpy = malloc(1024);
-    	int i;
-    	int in = 0;
-    	int out;
-    	s1 = s;
-    	for(i=0;s1;i++){
-    		s2 = strsep(&s1,"|");
-    		trim(s2);
-    		commands[i]=s2;
-    	}
-    	commands[i] = NULL;
-
-    	int fd[2];
-
-    	for(i = 0; commands[i+1]; i++) {
-    		pipe(fd);
-    		out = fd[1];
-    		if(fork() == 0) {
-    			if (in != 0) {
-    				dup2(in, 0);
-    				close(in);
-    			}
-
-    			if (out != 1) {
-    				dup2(out, 1);
-    				close(out);
-    			}
-    			exec_line(commands[i]);
+    	if(fork() == 0) {
+    		int stdin_copy;
+    		char *s1;
+    		char *s2;
+    		char *commands[1024];
+    		char *jscpy = malloc(1024);
+    		int i;
+    		int in = 0;
+    		int out;
+    		s1 = s;
+    		for(i=0;s1;i++){
+    			s2 = strsep(&s1,"|");
+    			trim(s2);
+    			commands[i]=s2;
     		}
-    		close(fd[1]);
-			in = fd[0];
+    		commands[i] = NULL;
+
+    		int fd[2];
+
+    		for(i = 0; commands[i+1]; i++) {
+    			pipe(fd);
+    			out = fd[1];
+    			if(fork() == 0) {
+    				if (in != 0) {
+    					dup2(in, 0);
+    					close(in);
+    				}
+
+    				if (out != 1) {
+    					dup2(out, 1);
+    					close(out);
+    				}
+    				exec_line(commands[i]);
+    			}
+    			close(fd[1]);
+    			in = fd[0];
+    		}
+    		if (in != 0) {
+    			dup2(in,0);
+    		}
+    		exec_line(commands[i]);
+    	} else {
+    		wait(NULL);
     	}
-    	if (in != 0) {
-    		dup2(in,0);
-    	}
+<<<<<<< HEAD
     	
 	exec_line(commands[i]);
+=======
+>>>>>>> FETCH_HEAD
     	
     }
     // ALL OTHER COMMANDS

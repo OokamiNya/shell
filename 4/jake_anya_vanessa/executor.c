@@ -8,6 +8,34 @@
 int f;
 extern int cont;
 
+//////////////////////////////////////////////////////////
+//  redirection, semicolon, and piping helper functions //
+//////////////////////////////////////////////////////////
+
+void arrcpy(char** src, char** dest, int start, int end){
+  int i = 0;
+  while (start < end && src[start]){
+    dest[i] = src[start];
+    i++;
+    start++;
+  }
+  dest[i] = 0;
+}
+
+void deletetemp(char* name){
+  f = fork();
+  if (!f){
+    execlp("rm", "rm", name, NULL);
+    exit(0);
+  }
+  else{
+    wait(f);
+    f = 0;
+  }
+}
+
+
+
 /*------------------------------------------------------------
 int execute()
 Input: char ** arg
@@ -20,37 +48,33 @@ or pipes it calls executef() on arg.
 ------------------------------------------------------------*/
 int execute(char ** arg) {
   int i = 0;
-
+  
   int pipe = 0;
+  int semi = 0;
+  int right = 0;
+  int left = 0;
   for (i; arg[i] != 0; i++){
     if (!strcmp(arg[i], "|")){
       pipe = i;
     }
-  }
-
-  int semi = 0;
-  i = 0;
-  for (i; arg[i] != 0; i++){
     if (!strcmp(arg[i], ";")){
       semi = i;
     }
+    if (!strcmp(arg[i], ">")){
+      right = i;
+    }
+    if (!strcmp(arg[i], "<")){
+      left = i;
+    }
   }
-
+  
   //handle semicolon
   if (semi){
     char * cmd1arg[256];
-    i = 0;
-    while (i < semi){
-      cmd1arg[i] = arg[i];
-      i++;
-    }
-
+    arrcpy(arg, cmd1arg, 0, semi);
+    
     char * cmd2arg[256];
-    i = 1;
-    while (arg[semi + i] != 0){
-      cmd2arg[i-1] = arg[semi + i];
-      i++;
-    }
+    arrcpy(arg, cmd2arg, semi+1, 256);
     
     int stdinhold = dup(STDIN_FILENO);
     int stdouthold = dup(STDOUT_FILENO);
@@ -62,20 +86,10 @@ int execute(char ** arg) {
   //handle pipe
   else if (pipe){
     char * cmd1arg[256];
-    i = 0;
-    while (i < pipe){
-      cmd1arg[i] = arg[i];
-      i++;
-    }
-    cmd1arg[i] = 0;
+    arrcpy(arg, cmd1arg, 0, pipe);
     
     char * cmd2arg[256];
-    i = 1;
-    while (arg[pipe + i] != 0){
-      cmd2arg[i-1] = arg[pipe + i];
-      i++;
-    }
-    cmd2arg[i] = 0;
+    arrcpy(arg, cmd2arg, pipe+1, 256);
     
     int stdinhold = dup(STDIN_FILENO);
     int stdouthold = dup(STDOUT_FILENO);
@@ -93,16 +107,7 @@ int execute(char ** arg) {
     close(fd);
 
     //delete pipinghot
-    
-    f = fork();
-    if (!f){
-      execlp("rm", "rm", "pipinghot", NULL);
-      exit(0);
-    }
-    else{
-      wait(f);
-      f = 0;
-    }
+    deletetemp("pipinghot");
   }
 
   //handles cd
@@ -159,30 +164,60 @@ char *replace_string(char *str, char *old, char *rep){
   return buffer;
 }
 
-char * my_fgets(char *s, int size, FILE * stream){
-  int i = size;
-  int j = 0;
-  char * * result;
-  char ch = (char)fgetc(stream);
-  while (!(ch == '\n' || ch == '\t') && i){
-    s[j] = ch;
-    i--;
-    j++;
-    ch = (char)fgetc(stream);
-  }
-  s[j] = 0;
-  if(ch == '\t'){
-    DIR * d = opendir(".");
-    int i = 0;
-    char * * file;
-    struct dirent * entry = readdir(d);
-    while(entry){
-      if(strncmp(s,entry->d_name,strlen(s))){
-	strcat(*result,entry->d_name);
+/* char * my_fgets(char *s, int size, FILE * stream){ */
+/*   int i = size; */
+/*   int j = 0; */
+/*   char * * result; */
+/*   char ch = (char)fgetc(stream); */
+/*   while (!(ch == '\n' || ch == '\t') && i){ */
+/*     s[j] = ch; */
+/*     i--; */
+/*     j++; */
+/*     ch = (char)fgetc(stream); */
+/*   } */
+/*   s[j] = 0; */
+/*   if(ch == '\t'){ */
+/*     DIR * d = opendir("."); */
+/*     int i = 0; */
+/*     char * * file; */
+/*     struct dirent * entry = readdir(d); */
+/*     while(entry){ */
+/*       if(strncmp(s,entry->d_name,strlen(s))){ */
+/* 	strcat(*result,entry->d_name); */
+/*       } */
+/*       entry = readdir(d); */
+/*     } */
+/*   } */
+/*   printf("result(from my_fgets): %s\n",*result); */
+/*   return s; */
+/* } */
+
+
+char * my_fgets(char *buf, int bsize, FILE *fp){
+  int i;
+  char c;
+  int done = 0;
+  if (buf == 0 || bsize <= 0 || fp == 0)
+    return 0;
+  for (i = 0; !done && i < bsize - 1; i++) {
+    c = (char)fgetc(fp);
+    if (c == EOF) {
+      done = 1;
+      i--;
+    } 
+    else {
+      buf[i] = c;
+      if (c == '\n')
+	done = 1;
+      else if(c == '\t'){
+	
+	
       }
-      entry = readdir(d);
     }
   }
-  printf("result(from my_fgets): %s\n",*result);
-  return s;
+  buf[i] = 0;
+  if (i == 0)
+    return 0;
+  else
+    return buf;
 }

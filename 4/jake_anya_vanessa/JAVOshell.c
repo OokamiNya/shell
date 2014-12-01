@@ -44,7 +44,7 @@ int main(){
     char * newcwd = replace_string(cwd,getenv("HOME"),"~");
     
     printf("JAVO:%s> ",newcwd);
-    fgets(input, sizeof(input), stdin);
+    my_fgets(input, sizeof(input), stdin);
     //my_fgets(input,sizeof(input),stdin);
     input[sizeof(input)] = 0;
     

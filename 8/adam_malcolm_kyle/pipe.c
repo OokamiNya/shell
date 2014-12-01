@@ -1,15 +1,10 @@
 #include "pipe.h"
 
+extern int f;
 void piping(char * args[], int max){
   //piping: Takes a char pointer array with commands that were split by "|"                                              
   //Sends each command to appropriate methods                                                                            
   //Returns nothing                                                                                                      
-  int d = 0;
-  while (args[d]){
-    printf("|%s|\n",args[d]);
-    d++;
-  }
-  printf("here\n");
   start(args[0]);
 
   int step = 1;
@@ -19,7 +14,7 @@ void piping(char * args[], int max){
 
   end(args[max]);
 
-  //unlink("woo.txt");                                                                                                   
+  unlink("woo.txt");                                                                                                   
 }
 void start(char * command){
   //Takes a command representing the first command in a pipe                                                             
@@ -65,11 +60,6 @@ void mid(char * command){
     }
   }
   args[x] = 0;
-  int d =0;
-  while (args[d]){
-    printf("|%s|\n",args[d]);
-    d++;
-  }
   int c;
   f = fork();
   if (!f){

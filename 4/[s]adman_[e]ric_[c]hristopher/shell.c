@@ -10,12 +10,13 @@
 
 int currentPID;
 //counts the num of substr in string
-int countchar(char* str, char substr){
+int countchar(char* str,char substr){
   int ans=0;
   int index=0;
-  while(str[index])
+  while(str[index]){
     if (str[index++]==substr)
       ans++;
+  }
   return ans;
 }
 int wrap_with_semicolons_LOL(char* stuff){
@@ -37,6 +38,8 @@ int doPipeStuff(char* arg){
     commands=countchar(arg,124)+1,/*124 is pipe*/
     command_index=0;
   for (;command_index<commands;command_index++){
+    int boolleft=countchar(split_buffer,'<');
+    int boolright=countchar(split_buffer,'>');
     split_buffer=strsep(&arg,"|");
     int i=0;
     char** addresses= calloc(256,sizeof(char*));
@@ -47,39 +50,30 @@ int doPipeStuff(char* arg){
 	file_in = open("piped",O_RDONLY);
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
-      }else{
-      	char* split_buffer2 = calloc(256,sizeof(char));
-      	if (countchar(split_buffer , '<') = 1 )){
-	      	split_buffer2 = strsep(&split_buffer, "<"); 
-	      	split_buffer2 = strsep(&split_buffer, "<"); 
-	      	file_in = open(split_buffer2, O_RDONLY); }
-	//else {
-	//Are we still putting <</>> here also?	
-	//}
-      	dup2(file_in,STDIN_FILENO);
-	close(file_in); 
-      	//!!!!redirect file if format: input < file | output
+      }else if (boolleft==1){
+	printf("ran\n");
+	char* split_buffer2 = calloc(256,sizeof(char));
+	split_buffer2 = strsep(&split_buffer,"<");
+	split_buffer2 = strsep(&split_buffer,"<");
+	file_in = open(split_buffer2,O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
       }
       if(commands-command_index-1){//if not at last command
 	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
-      }else{
-      	char* split_buffer2 = calloc(256,sizeof(char));
-      	if (countchar(split_buffer , '<') = 1 )){	
-      		split_buffer2 = strsep(&split_buffer, ">"); 
-      		split_buffer2 = strsep(&split_buffer, ">"); 
-      		file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC); }
-      	else{
-      		split_buffer2 = strsep(&split_buffer, ">>"); 
-      		split_buffer2 = strsep(&split_buffer, ">>"); 	
-      		file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_APPEND);
-      	}
-      	dup2(file_out,STDOUT_FILENO);
+      }else if (boolright == 1){
+	printf("ran\n");
+	char* split_buffer2 = calloc(256,sizeof(char));
+	split_buffer2 = strsep(&split_buffer, ">"); 
+	split_buffer2 = strsep(&split_buffer, ">");
+	//strsep for spaces
+	file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC);
+	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
-      	//!!!!redirect file if format: input | output > file
       }
-      //!!!!check if has > or <!!!!!!!!!!
+      
       execvp(addresses[0],addresses);
     }else{
       wait(-1);

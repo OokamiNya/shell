@@ -11,6 +11,8 @@ Features:
 
 Attempted:
 	Finding a better name for the program
+	Considering the spaces for < > | and ;, but couldnt get strsep to
+	work the way I wanted it to
 
 Bugs:
 	Commands using < > | ; will not work if there are spaces on either side.
@@ -96,7 +98,8 @@ Function Headers under shell.c (handles everything):
 	
 	This function is recalled at the end (runs forever theoretically)
 	so that the program will remain "in the cshell"
-	It prints username&computername followed by the current working directory
+	It prints username&computername followed by the 
+	current working directory
 	and a $ sign
 	It then fgets the command made by the user
 	It then checks the command for ; for multiple commands

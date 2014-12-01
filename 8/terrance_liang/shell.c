@@ -161,7 +161,14 @@ void shell(){
   getcwd(currdir,sizeof(currdir));
   char hostname[500];
   gethostname(hostname,sizeof(hostname));
-  printf("<CShell> %s@%s: %s$ ",getlogin(),hostname,currdir);
+  //if the cwd is ahead of the home directory, then it replaces the home directory with ~
+  if (strstr(strstr(currdir,getlogin()),"/")){
+    printf("<CShell> %s@%s:~%s$ ",getlogin(),hostname,strstr(strstr(currdir,getlogin()),"/"));
+  }
+  //if the cwd is before the home directory, the full cwd is shown
+  else{
+    printf("<CShell> %s@%s: %s$ ",getlogin(),hostname,currdir);
+  }
   char uinput[5000];
   fgets(uinput,sizeof(uinput),stdin);
   char *temp = uinput;

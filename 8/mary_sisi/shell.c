@@ -1,10 +1,7 @@
 /*
 
-have to fix:
-- freeing (in main)
-
-simple optional features:
-- sighandler for Ctrl+C (attempted, doesn't work yet)
+simple optional features/improvements:
+- improve sighandler for Ctrl+C (kinda sorta works)
 - make parse() work without spaces between everything // might be harder than i though
 
 not-so-simple optional features:
@@ -13,12 +10,12 @@ not-so-simple optional features:
 - * as a wildcard
 - & to run things in the background
 - ~ as a directory shortcut
-- assign values to variables and such
+- assign values to variables and such (not happening)
 
 non-coding related things to do:
-- write readme.txt about project, when we're done
-- makefile
-- header file?
+- finish readme.txt about project
+- finish header file
+- finish makefile
 
  */
 
@@ -31,26 +28,19 @@ non-coding related things to do:
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-
-static void sighandler(int signo);
-void print_prompt();
-void print_array(char** args); //for testing purposes
-void parse(char ** a); //parses user input
-int contains(char ** a, char * c); //helper
-int execute(char ** a); //hanldes user input
+#include "shell.h"
 
 
 int main(){
 
   print_prompt();
 
-  int run = 1;
-  while(run){
+  while(1){
     signal(SIGINT, sighandler);
 
     char ** args; //allocate space for up to 64 strings of up to 32 characters each
-    args = (char**)malloc(sizeof(char ) * 64); //should we change this?
-    //char ** temp = args;
+    args = (char**)malloc(sizeof(char *) * 64); //should we change this?
+    char ** temp = args;
 
     int i = 0;
     while(i < 32){
@@ -60,14 +50,15 @@ int main(){
 
     parse(args);
     execute(args);
- 
-    /*i = 0;
+
+    i = 0;
     while(i < 64){
-      free(args[i]);
+      free(temp[i]);
       i++;
     }
-    free(args);*/
-
+    
+    free(temp);
+    
     print_prompt();
   }
 
@@ -179,9 +170,7 @@ void redirect(int type,int i, char ** args){
 
       execvp(part1[0], part1);
       //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
+      kill(getpid(),SIGTERM);
       //it isn't necessary to free part1 or reset the file table values, since the child is killed
 
     }else{
@@ -304,9 +293,8 @@ int execute(char ** args){
       //print_array(args);
       execvp(args[0], args);
       //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
+      printf("Not today, lad.\n");
+      kill(getpid(),SIGTERM);
     }else{
       wait(&status);
     }

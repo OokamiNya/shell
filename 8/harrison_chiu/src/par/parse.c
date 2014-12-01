@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <string.h>
 
@@ -8,12 +8,38 @@
 int parse(char **in, command_t *cmds[], int num_cmds)
 {
   int count;
+  int pipin = 0;
   for (count = 0; count < num_cmds; count++)
     {
       char *delim = (char *)malloc(1 * sizeof(char));
 
       cmds[count] = (command_t *)malloc(1 * sizeof(command_t));
       cmds[count]->execstr = strsep_save(in, DELIMS, delim);
+
+      //setting stdin
+      if (pipin)
+	{
+	  cmds[count]->f_in = (char *)malloc(strlen(TEMP_FILE) * sizeof(char));
+	  strcpy(cmds[count]->f_in, TEMP_FILE);
+	  pipin = 0;
+	}
+      else if (cmds[count]->f_in = strchr(cmds[count]->execstr, F_IN))
+	{
+	  cmds[count]->f_in++[0] = 0;
+	}
+
+      //setting stdout
+      if (*delim == '|')
+	{
+	  cmds[count]->f_out = (char *)malloc(strlen(TEMP_FILE) * sizeof(char));
+	  strcpy(cmds[count]->f_out, TEMP_FILE);
+	  cmds[count]->piped = 1;
+	  pipin = 1;
+	}
+      else if (cmds[count]->f_out = strchr(cmds[count]->execstr, F_OUT))
+	{
+	  cmds[count]->f_out++[0] = 0;
+	}
 
       free(delim);
     }
