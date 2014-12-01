@@ -172,17 +172,12 @@ int pipeCommands(char *left, char *right){
   pipe(fd);
   int f = fork();
   if (!f){
-    close(fd[0]);
-    close(1);
     dup2(fd[1],STDOUT_FILENO);
-    printf("Doing %s\n",right);
     executePipe(left);
   }else{
     int status;
     wait(&status);
     close(fd[1]);
-    close(0);
-    printf("Doing %s\n",left);
     dup2(fd[0],STDIN_FILENO);
     executePipe(right);
   }
@@ -212,7 +207,6 @@ int executePipe(char *s){
 	}  
   }
   params[n] = NULL;
-  printf("HERE %s\n",params[0]);
   execvp(params[0],params);
 }
 

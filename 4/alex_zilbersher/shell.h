@@ -8,3 +8,4 @@
 
 int run_command(char* s);
 int change_directory(char** args);
+int redirect(int i, int r, char** args);
