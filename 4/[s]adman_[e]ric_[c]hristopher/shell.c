@@ -19,14 +19,15 @@ int countchar(char* str,char substr){
   }
   return ans;
 }
+
 int wrap_with_semicolons_LOL(char* stuff){
   char* semicolon_buffer=calloc(256,sizeof(char));
   while(semicolon_buffer=strsep(&stuff,";")){
-    //printf("buff: -%s-\n", semicolon_buffer);
     doPipeStuff(semicolon_buffer);
   }
   return 0;
 }
+
 //removes whitespace
 char * strip(char * src){
   //removes leading whitespace
@@ -41,7 +42,6 @@ char * strip(char * src){
   }
   return src;
 }
-
 
 //pipe accepts the whole line of args, 
 int doPipeStuff(char* arg){
@@ -62,10 +62,12 @@ int doPipeStuff(char* arg){
     int boolleft=countchar(split_buffer,'<');
     int boolright=countchar(split_buffer,'>');
     int i=0;
-<<<<<<< HEAD
     if (!boolleft && !boolright){
-      while (arg_buffer=strsep(&split_buffer," "))
-	addresses[i++]=arg_buffer;
+      while (arg_buffer=strsep(&split_buffer," ")){
+	if (arg_buffer[0] > 0){
+	  addresses[i++]=arg_buffer;
+	}
+      }
       i=0;
     }
     if ( fork()){
@@ -77,20 +79,6 @@ int doPipeStuff(char* arg){
       wait(-1);
     }else{
       if (boolleft==1 && !command_index){
-=======
-    char** addresses= calloc(256,sizeof(char*));
-    while (arg_buffer=strsep(&split_buffer," ")){
-      if (arg_buffer[0] > 0){
-	addresses[i++]=arg_buffer;
-      }
-    }if (! fork()){
-      if(command_index){//if not at first command
-	file_in = open("piped",O_RDONLY);
-	dup2(file_in,STDIN_FILENO);
-	close(file_in);
-      }else if (boolleft==1){
-	printf("ran\n");
->>>>>>> 52c14efa67e7f3e9714cd8b00f6c10d7eed8ceb3
 	char* split_buffer2 = calloc(256,sizeof(char));
 	split_buffer2 = strsep(&split_buffer_buffer, ">"); 
 	while (arg_buffer=strsep(&split_buffer2," "))
