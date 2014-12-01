@@ -11,6 +11,7 @@ void process(char * start){
     if (*y != 0)
       execute(y);
   }
+  
 }
 
 
@@ -18,48 +19,59 @@ void execute(char * start){
   //execute: Takes a char pointer start representing the beginning f a String
   //Splits the string arguements and sends to appropriate method
   //Returns nothing
-  if( ! strncmp(start,"HOME=",5))
-    set_home(start);
-  char * args[10];
-  int x = 0;
-  char * y;
-  int redir = 0;
-  int pipe = 0;
+  char * test[10];
+  int x =0;
+  char * temp;
   while (start){
-    y = strsep(&start, " ");
-    if(*y != 0){
-      if (! strcmp(">>",y))
-        redir = 3;
-      else if( ! strcmp("<",y))
-        redir = 2;
-      else if (! strcmp(">",y))
-        redir = 1;
-      else if (! strcmp("|",y))
-        pipe = x;
-      args[x] = y;
+    temp = strsep(&start, "|");
+    if(*temp != 0){
+      test[x] = temp;
       x++;
     }
-    
   }
-  args[x -1] = strsep(&args[x-1], "\n");
-  args[x]=0;
-  if (redir){
-    //printf("%d", redir);
-    args[x + 1] = 0;
-    redirect(args, redir);
-  }else if(pipe){
-    args[x + 1] = 0;
-    piping(args,pipe);
-  }
+  if (x > 1){
+    test[x] = 0;
+    piping(test,x - 1);}
   else{
-    if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
-      normal_process(args);
+    start = temp;
+    if( ! strncmp(start,"HOME=",5))
+      set_home(start);
     else{
-      child_process(args);
+      char * args[10];
+      x = 0;
+      char * y;
+      int redir = 0;
+      while (start){
+	y = strsep(&start, " ");
+	if(*y != 0){
+	  if (! strcmp(">>",y))
+	    redir = 3;
+	  else if( ! strcmp("<",y))
+	    redir = 2;
+	  else if (! strcmp(">",y))
+	    redir = 1;
+	  args[x] = y;
+	  x++;
+	}
+    
+      }
+      args[x -1] = strsep(&args[x-1], "\n");
+      args[x]=0;
+      if (redir){
+	//printf("%d", redir);
+	args[x + 1] = 0;
+	redirect(args, redir);
+      }
+      else{
+	if (! (strcmp("cd",args[0]) && strcmp("exit",args[0])))
+	  normal_process(args);
+	else{
+	  child_process(args);
+	}
+      }
     }
   }
 }
-
 void set_home(char * start){
   //Sets the 'home' directory which allows for the use of the character "~"
   //Takes the location of new home directory in relation to current directory
@@ -106,52 +118,128 @@ void child_process(char * args[]){
   }
 }
 
-void piping(char * args[], int pipe){
-  //piping: Takes a char pointer array with command line input and int locating where "|" is in array
-  //Runs first commands and uses output as input to next command
-  //Returns nothing
 
+
+//////////////////////////   The next chunk is dedicated to piping   //////////////////////////
+
+void piping(char * args[], int max){
+  //piping: Takes a char pointer array with commands that were split by "|"
+  //Sends each command to appropriate methods
+  //Returns nothing
+  int d = 0;
+  while (args[d]){
+    printf("|%s|\n",args[d]);
+    d++;
+  }
+  printf("here\n");
+  start(args[0]);
+  
+  int step = 1;
+  while (step < max){
+    mid(args[step]);
+    step++;}
+  
+  end(args[max]);
+
+  //unlink("woo.txt");
+}
+void start(char * command){
+  //Takes a command representing the first command in a pipe
+  //Runs it and stores it's output in a file
+  char * args[10];
+  int x = 0;
+  char * y;
+  int redir = 0;
+  while (command){
+    y = strsep(&command, " ");
+    if(*y != 0){
+      args[x] = y;
+      x++;
+    }
+  }
+  args[x] = 0;
   int c;
   f = fork();
   if (!f){
     c = open("woo.txt", O_CREAT | O_WRONLY | O_TRUNC, 0777);
     dup2(c,STDOUT_FILENO);
-    char * args2[256];
-    int n = 0;
-    while( n !=pipe){
-      //printf("|%s|\n",args[n]);
-      args2[n]=args[n];
-      n++;
-    }
-    args2[n] = 0;
-    //int x = 0;
-    //while(args2[x])
-    //printf("%s\n",args2[x]);
-    execvp(args2[0],args2);
+    execvp(args[0],args);
     exit(0);
   }
   else{
     wait(&f);
     f = 0;
-    f = fork();
-    if (!f){
-      c = open("woo.txt",O_RDONLY);
-      dup2(c,STDIN_FILENO);
-      char * args2[256];
-      int n = 1;
-      while(args[n+pipe]){
-	args2[n - 1]=args[n+pipe];
-	n++;}
-      args2[n -1] = 0;
-      execvp(args2[0],args2);
-      exit(0);
-    }
-    else{
-      wait(&f);
-      f = 0;
-    }
+    close(c);
   }
 }
+void mid(char * command){
+  //Takes a command representing any middle arguement of a pipe
+  //Runs it using info stores in a file, and stores it's output in same file
+  char * args[10];
+  int x = 0;
+  char * y;
+  int redir = 0;
+  while (command){
+    y = strsep(&command, " ");
+    if(*y != 0){
+      args[x] = y;
+      x++;
+    }
+  }
+  args[x] = 0;
+  int d =0;
+  while (args[d]){
+    printf("|%s|\n",args[d]);
+    d++;
+  }
+  int c;
+  f = fork();
+  if (!f){
+    c = open("woo.txt", O_RDWR | O_TRUNC, 0777);
+    dup2(c,STDOUT_FILENO);
+    dup2(c,STDIN_FILENO);
+    execvp(args[0],args);
+    exit(0);
+  }
+  else{
+    wait(&f);
+    f = 0;
+  }
+}
+void end(char * command){
+  //Takes a command representing any end arguement of a pipe
+  //Runs it using info stores in a file, and prints out it's output
+  char * args[10];
+  int x = 0;
+  char * y;
+  int redir = 0;
+  while (command){
+    y = strsep(&command, " ");
+    if(*y != 0){
+      args[x] = y;
+      x++;
+    }
+  }
+  args[x -1] = strsep(&args[x-1], "\n");
+  args[x] = 0;
+  int d = 0;
+  int c;
+  f = fork();
+  if (!f){
+    c = open("woo.txt",O_RDONLY);
+    dup2(c,STDIN_FILENO);
+    execvp(args[0],args);
+    exit(0);
+  }
+  else{
+    wait(&f);
+    f = 0;
+  }
+}
+
+
+//////////////////////////   End of piping   //////////////////////////
+
 
 void redirect(char * args[], int redir){
   //redirect: Takes a char pointer array with command line input and int representing type of redirection

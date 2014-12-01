@@ -104,7 +104,15 @@ int execute(char *s){
   //checks if | in input
   if (strchr (p, '|')){
 	k = strsep(&p,"|");
-	pipeCommands(k,p);
+	int f = fork();
+	if (!f){
+	  pipeCommands(k,p);
+	}else{
+	  int status;
+	  wait(&status);
+	  free(params);
+	  return 1;
+	}
   }
   while (k = strsep(&p," ")){
 	if (strcmp(k,"")){ //removes blanks from multiple spaces
@@ -116,7 +124,8 @@ int execute(char *s){
   if (!strcmp(params[0],"cd")){
 	if (params[1]){
 	  int i = 1;
-	  if (cd (params [i])) printf("No such directory\n");
+	  if (cd (params [i])) 
+		printf("No such directory\n");
 	}else{
 	  cd("~");
 	}
@@ -167,18 +176,22 @@ int inputFrom(char **params,int n){
   execvp(params[0],params);
 }
 
-int pipeCommands(char *left, char *right){
+int pipeCommands(char *left, char *right){//limited to a single pipe
   int fd[2];
-  pipe(fd);
+  pipe(fd);//creates pipe
   int f = fork();
-  if (!f){
-    dup2(fd[1],STDOUT_FILENO);
+  if(f == -1) {
+    printf("error in forking\n");
+    exit(0);
+  }
+  if (!f){//child process
+    dup2(fd[1],STDOUT_FILENO);//writes to pipe
     executePipe(left);
-  }else{
+  }else{//parent process
     int status;
     wait(&status);
-    close(fd[1]);
-    dup2(fd[0],STDIN_FILENO);
+    close(fd[1]);//close write end
+    dup2(fd[0],STDIN_FILENO);//reads in from pipe
     executePipe(right);
   }
 }
@@ -187,7 +200,6 @@ int executePipe(char *s){
   if (emptyString(s)){ //does not run empty commands
 	return 1;
   }
-  char g[1000];
   int n = 2;
   char *p = s;
   while (*p){
@@ -207,7 +219,11 @@ int executePipe(char *s){
 	}  
   }
   params[n] = NULL;
-  execvp(params[0],params);
+  int t = execvp(params[0],params);
+  if (t == -1) {
+    printf("error\n");
+    exit (0);
+  }
 }
 
 int emptyString(char *s){

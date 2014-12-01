@@ -1,4 +1,4 @@
 all:
-	gcc shell.c
+	gcc shell.c pipes.c
 clean:
 	rm a.out

@@ -120,9 +120,7 @@ int main() {
 #ifdef DEBUG
     printf("$input: `%s`\n", line);
 # endif
-    printf("history1:%s\n",path_history->arg);
     path_history = parse_input(line,path_history);
-    printf("history2:%s\n",path_history->arg);
     if (valid_input) { // Inputs that contain non-whitespace characters
       add_history(line);
     }

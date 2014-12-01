@@ -3,9 +3,21 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <dirent.h>
+
 int f;
 extern int cont;
 
+/*------------------------------------------------------------
+int execute()
+Input: char ** arg
+What it does: Takes the information typed in by the user as 
+char ** arg and checks for semicolons and pipes and parses the
+string accordingly and then calls execute on the new parsed 
+strings individually. Also takes care of cases in which cd and 
+exit are called. For any cases without cd, exit, semicolons,
+or pipes it calls executef() on arg.
+------------------------------------------------------------*/
 int execute(char ** arg) {
   int i = 0;
 
@@ -113,6 +125,12 @@ int execute(char ** arg) {
   return 0;
 }
 
+/*------------------------------------------------------------
+int executef()
+Input: char** arg
+What it does: Forks of a child process and executes arg using
+execvp().
+------------------------------------------------------------*/
 int executef(char** arg){
   f = fork();
   if (!f){
@@ -125,18 +143,46 @@ int executef(char** arg){
   }
 }
 
-char *replace_string(char *str, char *orig, char *rep){
+char *replace_string(char *str, char *old, char *rep){
 
-  static char buffer[4096];
+  static char buffer[256];
   char *p;
 
-  if(!(p = strstr(str, orig)))
+  if(!(p = strstr(str, old)))
     return str;
 
   strncpy(buffer, str, p-str);
   buffer[p-str] = '\0';
 
-  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
+  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(old));
 
   return buffer;
+}
+
+char * my_fgets(char *s, int size, FILE * stream){
+  int i = size;
+  int j = 0;
+  char * * result;
+  char ch = (char)fgetc(stream);
+  while (!(ch == '\n' || ch == '\t') && i){
+    s[j] = ch;
+    i--;
+    j++;
+    ch = (char)fgetc(stream);
+  }
+  s[j] = 0;
+  if(ch == '\t'){
+    DIR * d = opendir(".");
+    int i = 0;
+    char * * file;
+    struct dirent * entry = readdir(d);
+    while(entry){
+      if(strncmp(s,entry->d_name,strlen(s))){
+	strcat(*result,entry->d_name);
+      }
+      entry = readdir(d);
+    }
+  }
+  printf("result(from my_fgets): %s\n",*result);
+  return s;
 }

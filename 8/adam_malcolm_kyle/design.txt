@@ -11,14 +11,14 @@ Features:
 	Saves home direcory (HOME=<path from cur dir>)
 	Pipes multi-arg commands (try "find . -type f -print | wc -l")
 	SIGINT kills the running child process and not the whole
-	terminal, if applicable
+	terminal, if applicable  (run command flood_my_terminal to test)
 
 Attempted:
 	Would have liked to account for "\ " char, or allow the user
 	to insert a different character, but decided against implementation
 
 Bugs:
-	
+	| needs white space
 	
 Files & Function Headers:
 program.c
@@ -59,6 +59,15 @@ program.c
 	 Takes a char pointer array with command line input and int representing type of redirection
   	 Performs appropriate redirection depending on ">", "<", or ">>"
   	 Allows for <command> > <file1> > <file2> etc. if that's what you'd like
+	====================*/
+
+	/*======== void piping() ==========
+	Inputs:  char * args[], int pipe
+
+	 Takes a char pointer array with command line input and int
+	 locating where "|" is in array 
+	 Runs first commands and uses output as input to next command
+	 Accounts for multiple arguements
 	====================*/
 
 	/*======== void set_home() ==========

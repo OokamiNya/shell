@@ -23,10 +23,15 @@ void piper(char *s){
       dup2(temp_in, STDIN_FILENO);	
       parse_string(piparray[1]);
       close(temp_in);
+      remove_file("pin");
       exit(0);
     }
     else{
       wait(&f2);
     }
   }
+}
+
+void remove_file(char* f){
+  execlp("rm","rm", f, NULL);
 }

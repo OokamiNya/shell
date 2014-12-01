@@ -2,18 +2,21 @@ seashell
 by Aida Piccato and Madina Radjabova
 
 Features:
+<<<<<<< HEAD
 	Accounts for 'cd' and 'exit'
 	Can execute a command with multiple arguments
 	Can parse and read multiple commands on a line, separated by a semicolon.
 	Implements simple redirection ('<','>','>>'). When redirecting output, correctly redirect the output of a command with multiple arguments!
+=======
+	Forks and executes commands! Accounts for 'cd' and 'exit'
+	Parses multiple commands on one line and executes each one 
+	> , < , and >> functionality implemented
+	Can create an army of wizards to battle the horrible orcs.
 
 Attempted:
 
 Bugs:
-	At times, Aida's behavior is malfunctional. She gets sassy when
-	in presence of her chapstick. She insists that I mention it is
-	Burt's Bees "minty fresh" flavored chapstick. Upon smelling it,
-	I concur that it does indeed smell nice.
+	
 
 Files & Function Headers:
 	parse.c
@@ -32,7 +35,7 @@ Files & Function Headers:
 		Used in parse_args and parse_commands to find the different tokens separated by ' ' and ';', respectively.
 
 	redirect.c
-		Handles redirection using >,>>,<, and pipes. 
+		Handles redirection using >,>>,<.
 		============== int redir_in() ===========================
 		Inputs: char** args
 		Handles input redirection with '<'. Reads a designated input_file, the name of which is found in args array, and uses dup2 to replace its file descriptor to that of stdin. It then executes the file, also found in args array, which will use whatever was in input_file and stdin. 

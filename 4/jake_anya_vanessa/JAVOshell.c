@@ -19,6 +19,9 @@ static void sighandler(int signo){
     if (f){
       exit(0);
     }
+    else{
+      printf("\n");
+    }
   }
 }
 
@@ -30,7 +33,7 @@ int main(){
   chdir(getenv("HOME"));
   
   while(cont){
-    printf("pid: %d\n", getpid());
+    //    printf("pid: %d\n", getpid());
 
     char input[256];
     char cwd[256];
@@ -42,6 +45,7 @@ int main(){
     
     printf("JAVO:%s> ",newcwd);
     fgets(input, sizeof(input), stdin);
+    //my_fgets(input,sizeof(input),stdin);
     input[sizeof(input)] = 0;
     
     char *s1 = input;
@@ -69,3 +73,4 @@ int main(){
   }
   return 0;
 }
+

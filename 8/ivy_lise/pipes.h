@@ -10,3 +10,4 @@
 #include "shell.h"
 
 void piper(char *);
+void remove_file(char*);

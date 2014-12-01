@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include "parse.c"
 #include "redirect.c"
+#include "pipe.c"
+
 int main() {
   char input[256];
   char **commands;
@@ -78,10 +80,10 @@ int main() {
         }
         waitid(P_PID, pid, infop, WEXITED);
       }
-      free(args);
       i++;
+      free(args);
     }
-    free(commands);   
+    free(commands);
   }
 }
 

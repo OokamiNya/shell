@@ -4,6 +4,7 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
+
 char **parse_args(char *command) {
   int num_args = count_tokens(command,' ');
     char **args_array = (char**)malloc(sizeof(char)*64);
@@ -12,6 +13,7 @@ char **parse_args(char *command) {
       args_array[j] = (char *)malloc(sizeof(char)*32);
       j++;
     }
+
     args_array[0] = strtok(command," ");
     int i = 1;
     while (i <= num_args) {
