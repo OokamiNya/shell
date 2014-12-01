@@ -15,11 +15,11 @@ ATTEMPTED FEATURES
 ----------------------------------------------------------------------------
 	* Was unable to get 2> to redirect stderr to a new file
 	* Was also unable to get 2>> to redirect stderr and append to a new file
-
+	* Multiple piping
 BUGS
 ----------------------------------------------------------------------------
-	* Multiple piping may or may not work...
-	* cd past ~ breaks and cries
+	* Multiple piping
+	* cd past home (~) directory segfaults.
 
 FILES AND FUNCTION HEADERS
 ==========================================================================
