@@ -1,14 +1,14 @@
 Shell
-By Michael Jin, Sharuz, and Jeffrey.
+By Michael Jin, Shahruz Ghaemi, and Jeffrey He.
 
 Features:
 	Forks and executes command line
-	Parses multiple command on one line
+	Parses multiple commands on one line
 	Can exit and change directory
-	<,>,>>,| works
+	<,>,>>, simple | all work
 
 Attempted:
-	Tried to think of a creative shell prompt to match "Ca$h".
+	Tried to think of a creative shell prompt to match "Ca$h". Ended up with “^_^”
 
 Bugs:
 	Nope
@@ -18,7 +18,7 @@ Files & Function Headers:
 main.c
 
       	exec_line
-		Input: command
+		Input: parse & edited command
 		Output: NULL
 		
 		Runs execvp on the command provided.
@@ -32,11 +32,17 @@ main.c
 		an error.
 	
 	runs_command
-		Input: command
+		Input: raw command-line input
 		Output: NULL
 
 		The brain of the whole operation. Takes in the command in its
-		raw form and then cycles it through trim if necessay. Then, the
+		raw form and then cycles it through trim if necessary. Then, the
 		function determines if the command is a special case (>,>>,<,|
 		exit,cd). If it is, the command is handled by the "if" 
 		statements. If not, the command is run through exec_command.
+	wrkdir
+		Input: none
+		Output: formatted string version of the cwd
+		
+		Simply formats the current working directory down into a string 
+		which can be used as the common prompt.
