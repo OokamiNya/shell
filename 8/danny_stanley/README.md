@@ -28,7 +28,8 @@ For automated testing:
     - Current directory
     - `ᐅ` changes color based on success/failure of previous command
 - Builtin commands:
-    - `cd`, `exit/quit`
+    - `cd`, `cd -` to backtrack
+    - `exit/quit`
 - Home directory recognition:
     - `~` expands to home directory of environment
     - `~user` expands to home directory of user specified
@@ -48,6 +49,7 @@ For automated testing:
     - Tab Completion
     - History (Using the arrow keys)
 - Background Processes (VERY BAD)
+    - `jobs` gives a list of all background processes whether they are currently running or not
 
 ## TODO: (We didn't have enough time to implement these ☹)
 
