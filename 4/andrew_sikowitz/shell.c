@@ -5,14 +5,29 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "shell.h"
 
 #define pwd pw->pw_dir
+int cpid;
+char valid;
 
 static void sighandler(int signo) {
   if (signo == SIGINT) {
-    quit();
+    if (!cpid) {
+      printf("\n");
+      exit(2);
+    }
+    else
+      valid = 0;
+  }
+  if (signo == SIGUSR1) {
+    if (!cpid) {
+      exit(1);
+    }
+    else
+      valid = 0;
   }
 }
 
@@ -20,7 +35,7 @@ char isRed(char c) {
   return c == '>' || c == '<' || c == '|';
 }
 
-char * clean(char * input) {
+char * clean(char * input) { //Alters string, so no malloc
   char * ph = input;
   while (*ph && *ph == ' ') {
     input++;
@@ -101,9 +116,13 @@ int parse(char * input) {
 
 int separate(char * input) {
   char * step;
+  char * clean_step = malloc(1024);
+
   while ((step = strsep(&input, ";"))) {
-    parse(step);
+    strncpy(clean_step, step, 1024);
+    parse(clean(clean_step));
   }
+  free(clean_step);
 
   return 0;
 }
@@ -132,10 +151,6 @@ char ** sparse(char * command) {
   return args;
 }
 
-void quit() {
-  exit(0);
-}
-
 void ssfree(char ** starstar, int c) {
   int i;
   for (i=0; i<c; i++) {
@@ -146,17 +161,23 @@ void ssfree(char ** starstar, int c) {
 }
 
 int run(char ** commands, int c) {
+  int f, status;
+  
   if (!strncmp(commands[0], "cd", 2)) {
-    char ** args = sparse(commands[0]);
+    char * command = clean(commands[0]);
+    char ** args = sparse(command);
     ssfree(commands, c);
+
     if (chdir(args[1]))
       printf("%s\n", strerror(errno));
+    ssfree(args, 2); 
   }
   else if (!strncmp(commands[0], "exit", 4)) {
-    quit();
+    ssfree(commands, c);
+    kill(getppid(), SIGUSR1);
+    exit(9);
   }   
   else {
-    int f, status;
     f = fork();
     if (f) {
       wait(&status);
@@ -195,33 +216,77 @@ int run(char ** commands, int c) {
   
   return 0;
 }
-      
+
+void main_run(char * hostname, char * cwd, char * cwdp, struct passwd *pw) {
+  int status;
+  char cwd_new[4096];
+  int pipefd[2];
+  pipe(pipefd);
+  cpid = fork();
+  valid = 1;
+  
+  if (cpid) {
+    close(pipefd[1]);
+    *cwd_new = 0;
+    while (*cwd_new == 0 && valid)
+      read(pipefd[0], &cwd_new, 4096);
+    close(pipefd[0]);
+    kill(cpid, SIGUSR1);
+    waitpid(cpid, &status, 0);
+    
+    if (WIFEXITED(status)) {
+      switch(WEXITSTATUS(status)) {
+      case 9:
+        exit(0);
+      case 10:
+	printf("Something went wrong\n");
+      }
+    }
+    else
+      printf("Error exiting\n");
+    printf("CD: %s\n", cwd_new);
+    if (chdir(cwd_new) && valid)
+      printf("%s\n", strerror(errno));
+  }
+  else {
+    close(pipefd[0]);
+    getcwd(cwd, 4096);
+    gethostname(hostname, 4096);
+    getpwuid(getuid());
+    cwdp = strstr(cwd, pwd) + strlen(pwd) - 1;
+    *cwdp = '~';
+    printf("%s@%s:%s$ ", getlogin(), hostname, cwdp);
+    char * input = (char *) malloc(1024);
+    fgets(input,1024,stdin);
+    input[strlen(input)-1] = 0; //Removes newline
+    separate(input);
+    free(input);
+    getcwd(cwd, 4096);
+    if ((write(pipefd[1], cwd, 4096)) == -1)
+      printf("%s\n", strerror(errno));
+    close(pipefd[1]);
+    pause();
+    exit(10); //Shouldn't run
+  }
+}
       
 int main() {
   //Main program
 
   signal(SIGINT, sighandler);
-
+  signal(SIGUSR1, sighandler);
+  
   printf("PID: %d\n", getpid());
   //printf("Login: %s\n", getlogin());
+
   char hostname[4096];
   char cwd[4096];
   char * cwdp;
   getcwd(cwd, 4096);
   gethostname(hostname, 4096);
   struct passwd *pw = getpwuid(getuid());
-  
+
   while (1) {
-      getcwd(cwd, 4096);
-      gethostname(hostname, 4096);
-      getpwuid(getuid());
-      cwdp = strstr(cwd, pwd) + strlen(pwd) - 1;
-      *cwdp = '~';
-      printf("%s@%s:%s$ ", getlogin(), hostname, cwdp);
-      char * input = (char *) malloc(1024);
-      fgets(input,1024,stdin);
-      input[strlen(input)-1] = 0; //Removes newline
-      separate(input);
-      free(input);
+    main_run(hostname, cwd, cwdp, pw);
   }
 }
