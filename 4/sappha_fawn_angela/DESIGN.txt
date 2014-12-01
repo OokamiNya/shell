@@ -6,7 +6,7 @@ FEATURES
 ----------------------------------------------------------------------------
 	* Forks and executes commands!
 	* Parses multiple commands (separated by semicolons) on one line!
-	* Redirects using >, <!
+	* Redirects using >, <, >>!
 	* Can make you almost forget you're not using bash!
 	* Attempts to fight against User Silliness Syndrome! 'ls           -l' can't fight us!
 
@@ -15,11 +15,11 @@ ATTEMPTED FEATURES
 ----------------------------------------------------------------------------
 	* Was unable to get 2> to redirect stderr to a new file
 	* Was also unable to get 2>> to redirect stderr and append to a new file
-	* Multiple piping
+	* Multiple piping clearly does not adhere to bash's multiple piping.
 BUGS
 ----------------------------------------------------------------------------
-	* Multiple piping
-	* cd past home (~) directory segfaults.
+	* Multiple piping returns funkiness.
+	* attempts to cd higher than the home (~) directory will cause segfaults. 
 
 FILES AND FUNCTION HEADERS
 ==========================================================================
@@ -197,5 +197,6 @@ redirect.c: home of our redirection functions and magical creatures!
 	to this temporary file. After this, we delete the temporary file--
 	who said temp ever existed?!
 	==============================================*/ 
+
 
 

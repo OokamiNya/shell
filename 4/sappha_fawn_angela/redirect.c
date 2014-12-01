@@ -8,17 +8,19 @@
   Ex: cat < DESIGN.txt will redirect stdin to DESIGN.txt and then cat, resulting in cat DESIGN.txt.
   ==============================================*/ 
 void redirect_in(char * command, char * file){
-	int fd, fd1;
-	fd = open(file ,O_RDONLY, 0644);
-     	if (fd == -1){
-	  printf("owl: %s: No such file or directory\n", file);
-	}
-	else {
-	  fd1 = dup(STDIN_FILENO);//set fd1 to STDIN
-	  dup2(fd, STDIN_FILENO);//set STDIN to fd
-	  execute(command);
-	  dup2(fd1, STDIN_FILENO);//reset STDIN to fd1
-	}
+  command = trim(command);
+  file = trim(file);
+  int fd, fd1;
+  fd = open(file ,O_RDONLY, 0644);
+  if (fd == -1){
+    printf("owl: %s: No such file or directory\n", file);
+  }
+  else {
+    fd1 = dup(STDIN_FILENO);//set fd1 to STDIN
+    dup2(fd, STDIN_FILENO);//set STDIN to fd
+    execute(command);
+    dup2(fd1, STDIN_FILENO);//reset STDIN to fd1
+  }
 }
 
 /*======== void redirect_out() =======================
@@ -30,6 +32,8 @@ void redirect_in(char * command, char * file){
   --> If mode == 2, we will create (if necessary) or append to the file if it already exists.
   ==============================================*/
 void redirect_out(char * command, char * file, int mode){
+  command = trim(command);
+  file = trim(file);
   int fd, fd1;
   if (mode == 1){
     fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
@@ -52,6 +56,8 @@ void redirect_out(char * command, char * file, int mode){
   --> If mode == 2, we will create (if necessary) or append to the file if it already exists.
   ==============================================*/ 
 void redirect_err(char * command, char * file, int mode){
+  command = trim(command);
+  file = trim(file);
   int fd, fd1;
   if (mode == 1){ //2>
     fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
