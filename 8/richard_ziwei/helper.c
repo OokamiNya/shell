@@ -1,4 +1,4 @@
-#include"heads.h"
+#include "heads.h"
 
 char * strip(char * s){
   while (*s == ' ' || *s == '\t' || *s == '\n'){

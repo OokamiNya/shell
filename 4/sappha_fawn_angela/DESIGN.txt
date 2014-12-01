@@ -119,4 +119,83 @@ shell.c: where our fantastical magic begins!
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-redirect.c: home of our redirection functions
+redirect.c: home of our redirection functions and magical creatures!
+
+	/*======== int has_redirect() =======================	
+	Inputs:  char *i
+	Returns: An integer value that gives insight as to whether or not
+	the inputted string (i) originally had any fancy redirection symbols.
+
+	A helper function which manipulates the inputted string i (used as a fxn
+	in other contexts) to determine which redirection symbols exist.
+	
+		Return Value	Symbol Existent
+		--------------------------------
+			0		N/A
+			1		<
+			3		>
+			4		>>
+			5		|
+			6		2>
+			7		2>>
+
+		Note: 6 and 7 represent attempts to redirect stderr
+		Note: 2 is missing because skipping << seemed sad.
+
+	==============================================*/ 
+
+	/*======== void redirection() =======================
+	Inputs:  char *s, int mode
+	Returns: N/A
+	 
+	The grandpa redirection function. Takes care of
+	whatever redirection business is necessary based on mode,
+	which, in our code, is given the value returned by has_redirect().
+
+	==============================================*/ 
+
+	/*======== void redirect_in() =======================
+	Inputs:  char *command, char* file
+	Returns: N/A
+	 
+	Redirects stdin to a given file and executes the given command.
+	Ex: cat < DESIGN.txt will redirect stdin to DESIGN.txt and then 
+	cat, resulting in cat DESIGN.txt.
+	==============================================*/ 
+
+	/*======== void redirect_out() =======================
+	Inputs:  char *command, char* file, int mode
+	Returns: N/A
+	 	
+	Redirects stdout from executing the given command to the
+	given file. 
+	--> If mode == 1, we will create (if necessary) or rewrite
+	the file if it already exists.
+	--> If mode == 2, we will create (if necessary) or append to 
+	the file if it already exists.
+	==============================================*/ 
+
+	/*======== void redirect_err() =======================
+	Inputs:  char *command, char* file, int mode
+	Returns: N/A
+	***************CURRENTLY BROKEN**********************
+	Redirects stderr from executing the given command to the
+	given file. 
+	--> If mode == 1, we will create (if necessary) or rewrite
+	the file if it already exists.
+	--> If mode == 2, we will create (if necessary) or append to 
+	the file if it already exists.
+	==============================================*/ 
+
+	/*======== void pipeify() =======================
+	Inputs:  char *first, char* second
+	Returns: N/A
+	 	
+	Redirects the stdout from executing first to the stdin from 
+	executing second by redirecting stdout of the first command
+	to a temporary file, then redirecting stdin of the second command
+	to this temporary file. After this, we delete the temporary file--
+	who said temp ever existed?!
+	==============================================*/ 
+
+
