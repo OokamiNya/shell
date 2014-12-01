@@ -9,6 +9,7 @@ FEATURES
 	* Redirects using >, <, >>!
 	* Can make you almost forget you're not using bash!
 	* Attempts to fight against User Silliness Syndrome! 'ls           -l' can't fight us!
+	* Handles empty commands (" ; ")
 
 
 ATTEMPTED FEATURES
@@ -18,7 +19,8 @@ ATTEMPTED FEATURES
 BUGS
 ----------------------------------------------------------------------------
 	* Multiple piping returns funkiness.
-	* attempts to cd higher than the home (~) directory will cause segfaults. 
+	* Attempts to cd .. past the home (~) directory will result in a segfaults.
+	* Attempts to put a random semicolon at the beginning or end of your command will result in a segfault.
 
 
 FILES AND FUNCTION HEADERS
@@ -104,7 +106,7 @@ shell.c: where our fantastical magic begins!
 	
 	Takes the user input and parses along the semicolons (;), adding
 	each element into the args array of strings. Then, we return this
-	array of strings.	
+	array of strings. Handles extraneous semicolons.	
 
 	==============================================*/ 
 

@@ -12,7 +12,7 @@ void runs_command(char *scpy);
 // Removes extraneous white spaces from str
 void trim(char *str);
 // Returns the cwd in a presentable string
-char * wrkdir(char * s);
+char * wrkdir();
 
 int main() {
   int status;
@@ -24,11 +24,11 @@ int main() {
   char *cwd;
   
   while(1) {
-   cwd = wrkdir(cwd);
+   cwd = wrkdir();
     /*
     getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
     */
-    printf("%s : ", cwd);
+    printf("%s ^_^ : ", cwd);
     fgets(s,sizeof(s),stdin);
     
     int i=0;
@@ -256,7 +256,7 @@ void trim(char *str) {
 }
 
 char * wrkdir(){
-  char *path;
+  char *path = (char *)malloc(512);
   path = getcwd( path, 512 );
   char * temp = (char *)malloc(512);
   temp = getcwd(temp, sizeof(temp) );
@@ -268,7 +268,8 @@ char * wrkdir(){
     path = getcwd(path, sizeof(path) );
   } else {
     path = getcwd(path, sizeof(path) );
-    for(int i = 0; i< branches-3 ; i++){
+    int i = 0;
+    for(i; i< branches-3 ; i++){
       temp = strsep(&path, "/");
     }
   }
