@@ -6,7 +6,7 @@ Features:
 	Parses multiple commands on one line using ';' (handles multiple ;)
 	Ignores extra white space
 	Redirects using >, <, >> (ls > hey.txt > yo.txt etc. is valid
-	syntax)
+	syntax, as well as with '>>")
 	Changes Directories and exists
 	Saves home direcory (HOME=<path from cur dir>)
 	Pipes multi-arg commands (try "find . -type f -print | wc -l")
@@ -19,7 +19,7 @@ Attempted:
 	to insert a different character, but decided against implementation
 
 Bugs:
-	| needs white space
+	'bug' command featuring odd behavior 
 	
 Files & Function Headers:
 program.c
@@ -50,7 +50,7 @@ program.c
 	/*======== void child_process() ==========
 	Inputs:  char * args[]
 
-	Creates a forked process that executes the command dicatate by
+	Creates a forked process that executes the command dicatated by
 	args
 	====================*/
 
@@ -85,24 +85,25 @@ pipe.c
 	 Takes a an array comprising of commands that were seperated
 	by "|"
 	Processes each command using three methods
+	Deletes woo.txt, a file used during piping
 	====================*/
 
 	/*======== void start() ==========
 	Inputs:  char * args
 
-	Processes command normally, except that output goes to a file
+	Processes command normally, except that output goes to a file (woo.txt)
 	====================*/
 
 	/*======== void mid() ==========
 	Inputs:  char * args
 
-	Processes command normally, except it uses a file as input and
-	truncates file with output
+	Processes command normally, except it uses a file (woo.txt) as input and
+	truncates file (woo.txt) with output
 	====================*/
 
 	/*======== void end() ==========
 	Inputs:  char * args
 
-	Processes command normally, except it uses a file as input 
+	Processes command normally, except it uses a file (woo.txt) as input 
 	====================*/
 

@@ -11,8 +11,7 @@ Piping with | (single pipe only)<br>
 ## Attempted:
 
 ## Bugs:
-Cd to folders with "~/" is broken <br>
-Multiple Piping in sucession does not work.
+Multiple Piping in sucession does not work.<br>
 
 ## Files and Function Headers:
 #shell.c

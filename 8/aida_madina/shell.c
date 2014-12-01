@@ -4,9 +4,10 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "parse.c"
-#include "pipe.c"
-#include "redirect.c"
+#include "parse.h"
+#include "pipe.h"
+#include "redirect.h"
+
 int main() {
   char input[256];
   char **commands;
@@ -25,7 +26,7 @@ int main() {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(input, sizeof(input), stdin);
     input[strlen(input)-1]='\0';
-
+    
     //Parsing commands
     commands = parse_commands(input);
 
@@ -80,9 +81,9 @@ int main() {
         waitid(P_PID, pid, infop, WEXITED);
       }
       i++;
-      free(args);
+      free_array(args);
     }
-    free(commands);
+    free_array(commands);
   }
 }
 

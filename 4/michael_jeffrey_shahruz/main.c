@@ -194,8 +194,8 @@ void runs_command(char *scpy) {
     	if (in != 0) {
     		dup2(in,0);
     	}
-    	exec_line(commands[i]);
     	
+	exec_line(commands[i]);
     	
     }
     // ALL OTHER COMMANDS
@@ -269,8 +269,9 @@ char * wrkdir(){
   } else {
     path = getcwd(path, sizeof(path) );
     int i = 0;
-    for(i; i< branches-3 ; i++){
+    while(i<branches-3){
       temp = strsep(&path, "/");
+      i++;
     }
   }
   return path;

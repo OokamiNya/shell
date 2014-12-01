@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <signal.h>
-#include <fcntl.h>
 #include "parse.h"
 int count_tokens(char *line, char delim) {
   char *p = line;
@@ -18,7 +12,7 @@ int count_tokens(char *line, char delim) {
 }
 char **parse_args(char *command) {
   int num_args = count_tokens(command,' ');
-    char **args_array = (char**)malloc(sizeof(char)*64);
+    char **args_array = (char**)malloc(sizeof(char *)*64);
     int j = 0;
     while (j < 32) {
       args_array[j] = (char *)malloc(sizeof(char)*32);
@@ -38,7 +32,7 @@ char **parse_args(char *command) {
 char** parse_commands(char input[256]) {
   char *commands = input;
   int num_commands = count_tokens(commands,';');
-  char **comm_array = (char**)malloc(sizeof(char)*64);
+  char **comm_array = (char**)malloc(sizeof(char *)*64);
   int j = 0;
   while (j < 32) {
     comm_array[j] = (char *)malloc(sizeof(char)*32);
@@ -57,4 +51,19 @@ char** parse_commands(char input[256]) {
   return comm_array;
 }
 
+void free_array(char **array) {
+  int j = 0; 
+  int k;
+  while (j < 64) {
+    k = 0;
+    while (k < 32) {
+      if(array[j][k])
+	free(array[j][k]);
+      k++;
+    }
+    free(array[j]);
+    j++;
+  }
+  free(array);
+}
 

@@ -23,14 +23,6 @@ int main()
 
       //parse functions
       int num_cmds = count_delims(raw_in, DELIMS) + 1;
-      /* char **in = &raw_in; */
-      /* char *delim = malloc(1 * sizeof(char)); */
-      /* int count; */
-      /* for (count = 0; count < num_cmds; count++) */
-      /* 	{ */
-      /* 	  printf("%s\n", strsep_save(in, DELIMS, delim)); */
-      /* 	} */
-      /* free(delim); */
       command_t **cmds = (command_t **)malloc(num_cmds * sizeof(command_t *));
       parse(&raw_in, cmds, num_cmds);
 
@@ -38,11 +30,25 @@ int main()
       int count;
       for (count = 0; count < num_cmds; count++)
       	{
-      	  int pid = fork();
+      	  int pid;
+	  if (!strncmp("exit", cmds[count]->execstr, strlen("exit")))
+	    {
+	      exit(0);
+	    }
+	  else if (!strncmp("cd ", cmds[count]->execstr, strlen("cd ")))
+	    {
+	      chdir(cmds[count]->execstr + strlen("cd "));
+	    }
+	  else
+	    {
+	      pid = fork();
+	    }
+	  //printf("pid: %d\n", pid);
+
       	  if (pid == 0)
       	    {
 	      umask(0000);
-	      printf("cmd: (%s)\nin:  (%s)\nout: (%s)\n", cmds[count]->execstr, cmds[count]->f_in, cmds[count]->f_out);
+	      //printf("cmd: (%s)\nin:  (%s)\nout: (%s)\n", cmds[count]->execstr, cmds[count]->f_in, cmds[count]->f_out);
 	      if (cmds[count]->f_in)
 		dup2(open(cmds[count]->f_in, O_RDONLY | O_CREAT, 0644), STDIN_FILENO);
 	      if (cmds[count]->f_out)
@@ -54,6 +60,7 @@ int main()
       	      wait(NULL);
       	    }
       	}
+      remove(TEMP_FILE);
     }
   free(raw_in);
   free(prompt);
