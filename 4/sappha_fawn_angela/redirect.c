@@ -1,6 +1,5 @@
 #include "redirect.h"
 
-
 /*======== void redirect_in() =======================
   Inputs:  char *command, char* file
   Returns: N/A
@@ -41,7 +40,7 @@ void redirect_out(char * command, char * file, int mode){
   fd1 = dup(STDOUT_FILENO);//set fd1 to stdout
   dup2(fd, STDOUT_FILENO);//redirect fd to stdout
   execute(command);
-  dup2(fd1, STDOUT_FILENO);//reset: redirect fd1 to stdout
+  dup2(fd1, STDOUT_FILENO);//reseting stdout: redirect fd1 to stdout
 }
 
 /*======== void redirect_err() =======================
@@ -53,7 +52,6 @@ void redirect_out(char * command, char * file, int mode){
   --> If mode == 2, we will create (if necessary) or append to the file if it already exists.
   ==============================================*/ 
 void redirect_err(char * command, char * file, int mode){
-  printf("error redirecting!\n");
   int fd, fd1;
   if (mode == 1){ //2>
     fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
@@ -83,25 +81,25 @@ void pipeify(char * first, char * second) {
   stdout_fd = dup(STDOUT_FILENO);
 
   fd = open("temp", O_CREAT | O_TRUNC | O_WRONLY, 0644);
-
-  dup2(fd, STDOUT_FILENO); //redirects fd to stdout (stdout goes to fd)
-  execute(first);//actually writing to fd
+  //redirecting stdout to temp
+  dup2(fd, STDOUT_FILENO); //redirects fd to stdout
+  execute(first);
   close(fd);
-  dup2(stdout_fd, STDOUT_FILENO);//reset
-  
+  dup2(stdout_fd, STDOUT_FILENO);//reseting stdout
+
+  //redirecting temp to stdin
   fd = open("temp", O_RDONLY, 0644);
-  dup2(fd, STDIN_FILENO); //redirecting fd to stdin (stdin is fd)
+  dup2(fd, STDIN_FILENO); //redirecting fd to stdin
   execute(second);
-  dup2(stdin_fd, STDIN_FILENO);//reset
+  dup2(stdin_fd, STDIN_FILENO);//reset stdin
 
   int status, error, f;
   f = fork();
-  if (f){//parent
+  if (f){//parent process
     //printf("parent me!\n");
     wait(&status);
-    //printf("error? %d\n", error);
   }
-  else { //child
+  else { //child process
     //printf("child me!\n");
     error = execlp("rm", "rm", "temp", NULL);
   }
@@ -120,55 +118,51 @@ void redirection(char *s, int mode){
   strcpy(in, s);
   in = trim(in);
 
-  if (mode == 1){//<
+  if (mode == 1){// <
     sep = strsep(&in, "<");
     sep = trim(sep);
     if (in == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
-      //printf("in: %s\n", in);
-      //printf("sep: %s\n", sep);
       redirect_in(sep, in);
     }
   }
-  else if (mode == 3){ //>
+  
+  else if (mode == 3){ // >
    
     sep = strsep(&in, ">");
     sep = trim(sep);
-    if (in == 0) {//if null; for example ls < 
+    if (in == 0) {//if null; for example ls >
       printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
-      redirect_out(sep, in, 1);
+      redirect_out(sep, in, 1);//1 means trunc mode
     }
     
-  }
-  
-  else if (mode == 4){ //>>
+  }  
+  else if (mode == 4){ // >>
     sep = strsep(&in, ">");
-    printf("sep: %s\n", sep);
     strsep(&in, ">");
-    printf("in (file):%s\n", in);
-    if (in == 0) {//if null; for example ls < 
+    if (in == 0) {//if null; for example ls >> 
       printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
       //in is file
-      redirect_out(sep, in, 2);
+      redirect_out(sep, in, 2);//2 means append mode
     }
   }
   else if (mode == 5) { // |
     sep = strsep(&in, "|");
     sep = trim(sep);
-    if (in == 0) { // if there isn't a 2nd command
+    if (in == 0) { // if there isn't a 2nd command given
       printf("owl: syntax error near unexpected token newline'\n");
     }
     else {
       pipeify(sep, in);
     }
   }
-  /*
+  /* 2> and 2>> failed attempts:
   else if (mode == 6){ //2>
     char* temp = (char*)malloc(sizeof(char)*256);
     strcpy(temp, in);
@@ -227,7 +221,6 @@ void redirection(char *s, int mode){
 	Note: 2 is missing because skipping << seemed sad.
 	==============================================*/ 
 int has_redirect(char* i){
-  //printf("input: %s\n", input);
   char *input = (char*) malloc((sizeof(char)*256));
   strcpy(input, i);
   char *less, *more, *pipe;
@@ -236,16 +229,16 @@ int has_redirect(char* i){
   more = strchr(input, '>');
   //printf("more: %d\n", more);
   pipe = strchr(input, '|');
-  if (less) { //there is a < sign
+  if (less) { //if there is a < sign
     return 1;
   }
-  else if (more) { //there is a > sign
+  else if (more) { //if there is a > sign
     char *err_check = (char*) malloc((sizeof(char)*256));
     strcpy(err_check, i);				
     //printf("err_check is %s\n", err_check);
     char *err = strstr(err_check, "2>");
-    if (err) { //has 2>
-      //check for 2>>
+    if (err) { //if has 2>
+      //must still check for 2>> or just 2>
       strsep(&err, ">");
       //printf("err after strsep: %s\n", err);
       char *err_append = strchr(err, '>');
@@ -258,10 +251,10 @@ int has_redirect(char* i){
       strsep(&more, ">");
       char * moremore;
       moremore = strchr(more, '>');
-      if (moremore){
+      if (moremore){//has >>
 	return 4;
       }
-      return 3;
+      return 3;//only >
     }
   }
   else if (pipe) {
