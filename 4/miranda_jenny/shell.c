@@ -20,9 +20,12 @@ char* rmspaces( char *str){
   }
   return str;
 }
+
+
 void calculator(char * str){
   int total=0;
   int i=0;
+  str=&str[1];
   while( str[i] ){
     if (str[i] == '+'){
       str[i]=0;	
@@ -46,8 +49,7 @@ void calculator(char * str){
     i++;
   }
   total+=atoi(str);
-  printf("%d\n",total);
-  
+  printf("%d\n",total);  
 }
 
 void printUnicorn(){
@@ -173,7 +175,7 @@ int main() {
 	}
                
       }
-      else if(strchr( split_cmds, '+') || strchr( split_cmds, '-')){
+      else if(split_cmds[0] == '$' && (strchr( split_cmds, '+') || strchr( split_cmds, '-'))){
 	calculator(split_cmds);
 
       }

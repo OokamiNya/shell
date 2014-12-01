@@ -6,7 +6,8 @@ Features:
 	Parses multiple commands on one line!
 	Redirects using >, <!
 	Handles pipes.
-	Evaluates basic addition and subtration expressions (ie. 3 + 4 -7)
+	Evaluates basic addition and subtration expressions if a $ is
+	put in front of them(ie. $ 3 + 4 -7)
 	super secret unicorn command
 	
 Attempted:
