@@ -13,8 +13,7 @@ Attempted:
 
 Bugs:
     grasshoppers
-    only one redirection at a time
-    prompts are way messed up on macs
+    does bad things with extra spaces
 
 To do:
     strsep -> strchr for \n

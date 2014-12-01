@@ -21,6 +21,7 @@ BUGS
 	* Multiple piping returns funkiness.
 	* attempts to cd higher than the home (~) directory will cause segfaults. 
 
+
 FILES AND FUNCTION HEADERS
 ==========================================================================
 
@@ -197,6 +198,4 @@ redirect.c: home of our redirection functions and magical creatures!
 	to this temporary file. After this, we delete the temporary file--
 	who said temp ever existed?!
 	==============================================*/ 
-
-
 
