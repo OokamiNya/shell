@@ -5,8 +5,7 @@ have to fix:
 
 simple optional features:
 - sighandler for Ctrl+C (attempted, doesn't work yet)
-- implement >> and <<
-- make parse() work without spaces between everything
+- make parse() work without spaces between everything // might be harder than i though
 
 not-so-simple optional features:
 - up arrow to view history
@@ -43,15 +42,16 @@ int execute(char ** a); //hanldes user input
 
 int main(){
 
-  signal(SIGINT, sighandler);
+  
 
   print_prompt();
   int run = 1;
   while(run){
+    signal(SIGINT, sighandler);
 
     char ** args; //allocate space for up to 64 strings of up to 32 characters each
-    args = (char**)malloc(sizeof(char)*64);
-    char ** temp = args;
+    args = (char**)malloc(sizeof(char ) * 64); //should we change this?
+    //char ** temp = args;
 
     int i = 0;
     while(i < 32){
@@ -62,13 +62,12 @@ int main(){
     parse(args);
     execute(args);
  
-    //freeing doesn't work, gotta fix that
-    /* i = 0; */
-    /* while(i < 32){ */
-    /*   free(temp[i]); */
-    /*   i++; */
-    /* } */
-    /* free(temp); */
+    /*i = 0;
+    while(i < 64){
+      free(args[i]);
+      i++;
+    }
+    free(args);*/
 
     print_prompt();
   }
@@ -80,7 +79,8 @@ int main(){
 //I wish this worked.  It does not.
 static void sighandler(int signo){
   printf("\n");
-  main();
+  //main();
+  //print_prompt();
 }
 
 
@@ -121,8 +121,24 @@ void parse(char ** args){
     temp = strsep(&s," ");
   }
 
+  i = 0;
+  
+  /* char ** temp_args;
+  while(args[i]){
+    char * part = strsep( &(args[i]) , ">");
+    int j = 0;
+    while(part){
+      strcpy(temp_args[j + i] , part);
+      j++;
+    }
+    i = j + i;
+    }
+  
+    targs[i] = 0;*/
+
   //termination
   args[i] = NULL;
+  //args = targs;
 }
 
 
@@ -137,6 +153,44 @@ int contains(char ** args, char * c){
   return -1;
 }
 
+
+void redirect(int type,int i, char ** args){
+
+    int f = fork();
+    int status;
+
+    if (!f){
+
+      if (type == 0){ // <
+	int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+	dup2(fd, STDIN_FILENO);
+      }else if (type == 2){ // >
+	int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
+	dup2(fd, STDOUT_FILENO);
+      }else if(type == 1){ //>>
+	int fd = open(args[i+1], O_RDWR | O_CREAT | O_APPEND , 0644);
+	dup2(fd, STDOUT_FILENO);
+      }
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      
+      int j = 0;
+      while(j < i){
+	part1[j] = args[j];
+	j++;
+      }
+
+      execvp(part1[0], part1);
+      //in case execvp doesn't run:
+      if(1){
+	kill(getpid(),SIGTERM);
+      }
+      //it isn't necessary to free part1 or reset the file table values, since the child is killed
+
+    }else{
+      wait(&status);
+    }
+
+}
 
 int execute(char ** args){
 
@@ -160,61 +214,15 @@ int execute(char ** args){
     
   }else if((i = contains(args,"<")) != -1  ){
     //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    redirect( 0,i,args );
     
-    int f = fork();
-    int status;
-
-    if (!f){
-      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2(fd, STDIN_FILENO);
-
-      char ** part1 = (char**)malloc(sizeof(char*) * i);
-      
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-
-      execvp(part1[0], part1);
-      //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
-      //it isn't necessary to free part1 or reset the file table values, since the child is killed
-
-    }else{
-      wait(&status);
-    }
+  }else if((i = contains(args,">>")) != -1  ){
+    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
+    redirect( 1,i,args );
 
   }else if((i = contains(args,">")) != -1  ){
     //printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
-    
-    int f = fork();
-    int status;
-
-    if (!f){
-      int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
-      dup2(fd, STDOUT_FILENO);
-
-      char ** part1 = (char**)malloc(sizeof(char*) * i);
-      
-      int j = 0;
-      while(j < i){
-	part1[j] = args[j];
-	j++;
-      }
-
-      execvp(part1[0], part1);
-      //in case execvp doesn't run:
-      if(1){
-	kill(getpid(),SIGTERM);
-      }
-      //it isn't necessary to free part1 or reset the file table values, since the child is killed
-
-    }else{
-      wait(&status);
-    }
+    redirect( 2,i,args );    
 
   }else if((i = contains(args,"|")) != -1  ){
     //printf("COMMAND WITH '|' AT INDEX %d\n",i);
