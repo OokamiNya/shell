@@ -8,6 +8,7 @@ FEATURES
 	* Parses multiple commands (separated by semicolons) on one line!
 	* Redirects using >, <!
 	* Can make you almost forget you're not using bash!
+	* Attempts to fight against User Silliness Syndrome! 'ls           -l' can't fight us!
 
 
 ATTEMPTED FEATURES

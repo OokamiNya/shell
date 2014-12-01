@@ -48,10 +48,39 @@ void parse_redirect(char * s){
     }
   } else if(strchr(s, '<')){
     //redirin
-  }
+    char * tok;
+    int len = 2;
+    int i = 0;
+    char ** top_arr = (char**)malloc(len*sizeof(char*));
+    strip(s);
+    if(strchr(s,'<')){
+      while(tok = strsep(&s,"<")){
+	tok = strip(tok);
+	top_arr[i] = tok;
+	i++;
+      }
+      //printf("L: %s R: %s\n",top_arr[0],top_arr[1]);
+      int fd = open(top_arr[1], O_RDONLY);
+      int tmp_in, status;
+      
+      tmp_in = dup(STDIN_FILENO);
+      dup2(fd, STDIN_FILENO);
 
+      int f = fork();
+      if( !f ){
+	parse_string(top_arr[0]);
+	exit(-1);
+      } else {
+	int w = wait( &status );
+	dup2(tmp_in, STDIN_FILENO);
+	close(fd);
+	//printf("finished waiting. w: %d s: %d\n",w,status);
+      }
+    }
+  }
+  
   free(top_arr);
-  printf("ended\n");
+  //printf("ended\n");
 }
 
 void parse_string(char *s){
@@ -81,7 +110,7 @@ void parse_string(char *s){
       argarray[i] = (char*)malloc(256*sizeof(char));
       argarray[i] = token;
       token = strsep(&s, " ");
-      //   printf("token[%d]:___%s___",i,token);
+      //printf("token[%d]:___%s___",i,token);
       i++;
     }
   }
@@ -151,7 +180,7 @@ void shell(){
     cmd = strip(cmd);
     //printf("cmd:%s  \n\n",cmd);
     if(strchr(cmd, '>') || strchr(cmd, '<') || strstr(cmd, ">>")){
-      printf("Redirecting.\n");
+      //printf("Redirecting.\n");
       parse_redirect(cmd);
     } else {
       parse_string(cmd);
