@@ -173,7 +173,6 @@ char * my_fgets(char *s, int size, FILE * stream){
   s[j] = 0;
   if(ch == '\t'){
     DIR * d = opendir(".");
-    char * dirarray[256];
     int i = 0;
     char * * file;
     struct dirent * entry = readdir(d);
