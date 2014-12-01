@@ -4,7 +4,18 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
-
+#include "parse.h"
+int count_tokens(char *line, char delim) {
+  char *p = line;
+  int count = 0;
+  while (*p) {
+    if (*p == delim) {
+      count++;
+    }
+    p++;
+  }
+  return count;
+}
 char **parse_args(char *command) {
   int num_args = count_tokens(command,' ');
     char **args_array = (char**)malloc(sizeof(char)*64);
@@ -46,14 +57,4 @@ char** parse_commands(char input[256]) {
   return comm_array;
 }
 
-int count_tokens(char *line, char delim) {
-  char *p = line;
-  int count = 0;
-  while (*p) {
-    if (*p == delim) {
-      count++;
-    }
-    p++;
-  }
-  return count;
-}
+

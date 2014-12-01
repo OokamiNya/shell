@@ -4,6 +4,7 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
+#include "pipe.h"
 
 int pipes(char **args, int index, int end) {
   int file;
