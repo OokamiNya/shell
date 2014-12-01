@@ -4,7 +4,6 @@
 #include <string.h>
 #include <fcntl.h>
 
-int f = 0;
 
 void process(char * start);
 void execute(char * start);
@@ -12,7 +11,7 @@ void child_process(char * args[]);
 void normal_process(char * args[]);
 void redirect(char * args[], int redir);
 void set_home(char * start);
-void piping(char * args[], int max);
-void start(char * command);
-void mid(char * command);
-void end(char * command);
+
+
+
+

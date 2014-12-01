@@ -1,4 +1,6 @@
 #include "program.h"
+#include "pipe.h"
+int f =0;
 
 char home[256] = "/";
 
@@ -57,7 +59,6 @@ void execute(char * start){
       args[x -1] = strsep(&args[x-1], "\n");
       args[x]=0;
       if (redir){
-	//printf("%d", redir);
 	args[x + 1] = 0;
 	redirect(args, redir);
       }
@@ -98,6 +99,11 @@ void child_process(char * args[]){
   //Takes the process with args as an array
   f = fork();
   if (!f){
+
+    if(!strcmp("bug",args[0])){
+      printf("           _         _\n          /x\\       /x\\\n         /v\\x\\     /v\\/\\\n         \\><\\x\\   /></x/\n          \\><\\x\\ /></x/\n  __ __  __\\><\\x/></x/___\n /##_##\\/       \\</x/    \\__________\n|###|###|  \\         \\    __________\\\n \\##|##/ \\__\\____\\____\\__/          \\\\\n   |_|   |  |  | |  | |              \\|\n   \\*/   \\  |  | |  | /              /\n           /    /\n");
+
+    }
     if(strcmp("flood_my_terminal",args[0])){
       execvp(args[0],args);
       exit(0);}
@@ -118,128 +124,6 @@ void child_process(char * args[]){
 }
 
 
-/*
-//////////////////////////   The next chunk is dedicated to piping   //////////////////////////
-
-void piping(char * args[], int max){
-  //piping: Takes a char pointer array with commands that were split by "|"
-  //Sends each command to appropriate methods
-  //Returns nothing
-  int d = 0;
-  while (args[d]){
-    printf("|%s|\n",args[d]);
-    d++;
-  }
-  printf("here\n");
-  start(args[0]);
-  
-  int step = 1;
-  while (step < max){
-    mid(args[step]);
-    step++;}
-  
-  end(args[max]);
-
-  //unlink("woo.txt");
-}
-void start(char * command){
-  //Takes a command representing the first command in a pipe
-  //Runs it and stores it's output in a file
-  char * args[10];
-  int x = 0;
-  char * y;
-  int redir = 0;
-  while (command){
-    y = strsep(&command, " ");
-    if(*y != 0){
-      args[x] = y;
-      x++;
-    }
-  }
-  args[x] = 0;
-  int c;
-  f = fork();
-  if (!f){
-    c = open("woo.txt", O_CREAT | O_WRONLY | O_TRUNC, 0777);
-    dup2(c,STDOUT_FILENO);
-    execvp(args[0],args);
-    exit(0);
-  }
-  else{
-    wait(&f);
-    f = 0;
-    close(c);
-  }
-}
-void mid(char * command){
-  //Takes a command representing any middle arguement of a pipe
-  //Runs it using info stores in a file, and stores it's output in same file
-  char * args[10];
-  int x = 0;
-  char * y;
-  int redir = 0;
-  while (command){
-    y = strsep(&command, " ");
-    if(*y != 0){
-      args[x] = y;
-      x++;
-    }
-  }
-  args[x] = 0;
-  int d =0;
-  while (args[d]){
-    printf("|%s|\n",args[d]);
-    d++;
-  }
-  int c;
-  f = fork();
-  if (!f){
-    c = open("woo.txt", O_RDWR | O_TRUNC, 0777);
-    dup2(c,STDOUT_FILENO);
-    dup2(c,STDIN_FILENO);
-    execvp(args[0],args);
-    exit(0);
-  }
-  else{
-    wait(&f);
-    f = 0;
-  }
-}
-void end(char * command){
-  //Takes a command representing any end arguement of a pipe
-  //Runs it using info stores in a file, and prints out it's output
-  char * args[10];
-  int x = 0;
-  char * y;
-  int redir = 0;
-  while (command){
-    y = strsep(&command, " ");
-    if(*y != 0){
-      args[x] = y;
-      x++;
-    }
-  }
-  args[x -1] = strsep(&args[x-1], "\n");
-  args[x] = 0;
-  int d = 0;
-  int c;
-  f = fork();
-  if (!f){
-    c = open("woo.txt",O_RDONLY);
-    dup2(c,STDIN_FILENO);
-    execvp(args[0],args);
-    exit(0);
-  }
-  else{
-    wait(&f);
-    f = 0;
-  }
-}
-
-
-//////////////////////////   End of piping   //////////////////////////
-*/
-
 void redirect(char * args[], int redir){
   //redirect: Takes a char pointer array with command line input and int representing type of redirection
   //Performs appropriate redirection depending on ">", "<", or ">>"
@@ -249,11 +133,21 @@ void redirect(char * args[], int redir){
   f = fork();
   if(!f){
     if (redir == 3){
-      c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
-      dup2(c, STDOUT_FILENO);
-      close(c);
-      execlp(args[0], args[0], NULL);
-      exit(0);
+      int x =2;
+      while (args[x]){
+	int d = fork();
+	if (!d){
+	  c = open(args[x], O_CREAT | O_WRONLY| O_APPEND, 0644);
+	  dup2(c, STDOUT_FILENO);
+	  close(c);
+	  execlp(args[0], args[0], NULL);
+	  exit(0);
+	}
+	else{
+	  wait(&d);
+	  x+=2;
+	}
+      }
     }
     else if (redir == 2){
       c = open(args[2],O_RDWR,0777);
