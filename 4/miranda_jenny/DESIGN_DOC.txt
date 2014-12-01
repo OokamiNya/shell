@@ -6,15 +6,15 @@ Features:
 	Parses multiple commands on one line!
 	Redirects using >, <!
 	Handles pipes.
-
+	Evaluates basic addition and subtration expressions (ie. 3 + 4 -7)
+	super secret unicorn command
+	
 Attempted:
-	The following did not end up working, but have been left
-	in the code, commented out.
-	Tried replacing full path with just current director, got
-	seg faults.
+	Multiplication and division were going to happen but level of
+	difficulty outweighed reward
 
 Bugs:
-	?
+	None that we know of
 	
 Files & Function Headers:
 shell.c
@@ -44,10 +44,26 @@ shell.c
 	chdir() or exit(), respectively.
 	====================*/
 
+	/*======== void calculator() ==========
+	Inputs:  char * str
+	Returns: N/A
+
+	Takes string containing an algebraic expression of basic
+	addition and mulitplication and prints the result.
+	====================*/
+
+	/*======== void printUnicorn() ==========
+	Inputs: N/A
+	Returns: N/A
+
+	Untold mysteries 
+	====================*/
+
 	/*======== int main() ==========
 	Inputs: N/A
 	Returns: 0
 	
-	Deals with piping, redirection, multiple cmds on one line.
+	Deals with piping, redirection, multiple cmds on one line, and
+	determines if math is involved.
 	Otherwise, calls execute on cmds.
 	====================*/
