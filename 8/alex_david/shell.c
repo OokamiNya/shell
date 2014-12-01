@@ -106,17 +106,20 @@ int execute(char *s){
 	k = strsep(&p,"|");
 	pipeCommands(k,p);
   }
+
   while (k = strsep(&p," ")){
 	if (strcmp(k,"")){ //removes blanks from multiple spaces
 	  params[n] = k;
 	  n++;
 	}  
   }
+
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
 	if (params[1]){
 	  int i = 1;
-	  if (cd (params [i])) printf("No such directory\n");
+	  if (cd (params [i])) 
+	    printf("No such directory\n");
 	}else{
 	  cd("~");
 	}
@@ -179,7 +182,8 @@ int pipeCommands(char *left, char *right){
     wait(&status);
     close(fd[1]);
     dup2(fd[0],STDIN_FILENO);
-    executePipe(right);
+    //executePipe(right);
+  
   }
 }
 
@@ -196,7 +200,7 @@ int executePipe(char *s){
 	}
 	p++;
   }
-  char **params = malloc(sizeof(char *) * n);
+  char ** params = malloc( sizeof(char *) * n);
   n = 0;
   p = s;
   char *k;
