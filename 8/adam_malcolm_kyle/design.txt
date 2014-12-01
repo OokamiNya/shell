@@ -11,7 +11,7 @@ Features:
 	Saves home direcory (HOME=<path from cur dir>)
 	Pipes multi-arg commands (try "find . -type f -print | wc -l")
 	SIGINT kills the running child process and not the whole
-	terminal, if applicable
+	terminal, if applicable  (run command flood_my_terminal to test)
 
 Attempted:
 	Would have liked to account for "\ " char, or allow the user
