@@ -31,18 +31,27 @@ void redirect_out(char * command, char * file, int mode){
 	execute(command);
 	dup2(fd1, STDOUT_FILENO);//reset: redirect fd1 to stdout
 }
-//fd1 was set to STDOUT originally... changed... then redirect 
-//fd1 (STDOUT originally) to where it belongs
+
+//redirects stdout to a file
+void redirect_err(char * command, char * file, int mode){
+  printf("error redirecting!\n");
+  int fd, fd1;
+  if (mode == 1){ //2>
+    fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+  }
+  else if (mode == 2){ //2>>
+    fd = open(file, O_CREAT | O_APPEND | O_WRONLY, 0644);
+  }
+  fd1 = dup(STDERR_FILENO);//set fd1 to stderr
+  dup2(fd, STDERR_FILENO);//redirect fd to stderr
+  dup2(fd1, STDERR_FILENO);//reset: redirect fd1 to stderr
+}
 
 void pipeify(char * first, char * second) {
   //ls | wc --> ls is first, wc is second
   first = trim(first);
   second = trim(second);
-  //printf("first: %s\n", first);
-  //printf("second: %s\n", second);
-  //redirect stdout to a file descriptor
-  //then use that file descriptor to redirect stdin
-  int stdin_fd, stdout_fd, fd, fd1;
+  int stdin_fd, stdout_fd, fd;
 
   //for resetting purposes
   stdin_fd = dup(STDIN_FILENO);
@@ -59,6 +68,19 @@ void pipeify(char * first, char * second) {
   dup2(fd, STDIN_FILENO); //redirecting fd to stdin (stdin is fd)
   execute(second);
   dup2(stdin_fd, STDIN_FILENO);//reset
+
+  int status, error, f;
+  f = fork();
+  if (f){//parent
+    //printf("parent me!\n");
+    wait(&status);
+    //printf("error? %d\n", error);
+  }
+  else { //child
+    //printf("child me!\n");
+    error = execlp("rm", "rm", "temp", NULL);
+  }
+ 
 }
 
 //redirects stdin from a file
@@ -66,10 +88,11 @@ void redirection(char *s, int mode){
   char *sep;
   char* in = (char*)malloc((sizeof(char)*256));
   strcpy(in, s);
+  in = trim(in);
+
   if (mode == 1){//<
     sep = strsep(&in, "<");
     sep = trim(sep);
-    in = trim(in);
     if (in == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token newline'\n");
     }
@@ -83,7 +106,6 @@ void redirection(char *s, int mode){
    
     sep = strsep(&in, ">");
     sep = trim(sep);
-    in = trim(in);
     if (in == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token newline'\n");
     }
@@ -97,7 +119,6 @@ void redirection(char *s, int mode){
     sep = strsep(&in, ">");
     printf("sep: %s\n", sep);
     strsep(&in, ">");
-    in = trim(in);
     printf("in (file):%s\n", in);
     if (in == 0) {//if null; for example ls < 
       printf("owl: syntax error near unexpected token newline'\n");
@@ -110,7 +131,6 @@ void redirection(char *s, int mode){
   else if (mode == 5) { // |
     sep = strsep(&in, "|");
     sep = trim(sep);
-    in = trim(in);
     if (in == 0) { // if there isn't a 2nd command
       printf("owl: syntax error near unexpected token newline'\n");
     }
@@ -118,13 +138,37 @@ void redirection(char *s, int mode){
       pipeify(sep, in);
     }
   }
-
+ 
+  else if (mode == 6){ //2>
+    char* temp = (char*)malloc(sizeof(char)*256);
+    strcpy(temp, in);
+    //printf("in: %s\n", in);
+    char* cmd = strsep(&temp, "2");
+    cmd = trim(cmd);
+    strsep(&temp, ">");
+    temp = trim(temp);
+    //printf("temp: %s\n", temp);
+    // printf("cmd: %s\n", cmd);
+    if (temp == 0) {//if null; for example ls < 
+      printf("owl: syntax error near unexpected token newline'\n");
+    }
+    else {
+      redirect_err(cmd, temp, 1);
+    }
+  }
+ 
+  else if (mode == 7){
+    //do stuff
+  }
+  
 }
 //returns 0 if no redirect symbols
 //returns 1 if <
 //return 3 if >
 //return 4 if >>
 //return 5 if |
+//return 6 if 2>
+//return 7 if 2>>
 int has_redirect(char* i){
   //printf("input: %s\n", input);
   char *input = (char*) malloc((sizeof(char)*256));
@@ -138,19 +182,35 @@ int has_redirect(char* i){
   if (less) { //there is a < sign
     return 1;
   }
-  else if (more) { //there is a < sign
-    strsep(&more, ">");
-    char * moremore;
-    moremore = strchr(more, '>');
-    if (moremore){
-      return 4;
+  else if (more) { //there is a > sign
+    char *err_check = (char*) malloc((sizeof(char)*256));
+    strcpy(err_check, i);				
+    //printf("err_check is %s\n", err_check);
+    char *err = strstr(err_check, "2>");
+    if (err) { //has 2>
+      //check for 2>>
+      strsep(&err, ">");
+      //printf("err after strsep: %s\n", err);
+      char *err_append = strchr(err, '>');
+      if (err_append){
+	return 7;
       }
-    return 3;
+      return 6;
+    }
+    else { //check for >>
+      strsep(&more, ">");
+      char * moremore;
+      moremore = strchr(more, '>');
+      if (moremore){
+	return 4;
+      }
+      return 3;
+    }
   }
   else if (pipe) {
     return 5;
   } 
   return 0;
-
 }
+
 

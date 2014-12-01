@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include "shell.h"
 
 static void sighandler(int signo){
   if (signo == SIGUSR1){
@@ -15,7 +16,7 @@ static void sighandler(int signo){
 
 int main(){
   signal(SIGUSR1,sighandler);
-  printf("-- BALD SHELL --\n\n"); 
+  printf("-- BALD SHELL --\n\n");
   shell();
   return 0;
 }
@@ -50,7 +51,7 @@ int shell(){
     t = cwd;
     while (r > 2){
       if (*t == '/'){
-	r--;
+		r--;
       }
       t++;
     }
@@ -73,25 +74,28 @@ int shell(){
   n = 0;
   char *k;
   while (k = strsep(&p,";")){
-    commands[n] = k;
-    n++;
+	commands[n] = k;
+	n++;
   }
   int i = 0;
   for (; i < n; i++){
-    execute(commands[i]);
+	execute(commands[i]);
   }
   free(commands);
   shell();
 }
 
 int execute(char *s){
+  if (emptyString(s)){ //does not run empty commands
+	return 1;
+  }
   int n = 2;
   char *p = s;
   while (*p){
-    if (*p == ' '){
-      n++;
-    }
-    p++;
+	if (*p == ' '){
+	  n++;
+	}
+	p++;
   }
   char **params = malloc(sizeof(char *) * n);
   p = s;
@@ -99,70 +103,126 @@ int execute(char *s){
   char *k;
   //checks if | in input
   if (strchr (p, '|')){
-      while (k = strsep(&p,"|")){
-	if (strcmp(k,"")){ //if any blanks from multiple |
-	  params [n] = k;
-	  n++;
-	}
-	else {
-	  execute(params [0]);//execute only first command if there are multiple |'s
-	  break;
-	}
-      }
-      params [n] ='\0';
-
-      int fd [2];
-      pipe (fd);
-      int f = fork();
-      if (!f){
-		dup2(fd[0], 0);
-		execvp (params[0],params);
-      }
-  
-      
-   //temporary, still working on piping
+	k = strsep(&p,"|");
+	pipeCommands(k,p);
   }
   while (k = strsep(&p," ")){
-    if (strcmp(k,"")){ //removes blanks from multiple spaces
-      params[n] = k;
-      n++;
-    }  
+	if (strcmp(k,"")){ //removes blanks from multiple spaces
+	  params[n] = k;
+	  n++;
+	}  
   }
   params[n] = NULL;
   if (!strcmp(params[0],"cd")){
-    if (params[1]){
-      int i = 1;
-      if (cd (params [i])) printf("No such directory\n");
-    }else{
-      cd("~");
-    }
+	if (params[1]){
+	  int i = 1;
+	  if (cd (params [i])) printf("No such directory\n");
+	}else{
+	  cd("~");
+	}
   }else if (!strcmp(params[0],"exit")){
-    printf("Bye!\n\n");
-    exit(0);
+	printf("Bye!\n\n");
+	exit(0);
   }else{
-    int f = fork();
-    if (!f){
-      int y = 0;
-      for (;y < n; y++){ //redirection
+	int f = fork();
+	if (!f){
+	  int y = 0;
+	  for (;y < n; y++){ //redirection
 		if (!strcmp(params[y],">")){
-		  int fd = open(params[y+1],O_CREAT | O_TRUNC | O_WRONLY,0644);
-		  dup2(fd,STDOUT_FILENO);
-		  params[y] = NULL;
+		  writeTo(params,y);
 		}else if (!strcmp(params[y],">>")){
-		  int fd = open(params[y+1],O_CREAT | O_APPEND | O_WRONLY,0644);
-		  dup2(fd,STDOUT_FILENO);
-		  params[y] = NULL;
+		  appendTo(params,y);
 		}else if (!strcmp(params[y],"<")){
-		  int fd = open(params[y+1],O_RDONLY);
-		  dup2(fd,STDIN_FILENO);
-		  params[y] = NULL;
+		  inputFrom(params,y);
 		}
-      }
-      execvp(params[0],params);    
-    }else{
-      int status;
-      wait(&status);
-      free(params);
-    }
+	  }
+	  execvp(params[0],params);    
+	}else{
+	  int status;
+	  wait(&status);
+	  free(params);
+	  return 1;
+	}
   }
 }
+
+int writeTo(char **params,int n){
+  int fd = open(params[n+1],O_CREAT | O_TRUNC | O_WRONLY,0644);
+  dup2(fd,STDOUT_FILENO);
+  params[n] = NULL;
+  execvp(params[0],params);
+}
+
+int appendTo(char **params,int n){
+  int fd = open(params[n+1],O_CREAT | O_APPEND | O_WRONLY,0644);
+  dup2(fd,STDOUT_FILENO);
+  params[n] = NULL;
+  execvp(params[0],params);
+}
+
+int inputFrom(char **params,int n){
+  int fd = open(params[n+1],O_RDONLY);
+  dup2(fd,STDIN_FILENO);
+  params[n] = NULL;
+  execvp(params[0],params);
+}
+
+int pipeCommands(char *left, char *right){
+  int fd[2];
+  pipe(fd);
+  int f = fork();
+  if (!f){
+    dup2(fd[1],STDOUT_FILENO);
+    executePipe(left);
+  }else{
+    int status;
+    wait(&status);
+    close(fd[1]);
+    dup2(fd[0],STDIN_FILENO);
+    executePipe(right);
+  }
+}
+
+int executePipe(char *s){
+  if (emptyString(s)){ //does not run empty commands
+	return 1;
+  }
+  char g[1000];
+  int n = 2;
+  char *p = s;
+  while (*p){
+	if (*p == ' '){
+	  n++;
+	}
+	p++;
+  }
+  char **params = malloc(sizeof(char *) * n);
+  n = 0;
+  p = s;
+  char *k;
+  while (k = strsep(&p," ")){
+	if (strcmp(k,"")){ //removes blanks from multiple spaces
+	  params[n] = k;
+	  n++;
+	}  
+  }
+  params[n] = NULL;
+  execvp(params[0],params);
+}
+
+int emptyString(char *s){
+  int i = 0;
+  for (; i < strlen(s);i++){
+	if (s[i] != ' '){
+	  return 0;
+	}
+  }
+  return 1;
+}
+
+
+
+
+
+
+
