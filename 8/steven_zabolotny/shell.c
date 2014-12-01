@@ -4,12 +4,24 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+/* char *pre()
+   Inputs: None
+   Returns: The entire directory you are currently in.
+
+   This function is called pre because it gives you the directory that appears before you enter commands.
+   It also includes the name of the shell, Swag Shell. */
 char *pre() {
   char cwd[256];
   getcwd(cwd, 256);
   printf("Swag Shell:%s$ ",cwd);
 }
 
+/* void *cd()
+   Inputs: char *input
+   Returns: Nothing
+
+   A special function to change the directory of the shell. This cannot be used in run() because cd does not work in a forked process. 
+   It takes the input and the directory you want to go to and chdirs to it. Works with cd no arguments and cd with ... */
 void *cd(char *input) { // Runs the cd command
   //printf("<%s>\n",strchr(input,' '));
   if (strlen(input) <= 4) { // Check that no args are given
@@ -25,6 +37,14 @@ void *cd(char *input) { // Runs the cd command
   }
 }
 
+/* void *run()
+   Input: char *input
+   Returns: Nothing
+
+   Given the user input processed by main(), it splits up the command by spaces and then forks a process that is used to run 
+   these commands with the appropriate arguments. 
+   This function is multi-purpose and used to run any commands without pipes, redirection, or semicolons. 
+   This is the only function that actually runs commands. */
 void *run(char *input) { // Runs any non-cd command
   //printf("<%s>\n",input);
   int status;
@@ -48,6 +68,13 @@ void *run(char *input) { // Runs any non-cd command
   }
 }
 
+/* void *multi()
+   Input: char *input (containing at least one ;)
+   Returns: Nothing
+
+   Given the user input processed by main(), it splits up the command by semicolons, finding each seperate command-argument block. 
+   Each command-argument block is then run and executed. 
+   Does not actually execute commands itself, utilizes run() for this purpose. */
 void *multi(char *input) {
   int a = strlen(input);
   input[a] = ';';
@@ -80,6 +107,14 @@ void *multi(char *input) {
   }
 }
 
+/* void *redirect()
+   Input: char *input (containing at least one > or <), char *r (either < or >)
+   Returns: Nothing
+
+   Given the user input processed by main() and the type of redirection determined to be in this command by main, 
+   it splits up the command by > or <. Then, either stdout or stdin are redirected appropriatly, and then the command is run and executed. 
+   Finally, stdout and stdin are restored to their original values.
+   Does not actually execute commands itself, utilizes run() for this purpose. */
 void *redirect(char *input, char *r) {
   char *args[256];
   int i = 0;
@@ -125,6 +160,14 @@ void *redirect(char *input, char *r) {
   } 
 }
 
+/* void *piper()
+   Input: char *input (containing at least one |)
+   Returns: Nothing
+
+   Given the user input procesed by main(), it splits up the command by |. 
+   Then, the first command is run and it's output is redirected to a temporary file, 
+   and the temporary file is redirected as the input for the second command, which is also run. Finally, the temporary file is removed.
+   Does not actually execute commands itself, utilizes run() and redirect() for this purpose. */
 void *piper(char *input) { // Doesn't work yet
   char *args[256];
   int i = 0;
@@ -165,6 +208,14 @@ void *piper(char *input) { // Doesn't work yet
   close(fd);
 }
 
+/* int main()
+   Input: None
+   Returns: Everything
+
+   Runs a permanent while loop which keeps the shell running unless the process is killed. It also interprets input, 
+   adds a space at the end which is necessary for run(), and decides which of the above functions is needed to be run 
+   on the input based on the presence of certain characters (;,<,>,|).
+   Also interprets cd and exit, which change directory and exit the shell. */
 int main() {
   pre();
   while(1) {
