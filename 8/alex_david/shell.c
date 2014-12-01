@@ -104,7 +104,15 @@ int execute(char *s){
   //checks if | in input
   if (strchr (p, '|')){
 	k = strsep(&p,"|");
-	pipeCommands(k,p);
+	int f = fork();
+	if (!f){
+	  pipeCommands(k,p);
+	}else{
+	  int status;
+	  wait(&status);
+	  free(params);
+	  return 1;
+	}
   }
 
   while (k = strsep(&p," ")){
@@ -119,7 +127,7 @@ int execute(char *s){
 	if (params[1]){
 	  int i = 1;
 	  if (cd (params [i])) 
-	    printf("No such directory\n");
+		printf("No such directory\n");
 	}else{
 	  cd("~");
 	}
@@ -175,14 +183,14 @@ int pipeCommands(char *left, char *right){
   pipe(fd);
   int f = fork();
   if (!f){
-    dup2(fd[1],STDOUT_FILENO);
-    executePipe(left);
+	dup2(fd[1],STDOUT_FILENO);
+	executePipe(left);
   }else{
-    int status;
-    wait(&status);
-    close(fd[1]);
-    dup2(fd[0],STDIN_FILENO);
-    //executePipe(right);
+	int status;
+	wait(&status);
+	close(fd[1]);
+	dup2(fd[0],STDIN_FILENO);
+	executePipe(right);
   
   }
 }
@@ -191,7 +199,6 @@ int executePipe(char *s){
   if (emptyString(s)){ //does not run empty commands
 	return 1;
   }
-  char g[1000];
   int n = 2;
   char *p = s;
   while (*p){
