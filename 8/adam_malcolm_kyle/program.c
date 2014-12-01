@@ -99,7 +99,7 @@ void child_process(char * args[]){
 void piping(char * args[], int pipe){
   int x = 0;
   while(args[x]){
-    printf("%d. %s\n",pipe,args[x]);
+   // printf("%d. %s\n",pipe,args[x]);
     x++;}
   int c;
   int i = fork();
