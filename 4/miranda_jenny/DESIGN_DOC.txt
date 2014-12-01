@@ -1,0 +1,69 @@
+The Magic Conch Shell
+by Jenny Baran and Miranda Chaiken
+
+Features:
+	Forks and executes commands!
+	Parses multiple commands on one line!
+	Redirects using >, <!
+	Handles pipes.
+	Evaluates basic addition and subtration expressions (ie. 3 + 4 -7)
+	super secret unicorn command
+	
+Attempted:
+	Multiplication and division were going to happen but level of
+	difficulty outweighed reward
+
+Bugs:
+	None that we know of
+	
+Files & Function Headers:
+shell.c
+	Handles parsing, forking, and executing.
+	/*======== static void sighandler() ==========
+	Inputs:  int signo
+	Returns: N/A
+
+	Catches keyboard interrupt. If currently in a child process,
+	exits that process. Otherwise, exits the shell.
+	====================*/
+
+	/*======== char * rmspaces() ==========
+	Inputs:  char * str 
+	Returns: Pointer to the beginning of str
+
+	Removes leading and trailing whitespace on the string line.
+	Terminating '\0' is placed at a new location if necessary.	====================*/
+
+	/*======== void execute() ==========
+	Inputs:  char * split_cmds
+	Returns: N/A
+
+	Takes string containing one command and however many args
+	apply to it. Creates an array of args. Forks and runs with
+	execvp. In the case that the cmd is cd or exit, handles with
+	chdir() or exit(), respectively.
+	====================*/
+
+	/*======== void calculator() ==========
+	Inputs:  char * str
+	Returns: N/A
+
+	Takes string containing an algebraic expression of basic
+	addition and mulitplication and prints the result.
+	====================*/
+
+	/*======== void printUnicorn() ==========
+	Inputs: N/A
+	Returns: N/A
+
+	Untold mysteries 
+	====================*/
+
+	/*======== int main() ==========
+	Inputs: N/A
+	Returns: 0
+	
+	Deals with piping, redirection, multiple cmds on one line, and
+	determines if math is involved.
+	Otherwise, calls execute on cmds.
+	====================*/

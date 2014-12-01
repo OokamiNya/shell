@@ -1,0 +1,31 @@
+She Sells Sea Shells
+by Nadia Saleh
+
+Features:
+	Forks and executes commands!
+	Parses multiple commands on one line!
+	Redirects using >, <!
+	Pipes
+Attempted:
+	
+Bugs:
+
+Files & Function Headers:
+shellstuff.c
+      Handles parsing, forking commands, executing commands
+      /*======== void execute() ==========
+      Inputs: char * s1
+      Returns: none
+
+      Takes a singular command as a string, breaks 
+      over space to create an argument array, forks 
+      and executes using execvp. Handles special 
+      cases of cd and exit.
+      ====================*/
+
+      /*======== char *  rmspaces() ==========
+      Inputs: char * str
+      Returns: pointer to string without spaces
+
+      Takes a string. Returns it without extra whitespaces.
+      ====================*/

@@ -7,6 +7,8 @@
 #include <errno.h>
 //#include "strsep.h"
 
+#define BUF_SIZE 256
+
 /* char* parseStr(char* str, char* match){ */
 /*   int loc; //where to stop */
 /*   loc = strcspn(str, match); //saw this in some pico code */
@@ -27,16 +29,16 @@
 
 
 int execute(char* input){
-  char buf[256]; //we need this for some reason pls don't buffer overflow
+  char buf[BUF_SIZE]; //we need this for some reason pls don't buffer overflow
   strcpy(buf, input);
   buf[strlen(buf)] = '\0';
   char* running=malloc(sizeof(buf));
   strcpy(running, buf);
   int i = 0;
   int j = 0;
-  char** args = calloc(5,256); // function and args
+  char** args = calloc(5,BUF_SIZE); // function and args
   char* prev;
-  char** args2 = calloc(2, 256); // redirecting i.e {">", "a.txt"}
+  char** args2 = calloc(3, BUF_SIZE); // redirecting i.e {">", "a.txt"}
   int redir = 0; // 1 if redirect args
   while(1){
 
@@ -44,7 +46,7 @@ int execute(char* input){
     if(!prev){
       break;
     }
-    if(strcmp(prev, ">") == 0 || strcmp(prev, "<") == 0){
+    if(strcmp(prev, ">") == 0 || strcmp(prev, "<") == 0 || strcmp(prev, "|") == 0){
       redir = 1;
     }
     if (redir){
@@ -54,7 +56,30 @@ int execute(char* input){
       args[i] = prev;
       i++;
     }
+    args[i] = '\0';
+    args2[j] = '\0';
   }
+
+  if(strcmp(args[0], "cd") == 0){
+    if(!(args[1])){
+      printf("No directory specified.\n");
+    }
+    else if (strcmp(args[1],"~") == 0){
+      //printf("chdring to %s\n", getenv("HOME"));
+      if(chdir(getenv("HOME")) == -1){
+        printf("%s\n", strerror(errno));
+        return -1;
+      }
+    } else {
+      //printf("chdring to %s\n", args[1]);
+      if(chdir(args[1]) == -1){
+	    printf("%s\n", strerror(errno));
+	return -1;
+      }
+    }
+    return 5; //chdir'd instead.
+  }
+
   pid_t f = fork();
   int status;
   int w;
@@ -68,14 +93,17 @@ int execute(char* input){
     exit(EXIT_FAILURE);
   }
   else{
-    printf("redir=%d\n", redir);
+    //printf("redir=%d\n", redir);
     if (redir){
-      printf("---- Redirecting ----\n\n");
+      //  printf("---- Redirecting ----\n\n");
       if (strcmp(args2[0], ">") == 0){
 	redir_out(args,args2[1]);
       } else if (strcmp(args2[0], "<") == 0){
-	redir_in(args,args2[1], i);
+	redir_in(args,args2[1]);
+      } else if (strcmp(args2[0], "|") == 0){
+  redir_pipe(args,args2);
       }
+
     }
     execvp(args[0], args);
     printf("%s\n", strerror(errno));
@@ -87,4 +115,3 @@ int main(){
   execute("ls -al > a.txt");
 }
 */
-

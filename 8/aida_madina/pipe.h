@@ -1,0 +1,1 @@
+int pipes(char **, int, int);

@@ -6,50 +6,96 @@ Features:
     Forks and executes commands!
     Exits too!
     Semicolon nonsense!
+    Probably does redirection properly!
+    Probably also does piping, maybe!
+    Doesn't explode when you give it extra spaces!
+    Taunts user for making mistakes!
     That's it!
 
 Attempted:
-    ayy lmao
+    Piping without temporary files!
+    Multiple piping!
 
 Bugs:
-    grasshoppers
-    does bad things with extra spaces
-
-To do:
-    strsep -> strchr for \n
-    write the design doc :^(
+    Grasshoppers!
+    Does strange formatting things with macs!
+    Creates temporary file "foo" when piping!
 
 Files & Function Headers:
 main.c
     /***** int main() *****
-     * :^)
+     * Inputs: Nothing!
+     * Returns: 0, unless it segfaults or something!
+     * 
+     * Main loop for the shell.
+     * Also handles piping and directory changing.
+     *   ...which it probably shouldn't.
      ***************/
 
 shell.c
     /***** void prompt(char* s) *****
-     * :^)
+     * Inputs: char* s - pointer to string to write input to
+     * Returns: Nothing!
+     * 
+     * Prompts user for a command with a friendly :^)
      ***************/
 
-    /***** int countargs(char* s) *****
-     * :^)
+    /***** char is_control_char(char c) *****
+     * Inputs: char c - char to check
+     * Returns: 1 if c is a control character, 0 otherwise
+     * 
+     * Checks if c is a special character: ;<>|
      ***************/
 
-    /***** int countargs(char* s) *****
-     * :^)
+    /***** char* killspaces(char* src, char* dest) *****
+     * Inputs: char* src - string to kill spaces from
+     *         char* dest - string to write output to
+     * Returns: char* - pointer to dest
+     * 
+     * Removes excess spaces from src and writes to dest.
+     * Consecutive spaces are changed to single spaces.
+     * Spaces around control characters are removed.
+     ***************/
+
+    /***** int count(char* s, char* c) *****
+     * Inputs: char* s - string to count from
+     *         char* c - string to count instances of
+     * Returns: int - number of instances of c in s
+     * 
+     * Counts number instances of c in s.
      ***************/
 
     /***** void splitinput(char* s, char** cmds) *****
-     * :^)
+     * Inputs: char* s - user input string
+     *         char** cmds - list of commands
+     * Returns: Nothing!
+     * 
+     * Populates array cmds by splitting s on ";"
+     * Does not allocate memory for cmds
      ***************/
 
     /***** void splitcmd(char* s, char** args) *****
-     * :^)
+     * Inputs: char* s - user input string
+     *         char** args - list of arguments
+     * 
+     * Populates array args by splitting s on " "
+     * Does not allocate memory for args
+     * Adds additional NULL to end of args for use with exec() family
      ***************/
 
-    /***** void docmd(char** args) *****
-     * :^)
+    /***** void docmd(char** args, int redir_in, int redir_out) *****
+     * Inputs: char** args - list of arguments
+     *         int redir_in - file descriptor for input redirection
+     *         int redir_out - file descriptor for output redirection
+     * Returns: Nothing!
+     * 
+     * Executes command given by args
+     * If applicable, redirects stdin, stdout to redir_in, redir_out
      ***************/
 
     /***** void gtfo() *****
-     * :^)
+     * Inputs: Nothing!
+     * Returns: Nothing!
+     * 
+     * Exits with a disappointed look. :^(
      ***************/

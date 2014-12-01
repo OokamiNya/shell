@@ -1,3 +1,5 @@
+#pragma once
+
 const char *reset = "\e[0m";
 const char *normal_prefix = "\e[0;";
 const char *bold_prefix = "\e[1;";

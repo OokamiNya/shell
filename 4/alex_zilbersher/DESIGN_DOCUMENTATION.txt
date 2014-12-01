@@ -1,0 +1,62 @@
+Zilbash
+by Alex Zilbersher
+
+Features:
+	Forks and executes commands
+	Parses multiple commands on one line
+	Can use exit command
+	Can change directory and do another command on one line using ;
+	Prints out "Exited Zilbash" if it receives a kill -2 (SIGINT)
+	Recognizes and states bad commands
+	Redirects using >, <
+
+Attempted:
+	The following did not end up working, but have been left
+	in the code, commented out.
+
+Bugs:
+	-Putting two ;'s next to each other will break the parser
+	-Will occassionally print out an extra newline if a command
+	was invalid
+	
+Files & Function Headers:
+main.c
+	The driver, handles signals and runs main()
+	/*======== int main() ==========
+	Has no inputs and returns 0
+	
+	forks process for run_command() in shell.c
+	====================*/
+
+shell.c
+	Handles some of the forking and the executing of commands
+	/*======== int run_command(char* s) ==========
+	Inputs: char* s
+	Returns: 0
+
+	Will parse and execute each command in s recursively until
+	they are all completed. If s is null, it will then wait for a new input. 
+	This function also calls change_directory(char** args) to change
+	the directory, and redirect(int i, int r, char** args) to handle 
+	redirection using >, < and | rather than do that itself
+	====================*/
+
+	/*======== int change_directory(char** args) ==========
+	Inputs: char** args
+	Returns: 0
+
+	Takes in the cd command from run_command(char* s) and
+	uses its arguments to change the current process's directory. 
+	Will print out "Directory not found: <PATH>" if the directory
+	was unable to be found. 
+	====================*/
+
+	/*======== int redirect(int i, int r, char** args) ==========
+	Inputs: int i, int r, char** args
+	Returns: 0
+
+	Takes in the arguments that include the redirect as well as 
+	the index i of where the redirect is in args, as well as the 
+	type of redirect as indicated by r (ie: 1=>, 2=<, 3=|). It then
+	uses this information to appropriately redirect commands. 
+	====================*/

@@ -4,10 +4,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "shell.h"
 
-
-
-void parse(char *input);
 
 
 void mycd (char** commands, int numargs) { 
@@ -40,17 +38,22 @@ void mycd (char** commands, int numargs) {
 void redirect(char *input){
   int stdouttmp = dup(STDOUT_FILENO);
   int stdintmp = dup(STDIN_FILENO);
+  int closeInput = 0;
+  int closeOutput = 0;
+  int fdin, fdout;
   if (strchr(input, '>')){
+    
     char *p = strstr(input, ">");
     if (strlen(p) <= 1) {
       return;
     }
+    closeOutput = 1;
     int pend = strcspn(p + 2, " \n");
     char fileoutput[64];
     strncpy(fileoutput, p + 2, pend);
     fileoutput[pend] = 0;
     umask(0);
-    int fdout = open(fileoutput, O_WRONLY |  O_CREAT | O_TRUNC);
+    fdout = open(fileoutput, O_WRONLY |  O_CREAT | O_TRUNC);
     fchmod(fdout, 0644);
     dup2(fdout, STDOUT_FILENO);
     char input2[64];
@@ -65,12 +68,13 @@ void redirect(char *input){
     if (strlen(p) <= 1) {
       return;
     }
+    closeInput = 1;
     int pend = strcspn(p + 2, " \n");
     char fileoutput[64];
     strncpy(fileoutput, p + 2, pend);
     fileoutput[pend] = 0;
-    printf("%s", fileoutput);
-    int fdin = open(fileoutput, O_RDWR |  O_CREAT | O_TRUNC);
+    //printf("%s", fileoutput);
+    fdin = open(fileoutput, O_RDONLY);
     dup2(fdin, STDIN_FILENO);
     char input3[64];
     int g = p - input;
@@ -80,14 +84,19 @@ void redirect(char *input){
     strcpy(input, input3);
   }
   parse(input);
+  if (closeInput){
+    close(fdin);
+  }
+  if (closeOutput){
+    close(fdout);
+  }
   dup2(stdintmp, STDIN_FILENO);
   dup2(stdouttmp, STDOUT_FILENO);
 
 }
-<<<<<<< HEAD
 void process(char *input){
   if (strchr(input, '|')){
-    int numArgs;
+    int numArgs = 0;;
     char **commands = (char **) calloc(64, sizeof(char *));
     char *tmp = 0;
     tmp = strtok(input, "|");
@@ -99,20 +108,34 @@ void process(char *input){
       strcpy(commands[numArgs], tmp);
       numArgs++;
     } while(tmp = strtok(NULL, "|"));
-    commands[numArgs]=0;
+    commands[numArgs]=0;  
+    mypipe(commands, numArgs);
+    int i;
+    for (i= 0; i < numArgs; i++){
+      free(commands[i]);
+    }
+    free(commands);
   }
   else {
     redirect(input);
   }
 }
+void mypipe(char **commands, int numArgs){
+  int i;
+  strcat(commands[0], " > tmpfilepi");
+
+  redirect(commands[0]);
+  for (i = 1; i < numArgs - 1; i++) {
+    strcat(commands[i], " < tmpfilepi > tmpfilepi1");
+    redirect(commands[i]);
+    remove("tmpfilepi");
+    rename("tmpfilepi1", "tmpfilepi");
+  }
+  strcat(commands[numArgs-1], " < tmpfilepi");
+  redirect(commands[numArgs-1]);
+  remove("tmpfilepi");
+}
 void parse(char * input){
-=======
-
-
-
-void parse(char* input){
->>>>>>> c87d14d10e50fe03a63822fe667910337a17d319
- 
   char **commands = (char **) calloc(64, sizeof(char *));
   int i ;
   int numArgs = 0;
@@ -137,11 +160,12 @@ void parse(char* input){
     free(commands);
   }
   else if(strcmp(commands[0], "exit") == 0){
-    for (i= 0; i < numArgs; i++){
-      free(commands[i]);
-    }
-    free(commands);
-    exit(-1);
+    printf("exiting\n");
+    //for (i= 0; i < numArgs; i++){
+    // free(commands[i]);
+    //}
+    //free(commands);
+    exit(0);
   }
 
   
@@ -156,7 +180,11 @@ void parse(char* input){
       free(commands);
     }
     else{
-      execvp(commands[0], commands);
+      int i = execvp(commands[0], commands);
+      if (i == -1){
+	printf("%s\n", strerror(errno));
+      }
+      exit(-1);
     }
     
   }
@@ -165,6 +193,7 @@ void parse(char* input){
 
 int main(){
   while(1){
+    errno = 0;
     char path[256];
     getcwd(path,sizeof(path));
     
@@ -205,4 +234,7 @@ int main(){
     }
     free(commands);
   }
+ 
 }
+
+

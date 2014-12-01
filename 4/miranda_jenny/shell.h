@@ -7,3 +7,6 @@
 #include <signal.h>
 
 void execute( char * split_cmds );
+char* rmspaces( char *str);
+void calculator(char * str);
+void printUnicorn();s
