@@ -4,23 +4,20 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
-
-int count_commands(char input[256]);
-int count_args(char *command);
-
+#include "parse.c"
+#include "redirect.c"
 int main() {
   char input[256];
-  char *comm_array[10];
-  
-  int num_commands;
+  char **commands;
+  char **args;
+  char *flag_redir = NULL;
+  int flag_redir_index = 0;
   int pid;
   int *status;
   siginfo_t *infop;
   char cwd[256];
-  int flag_redir = 0;
   FILE * fout = NULL;
   int exit_val = 105;
-  int flag_redir_type = 0;
   int file;
   
   while(1) {
@@ -29,123 +26,63 @@ int main() {
     input[strlen(input)-1]='\0';
 
     //Parsing commands
-    num_commands = count_commands(input);
-    comm_array[0] = strtok(input, ";");
-    int i = 1;
-    while (i < num_commands) {
-      comm_array[i] = strtok(NULL, ";");
-      if(i > num_commands)
-        return 0;
-      i++;
-    }
+    commands = parse_commands(input);
 
-    for( i = 0; i < num_commands; i++) {
-      char *args_array[10];
-      command = comm_array[i];
-      int num_args = count_args(command);
+    int i = 0;
+    while (commands[i]) {
+      
+      args = parse_args(commands[i]);
 
-      char *comm = strtok(command, " ");
-    
-      if (!strcmp(comm,"exit")) {
+      if (!strcmp(args[0],"exit")) {
 	      exit(0);
       }
     
-      args_array[0] = comm;
-      int j = 1;    
-      if (num_args == 0) {
-	      args_array[1]=NULL;
-      }
-
-      else {
-	      while (j <= num_args) {
-	        args_array[j] = strtok(NULL, " ");
-      	  if (!strcmp(args_array[j], ">")) {
-            flag_redir_type = 1;
-      	    flag_redir = j;
-    	    }
-          else if (!strcmp(args_array[j],">>")) {
-            flag_redir_type = 2;
-            flag_redir = j;
-          }
-          else if (!strcmp(args_array[j],"<")) {
-            flag_redir_type = 3;
-            flag_redir = j;
-          }
-      	  j++;
-	      }  
-	      args_array[j]=NULL;
-      }
-
-      if (!strcmp(comm,"cd")) {
-        if (!args_array[1]) {
-	         chdir(getenv("HOME"));
+      else if (!strcmp(args[0],"cd")) {
+        if (!args[1]) {
+           chdir(getenv("HOME"));
         }
-        chdir(args_array[1]);
+        chdir(args[1]);
       }
-
-      else if (flag_redir) {
-        if (flag_redir_type <= 2) {
-          if (flag_redir_type == 2) {
-            file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_APPEND, 0644);
-          }
-          else if (flag_redir_type == 1) {
-            file = open(args_array[flag_redir + 1], O_CREAT | O_WRONLY| O_TRUNC, 0644);
-          }
-  	      pid = fork();
-  	      if (!pid) {
-        	  dup2(file,STDOUT_FILENO);
-        	  int n;
-        	  char *exec_args[10];
-        	  for(n = 0; n < flag_redir; n++) {
-        	    exec_args[n] = args_array[n];
-        	  }
-        	  exec_args[n] = NULL;
-        	  execvp(args_array[0], exec_args);
-        	  return 0;
-        	}
+      int j = 0;
+      while (args[j]) {
+    	  if (!strcmp(args[j], ">")) {
+          flag_redir_index = j;
+    	    flag_redir = ">";
+  	    }
+        else if (!strcmp(args[j],">>")) {
+          flag_redir_index = j;
+          flag_redir = ">>";
         }
-        else if (flag_redir_type == 3){ 
-          int input_file = open(args_array[flag_redir + 1], O_RDONLY, 0644);
-          dup2(input_file, STDIN_FILENO);
-          execvp(args_array[flag_redir - 1], NULL);
+        else if (!strcmp(args[j],"<")) {
+          flag_redir = "<";
+        }
+    	  j++;
+      }  
+
+      if (flag_redir) {
+        if (!strcmp(flag_redir, "<")){ 
+          redir_in(args);
+        }
+        else {
+          redir_out(args, flag_redir_index);
         }
         flag_redir = 0;
-        flag_redir_type = 0;
+        flag_redir_index = 0;
       }
 
       else {
-	      pid = fork();
+        pid = fork();
         if(!pid) {
-          execvp(args_array[0], args_array);	
+          execvp(args[0], args);  
           return WEXITSTATUS(exit_val);
         }
-      	waitid(P_PID, pid, infop, WEXITED);
+        waitid(P_PID, pid, infop, WEXITED);
       }
-    }    
+      free(args);
+      i++;
+    }
+    free(commands);   
   }
 }
 
-int count_commands(char input[256]) {
-  int num_commands = 1;
-  char *commands = input;
-  while (*commands) {
-    if (*commands == ';'){
-      num_commands++;
-    }
-    commands++;
-  }
-  return num_commands;
-}
-
-int count_args(char *command) {
-  char *p = command;
-  int num_args = 0;
-  while (*p){
-    if (*p == ' ') {
-      num_args++;
-    }
-    p++;
-  }
-  return num_args;
-}
 
