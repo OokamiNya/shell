@@ -1,3 +1,39 @@
-(Design Name)
+Shell
+By Michael Jin, Sharuz, and Jeffrey.
 
-By Michael, Sharuz, and Jeffrey.
+Features:
+	Forks and executes command line
+	Parses multiple command on one line
+	Can exit and change directory
+	<,>,>>,| works
+
+Attempted:
+	Tried to think of a creative shell prompt to match "Ca$h".
+
+Bugs:
+	Nope
+
+Files & Function Headers:
+      	exec_line
+		Input: command
+		Output: NULL
+		
+		Runs execvp on the command provided.
+
+	trim
+		Input: command
+		Output: NULL
+		
+		Removes spaces in the front and back of a string so that
+		it can be inserted to exec_line without exec_line returning
+		an error.
+	
+	runs_command
+		Input: command
+		Output: NULL
+
+		The brain of the whole operation. Takes in the command in its
+		raw form and then cycles it through trim if necessay. Then, the
+		function determines if the command is a special case (>,>>,<,|
+		exit,cd). If it is, the command is handled by the "if" 
+		statements. If not, the command is run through exec_command.

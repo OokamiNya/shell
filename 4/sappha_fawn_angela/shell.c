@@ -1,30 +1,35 @@
 #include "shell.h"
 #include "redirect.h"
 
-//signal handlers
+//signal handler
 static void sighandler(int signo){
   if (signo == SIGINT){
     exit(0);
   }
 }
 
+//running our shell~
 int main() {
   signal(SIGINT, sighandler);
-  
+  //continuously 
   while(1) {
     printprompt();    
     int i;
-    char ** parsed = execute_all();//array of commands
-    
+    char ** parsed = parser();//array of user inputed commands
     for (i = 0; parsed[i]; i++){
       //printf("parsed[%d]:%s\n",i, parsed[i]);
       execute(parsed[i]);
     }
-
   }
   return 0;
 }
 
+/*======== char* get_id() =======================
+  Inputs:  N/A
+  Returns: A string representing the currently-logged-in user's uid.
+  
+  A simple helper function which returns the current user's uid as a dynamically allocated string.
+  ==============================================*/ 
 char* get_id(){
   char *id = (char*)malloc(sizeof(char)*100);
   id = getlogin();
@@ -32,39 +37,39 @@ char* get_id(){
   return id;
 }
 
-//make foolproof so cannot go beyond ~ or whatnot
+/*================= void cd() =======================
+  Inputs:  char* path
+  Returns: N/A
+  
+  Changes our current working directory in a Linux-esque fashion:
+  If not given any arguments, then change working directory to ~. Otherwise, it will change the current working directory to the given argument or yell at you.
+  ==============================================*/ 
 void cd(char* path){
-  //no path given or ~ --> change directory to home directory
+  //no path given or ~ --> cd to home directory
   if (path == '\0' || strcmp(path, "~") == 0){
     chdir(getenv("HOME"));
   }
-  
-  //given path
+  //given a specific path
   else {
-    printf("original path: %s\n", path);
-    //printf("getenv('HOME'):%s\n", getenv("HOME"));
     char *sep;
     sep = strsep(&path, "~");
     //if there was a ~, we must format before chdir-ing
-    if ((sep && sep[0] == '\0')) { //this means that there was a ~
-      printf("path: %s\n", path);
-      //printf("sep: %s\n", sep);
-      char* home;
-      home = getenv("HOME"); 
- 
+    if ((sep && sep[0] == '\0')) { //this means that there was a ~ ; must be formatted
+      char* home = getenv("HOME"); 
       char * final = (char *) malloc(sizeof(char)* (1 + strlen(home)+ strlen(path)));
       strcpy(final, home);
       strncat(final, path, strlen(path));
+      
       int success = chdir(final);
+      
       //if not successful chdir --> path not found
       if (success == -1){
 	printf("owl: cd: %s: No such file or directory\n", final);
       }
     }
 
-    //not given ~, we simply work with cwd
-    else {
-      
+    //not given ~, we simply work with cwd (ex: Documents)
+    else {    
       char w[256];
       getcwd(w, sizeof(w));
       strcat(w, "/");
@@ -77,15 +82,19 @@ void cd(char* path){
       if (success == -1){
       	printf("owl: cd: %s: No such file or directory\n", final);
       }
-      
     }
-  }  
-}
+  } //end else (given path) 
+}//end cd
 
-char** execute_all(){
-  char s[256];
-  fgets(s, sizeof(s), stdin);//command-line arg
+/*======== char** parser() =======================
+  Inputs:  N/A
+  Returns: An array of strings, in which each element is a command to be executed.
   
+  Takes the user input and parses along the semicolons (;), adding each element into the args array of strings. Then, we return this array of strings.	
+  ==============================================*/ 
+char** parser(){
+  char s[256];
+  fgets(s, sizeof(s), stdin);//user input
   char* s1 = s;
   char *sep;
   char** args = (char**)(malloc(sizeof(char*)));
@@ -103,13 +112,21 @@ char** execute_all(){
     args[i] = temp;
     i++;
   }
-  //adding terminating null
+
+  //adding terminating null to properly terminate our array
   args = (char**)realloc(args, sizeof(char*)*(i));
   args[i] = NULL;
   return args;
 }
 
-
+/*======== void printprompt() =======================
+  Inputs:  N/A
+  Returns: N/A
+  
+  Prints (to stdout) our shell's prompt, which is meant to mimic Linux's bash prompt. It is the concatenation of the user's username, :, and Linux-esque pwd (~/stuff/substuff).
+  For example...
+  if username is 'unicorns', pwd is '/home/unicorns/Desktop', our prompt will print 'unicorns:~/Desktop'	
+  ==============================================*/ 
 void printprompt() {
   char wd[256];
   getcwd(wd, sizeof(wd));
@@ -119,29 +136,32 @@ void printprompt() {
   printf("%s:~%s$ ", get_id(), s_wd);
 }
 
-int execute(char a[256]){
+/*======== void execute() =======================
+  Inputs:  char a[256]
+  Returns: N/A
+  
+  Executes a single command (ls -l | wc would be considered one command in our case). First, we check for any type of redirection-esque commands (<, >, >>, |) and take care of those commands. If there are no redirection-esque commands, then we simply parse on spaces. If our command is 'cd' or 'exit' or 'quit' then we cd, exit, or quit. Otherwise, we fork and let our child process execvp and run the command. 
+  ==============================================*/
+void execute(char a[256]){
   char *s1 = a;
-  //printf("s1: %s\n", s1);
   char *sep;
   char** arg = (char**)(malloc(sizeof(char*)));
   int i = 0;
   s1 = strsep(&s1, "\n");  
 
-  //first check for > , < and pipes
- 
-  //printf("s1: %s\n", s1);
+  //first check for > , < and |
   int has = has_redirect(s1);
-  
-  printf("has:%d\n", has);
-  //if redirection is necessary
+  //printf("has:%d\n", has);
+
+  //if redirection is necessary (has <, >, |)
   if (has){
     redirection(s1, has);
   }
+  
+  //not a redirection cmd, parse by spaces and exec
   else {
-    //otherwise...
-    //parsing our command
     while (sep = strsep(&s1, " ")){
-      //fool proofing: allows for silly things like ls  -l or other silly user input
+      //fool proofing: allows for silly things like ls   -l or other silly user input!
       if (!(sep && sep[0] == '\0')) {
 	arg = (char**)realloc(arg, sizeof(char*)*(i+1));
 	char * tempo = (char *)malloc(sizeof(char)*256);
@@ -152,16 +172,16 @@ int execute(char a[256]){
       }
     }
  
-    //adding terminating null
+    //adding terminating null to our array
     arg = (char**)realloc(arg, sizeof(char*)*(i));
     arg[i] = NULL;
     
-    //if argument is 'exit' or 'quit':
+    //if command is 'exit' or 'quit':
     if (strcmp(arg[0], "exit") == 0 || strcmp(arg[0], "quit") == 0) { 
       exit(0);
     }
     
-    //else if argument is to change directory:
+    //else if command is to change directory:
     else if (strcmp(arg[0], "cd") == 0) {//if calling cd
       cd(arg[1]);
     }
@@ -171,7 +191,7 @@ int execute(char a[256]){
       int f, status;
       f = fork();
       if (f == 0) {//child process
-	if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist
+	if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist or other wonky error
 	  // printf("errno: %d\n", errno);
 	  //printf("strerrno: %s\n", strerror(errno));
 	  printf("%s: command not found\n", arg[0]);	}
@@ -182,13 +202,16 @@ int execute(char a[256]){
       } 
     }
   }
-  //no need to free arg: http://stackoverflow.com/questions/14492971/how-to-free-memory-created-by-malloc-after-using-execvp
-  //free(arg);
-
 }
 
-//gets rid of trailing and leading white space 
-char * trim (char * s) {
+//gets rid of trailing and leading white space
+/*======== char * trim() =======================
+  Inputs:  char *s
+  Returns: Pointer to the beginning of a string.
+  
+  Removes leading and trailing whitespace on the string s. Terminating '\0' is placed at the appropriate new location by strndup.
+  ==============================================*/
+char* trim (char * s) {
   int l = strlen(s);
   //trailing white space -- backwards
   while(isspace(s[l - 1])) {
