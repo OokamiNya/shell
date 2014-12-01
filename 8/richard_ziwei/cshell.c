@@ -3,9 +3,12 @@
 
 int id;
 
+//handles the SIGINT
 static void sighandler(int signo){
-  if (getpid() != id){
-    kill(getpid(),SIGINT);
+  if (signo == SIGINT){
+    if (getpid() != id){
+      kill(getpid(),SIGINT);
+    }
   }
 }
 
@@ -43,7 +46,8 @@ void normal_stuff(char arg[]){
     }
     argarr[i] = NULL;
     if (execvp(argarr[0], argarr) < 0){
-      printf("Invalid command: %d %s\n", errno, strerror(errno));//GIVE AN ACTUAL ERRNO
+      //printf("Invalid command\n");
+      printf("Invalid command: %d %s\n",errno,strerror(errno));
       exit(-1);
     }
   }

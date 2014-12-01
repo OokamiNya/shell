@@ -1,2 +1,2 @@
 all: 
-	gcc cshell.c
+	gcc -o cs cshell.c
