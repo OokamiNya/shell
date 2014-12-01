@@ -1,6 +1,7 @@
 #include "program.h"
 
 char home[256] = "/";
+int f = 0;
 
 void process(char * start){
   //site of user input processing
@@ -15,9 +16,8 @@ void process(char * start){
 
 void execute(char * start){
   //execute: Takes a char pointer start representing the beginning f a String
-  //Splits the string arguements and runs them with a child process and execvp
+  //Splits the string arguements and sends to appropriate method
   //Returns nothing
-  //printf("%s\n",start);
   if( ! strncmp(start,"HOME=",5))
     set_home(start);
   char * args[10];
@@ -85,25 +85,34 @@ void normal_process(char * args[]){
 void child_process(char * args[]){
   //For processes that require a child to run
   //Takes the process with args as an array
-  int f = fork();
+  f = fork();
   if (!f){
-    //printf("running: %s %s\n",args[0],args[1]);
-    //execl("/bin/ls","ls","-l",NULL);
-    execvp(args[0],args);
+    if(strcmp("flood_my_terminal",args[0])){
+      execvp(args[0],args);
+      exit(0);}
+    else{
+      while(1){
+	sleep(1);
+	printf("Would you really kill me?\n");
+      }
+    } 	 
   }
   else{
     wait(&f);
+    f = 0;
+    if(! strcmp("flood_my_terminal",args[0]))
+      printf("\nI see you have no mercy\n");
+    
   }
 }
 
 void piping(char * args[], int pipe){
-  int x = 0;
-  while(args[x]){
-    printf("%d. %s\n",pipe,args[x]);
-    x++;}
+  //piping: Takes a char pointer array with command line input and int locating where "|" is in array
+  //Runs first commands and uses output as input to next command
+  //Returns nothing
   int c;
-  int i = fork();
-  if (!i){
+  f = fork();
+  if (!f){
     c = open("woo.txt", O_CREAT | O_WRONLY | O_TRUNC, 0777);
     dup2(c,STDOUT_FILENO);
     char * args2[256];
@@ -121,9 +130,10 @@ void piping(char * args[], int pipe){
     exit(0);
   }
   else{
-    wait(&i);
-    int x = fork();
-    if (!x){
+    wait(&f);
+    f = 0;
+    f = fork();
+    if (!f){
       c = open("woo.txt",O_RDONLY);
       dup2(c,STDIN_FILENO);
       char * args2[256];
@@ -136,49 +146,69 @@ void piping(char * args[], int pipe){
       exit(0);
     }
     else{
-      wait(&x);
+      wait(&f);
+      f = 0;
     }
   }
 }
 
 void redirect(char * args[], int redir){
+  //redirect: Takes a char pointer array with command line input and int representing type of redirection
+  //Performs appropriate redirection depending on ">", "<", or ">>"
+  //Allows for <command> > <file1> > <file2> etc. if that's what you'd like
+  //Returns nothing
   int c;
-  int i = fork();
-  if(!i){
+  f = fork();
+  if(!f){
     if (redir == 3){
       c = open(args[2], O_CREAT | O_WRONLY | O_APPEND, 0644);
       dup2(c, STDOUT_FILENO);
-      execlp(args[0], args[0], NULL);
       close(c);
+      execlp(args[0], args[0], NULL);
+      exit(0);
     }
     else if (redir == 2){
       c = open(args[2],O_RDWR,0777);
       dup2(c,STDIN_FILENO);
       close(c);
       execlp(args[0],args[0],NULL);
+      exit(0);
     }else{
       int x =2;
       while (args[x]){
-  int d = fork();
-  if (!d){
-    c = open(args[x], O_CREAT | O_WRONLY, 0644);
-    dup2(c, STDOUT_FILENO);
-    close(c);
-    execlp(args[0], args[0], NULL);
-  }
-  else{
-    wait(&d);
-    x+=2;
-  }
+	int d = fork();
+	if (!d){
+	  c = open(args[x], O_CREAT | O_WRONLY, 0644);
+	  dup2(c, STDOUT_FILENO);
+	  close(c);
+	  execlp(args[0], args[0], NULL);
+	  exit(0);
+	}
+	else{
+	  wait(&d);
+	  x+=2;
+	}
       }
     }
   }else{
-    wait(&i);
+    wait(&f);
+    f = 0;
     redir = 0;
   }
 }
 
+static void sighandler( int signo ) {
+  //Takes the signal number
+  //Only kills a process if it has no children
+    if ( signo == SIGINT ) {
+        if ( !f ) {
+            exit(0);
+        }
+    }
+}
+
 int main(int argc, char *argv[]){
+  signal( SIGINT, sighandler );
   char directory[256];
   while(1){
     getcwd(directory,256);
@@ -189,7 +219,7 @@ int main(int argc, char *argv[]){
       args[x] = strsep(&direct_point, "/"); 
       x++;
     }
-    printf("%s/%s: input: ",args[x-2],args[x-1]);
+    printf("%s/%s: ",args[x-2],args[x-1]);
     char input[256];
     fgets(input, 256, stdin);
     printf("\n");
