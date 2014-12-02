@@ -30,6 +30,22 @@ void myexec(char *input){
   }
 }
 
+void piping(char * args[]){
+  int check1,check2,check3;
+  int i = fork();
+  if (!i){
+    check1 = open("check.txt", O_CREAT | O_WRONLY | O_TRUNC, 0777);
+    dup2(check1,STDOUT_FILENO);
+    execlp(args[0],args[0],NULL);
+  }
+  else{
+    check2 = wait(&check3);
+    check1 = open("check.txt",O_RDONLY);
+    dup2(check1,STDIN_FILENO);
+    execlp(args[2],args[2],NULL);
+  }
+}
+
 void semisep(char *s){
   int i=0;
   char * raw;
