@@ -73,13 +73,21 @@ void redirect_err(char * command, char * file, int mode){
     //printf("opening in append mode\n");
     fd = open(file, O_CREAT | O_APPEND | O_WRONLY, 0644);
   }
-  fd1 = dup(STDERR_FILENO);//set fd1 to stderr
-  dup2(fd, STDERR_FILENO);//redirect fd to stderr
-  execute(command);
-  dup2(fd1, STDERR_FILENO);//reset: redirect fd1 to stderr
+  char *temp = (char*)malloc(sizeof(char)*100);
+  strcpy(temp, command);
+  int success = execute(temp);
+  //printf("success: %d\n", success);
+  if (success == -1){ // not successful
+    //printf("redirecting stdout\n");
+    redirect_out(temp, file, mode);
+  }
+  else {
+    fd1 = dup(STDERR_FILENO);//set fd1 to stderr
+    dup2(fd, STDERR_FILENO);//redirect fd to stderr
+    execute(command);
+    dup2(fd1, STDERR_FILENO);//reset: redirect fd1 to stderr
+  }
 }
-
-
 /*======== void pipeify() =======================
   Inputs:  char *first, char* second
   Returns: N/A

@@ -9,7 +9,7 @@
 #include <errno.h>
 
 int currentPID;
-//counts the num of substr in string
+//counts the num of substr in string (Arguments: char* , char)
 int countchar(char* str,char substr){
   int ans=0;
   int index=0;
@@ -20,6 +20,7 @@ int countchar(char* str,char substr){
   return ans;
 }
 
+//Parses arguments by semicolons and sends each argument to doPipeStuff (Arguments: char*)
 int wrap_with_semicolons_LOL(char* stuff){
   char* semicolon_buffer=calloc(256,sizeof(char));
   while(semicolon_buffer=strsep(&stuff,";")){
@@ -28,7 +29,7 @@ int wrap_with_semicolons_LOL(char* stuff){
   return 0;
 }
 
-//removes whitespace
+//removes whitespace (Arguments: , char*)
 char * strip(char * src){
   //removes leading whitespace
   while(src[0] == ' '){
@@ -43,7 +44,8 @@ char * strip(char * src){
   return src;
 }
 
-//pipe accepts the whole line of args, 
+//The main function for executing command line args. Mainly used for checking if there are any redirection symbols.
+//Parses by pipes first, then checks for < and > accordingly. (Arguments: char*)
 int doPipeStuff(char* arg){
   char* split_buffer=calloc(256,sizeof(char));
   char* split_buffer_buffer=calloc(256,sizeof(char));
@@ -63,22 +65,18 @@ int doPipeStuff(char* arg){
     int boolright=countchar(split_buffer,'>');
     int i=0;
     if (!boolleft && !boolright){
-      while (arg_buffer=strsep(&split_buffer," ")){
-	if (arg_buffer[0] > 0){
+      while (arg_buffer=strsep(&split_buffer," "))
+	if (arg_buffer[0] > 0)
 	  addresses[i++]=arg_buffer;
-	}
-      }
       i=0;
     }
-    if ( fork()){
-      //reset stdin/out
-      close(file_in);
-      close(file_out);
-      dup2(stdin_buffer,STDIN_FILENO);
-      dup2(stdout_buffer,STDIN_FILENO);
-      wait(-1);
-    }else{
-      if (boolleft==1 && !command_index){
+    if (! fork()){
+      if(command_index){//if not at first command
+	file_in = open("piped",O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
+	printf("open! piped for command %s\n",addresses[0]);
+      }else if (boolleft==1){
 	char* split_buffer2 = calloc(256,sizeof(char));
 	split_buffer2 = strsep(&split_buffer_buffer, ">"); 
 	while (arg_buffer=strsep(&split_buffer2," "))
@@ -89,36 +87,53 @@ int doPipeStuff(char* arg){
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
       }
-      if (boolright == 1 && commands-command_index-1 == 0){
+      if(commands-command_index-1){//if not at last command
+	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
+	printf("wrote piped for command %s\n",addresses[0]);
+	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
+      }else if (boolright == 1){
 	char* split_buffer2 = calloc(256,sizeof(char));
 	split_buffer2 = strsep(&split_buffer_buffer, ">");
 	while (arg_buffer=strsep(&split_buffer2," "))
 	  addresses[i++]=arg_buffer;
 	split_buffer2 = strsep(&split_buffer_buffer, ">");
 	//strsep for spaces
-	printf("into this file: %s\n",split_buffer2);
 	file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC);
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
       }
+<<<<<<< HEAD
+      
+      
+=======
       if(command_index){//if not at first command
 	file_in = open("piped",O_RDONLY);
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
-	printf("open piped for command %s\n",addresses[0]);
       }
       if(commands-command_index-1){//if not at last command
 	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
 	dup2(file_out,STDOUT_FILENO);
-	printf("wrote piped for command %s\n",addresses[0]);
 	close(file_out);
       }
+>>>>>>> 9370f01cc3b803ac3669b29f9eb4b3ec60842e25
       execvp(addresses[0],addresses);
+    }else{
+      //reset stdin/out
+      wait(-1);
+      dup2(stdin_buffer,STDIN_FILENO);
+      dup2(stdout_buffer,STDIN_FILENO);
+      close(stdin_buffer);
+      close(stdout_buffer);
+
     }
       
   }
   return 0;
 }
+
+//Sighandler modified so ctrl+c would only exit our processes and not the shell
 static void sighandler(int signo){
   if (signo == SIGINT && !getpid()){
     printf("caught interrupt\n");
@@ -128,7 +143,7 @@ static void sighandler(int signo){
   }
 }
 
-
+//Main runs the shell and also handles the cd command
 int main(){
   signal(SIGINT, sighandler);
   printf("shell PID:%d\n", getpid());
@@ -166,7 +181,6 @@ int main(){
       
     }
   }
-  //ls | grep poop > swag.txt
   remove("piped");
   return 0;
 }
