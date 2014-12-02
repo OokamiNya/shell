@@ -9,16 +9,18 @@
 */
 void stringsep  (char ** str, char ** new, char * query)
 {
-	char * first;	
+	*new = *str;
+
+	if ( *str == NULL ) {
+		*new = NULL;
+		return;
+	}
 	
-	first = *str;
 	*str = strstr( *str, query);
 	if (*str) {
 		**str = 0;	
 		*str += strlen(query);
 	}
-
-	*new = first;
 }
 
 /*
