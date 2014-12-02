@@ -117,7 +117,7 @@ void execStdin(char* s){
   s3 = (char*)malloc(sizeof(char*));
   int ctr = 0;
   while((s3 = strsep(&s,"<")) != NULL){
-    array[ctr] = removeSpace(s3);
+    array[ctr] = s3;
     ctr++;
   }
   array[ctr] = NULL;
@@ -146,7 +146,7 @@ void execPipe(char*s){
   s3 = (char*)malloc(sizeof(char*));
   int ctr = 0;
   while((s3 = strsep(&s,"|")) != NULL){
-    array[ctr] = removeSpace(s3);
+    array[ctr] = s3;
     ctr++;
   }
   array[ctr] = NULL;
@@ -155,7 +155,7 @@ void execPipe(char*s){
 
   int f = fork();
   if (f == 0){
-    int fd = open("randomfile", O_CREAT|O_WRONLY);
+    int fd = open("randomfile", O_CREAT|O_WRONLY, 0777);
     dup2(fd, STDOUT_FILENO);
     execLine(array[0]);
     close(fd);
