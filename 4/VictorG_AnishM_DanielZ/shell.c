@@ -30,7 +30,7 @@ void myexec(char *input){
   }
 }
 
-/*void piping(char * args[]){
+void piping(char * args[]){
   int check1,check2,check3;
   int i = fork();
   if (!i){
@@ -44,7 +44,7 @@ void myexec(char *input){
     dup2(check1,STDIN_FILENO);
     execlp(args[2],args[2],NULL);
   }
-}*/
+}
 
 void semisep(char *s){
   int i=0;
@@ -98,20 +98,22 @@ void redirin(char** args, char * source){
 }
 
 void redirpipe(char** args, char ** args2) {
-  pid_t child = fork();
-  int check1,check2;
-  if (child==0){
-    redirout(args,"check.txt");
-  }  
-  else {
-    int check1 = wait(&check2);
-    int i = 0;
-    for (i;i<10;i++){
-      args2[i]=args2[i+1];
+    int pfds[2];
+
+    pipe(pfds);
+
+    if (!fork()) {
+        //close(1);       /* close normal stdout */
+        dup2(STDOUT_FILENO,pfds[1]);   /* make stdout same as pfds[1] */
+        close(pfds[0]); /* we don't need this */
+        printf("%s\n",args[0]);
+        execvp(args[0], args);
+    } else {
+        //close(0);       /* close normal stdin */
+        dup2(pfds[0],STDIN_FILENO);   /* make stdin same as pfds[0] */
+        close(pfds[1]); /* we don't need this */
+        execvp(args2[0], args2);
     }
-    args2[10]='\0';
-    redirin(args2,"check.txt");
-  }
 }
 
 void run(char *input){
@@ -163,10 +165,10 @@ void run(char *input){
     else{
       raw=input2;
     }
-    char ** args;
-    char ** args2;
+    char ** args=(char **) malloc(2048);
+    char ** args2=(char **) malloc(2048);
     args=separate(strsep(&raw,"|"));
-    printf("%s",raw);
+    //printf("%s\n%s\n",args[0],args[2]);
     args2=separate(raw);
     int f=fork();
     if(!f)
@@ -203,7 +205,7 @@ void run(char *input){
       int i = chdir(inputA[1]);
       if (i!=0){
 	printf("%s is not a directory.",inputA[0]);
-	free(inputA);
+	//free(inputA);
 	return;
       }
     }
@@ -217,8 +219,8 @@ void run(char *input){
     if (!strcmp(inputA[0],"exit")){
       int z=fork();
       if (z==0){
-	printf("Thanks for using our shell!\n");}
-      free(inputA);
+	    printf("Thanks for using our shell!\n");}
+      //free(inputA);
       exit(0);
       return;
     }
@@ -240,7 +242,7 @@ int main(){
   int f=1;
 
   while(1){
-    printf("==|==<(x_x)>===>:");
+    printf("==|==<(x_x)>===>: ");
     fgets(s,1024,stdin);
     //f=fork();
     run(s);
