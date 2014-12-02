@@ -5,17 +5,8 @@
 #include <signal.h>
 #include <fcntl.h>
 
-int count_tokens(char *line, char delim) {
-  char *p = line;
-  int count = 1;
-  while (*p){
-    if (*p == delim) {
-      count++;
-    }
-    p++;
-  }
-  return count;
-}
+int count_commands(char input[256]);
+int count_args(char *command);
 
 int main() {
   char input[256];
@@ -38,7 +29,7 @@ int main() {
     input[strlen(input)-1]='\0';
 
     //Parsing commands
-    num_commands = count_tokens(input,';');
+    num_commands = count_commands(input);
     comm_array[0] = strtok(input, ";");
     int i = 1;
     while (i < num_commands) {
@@ -49,19 +40,23 @@ int main() {
     }
 
     for( i = 0; i < num_commands; i++) {
-      char **args_array;
+      char *args_array[10];
       command = comm_array[i];
-      int num_args = count_tokens(command,' ') - 1;
+      int num_args = count_args(command);
 
       char *comm = strtok(command, " ");
-      args_array[0] = comm;
-
+    
       if (!strcmp(comm,"exit")) {
         exit(0);
       }
     
+      args_array[0] = comm;
+      int j = 1;    
+      if (num_args == 0) {
+        args_array[1]=NULL;
+      }
+
       else {
-        int j = 0;
         while (j <= num_args) {
           args_array[j] = strtok(NULL, " ");
           if (!strcmp(args_array[j], ">")) {

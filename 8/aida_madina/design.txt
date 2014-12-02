@@ -11,7 +11,17 @@ Attempted:
 
 Bugs:
 	
-
+int count_tokens(char *line, char delim) {
+  char *p = line;
+  int count = 1;
+  while (*p){
+    if (*p == delim) {
+      count++;
+    }
+    p++;
+  }
+  return count;
+}
 Files & Function Headers:
 	parse.c
 		Handles the parsing of lines, into commands and arguments
