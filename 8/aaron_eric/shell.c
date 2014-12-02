@@ -73,8 +73,10 @@ interino main() {
     
     for (;semicolon_parsed[i];++i) {
       char ** command = parse_string(semicolon_parsed[i]," ");
-      //realloc(history,sizeof(char *)*++history_len);
-      //history[history_len-1] = command;
+      //hist = (char **)realloc(hist,256*++history_len);
+      //printf("%s",hist[history_len-1]);
+      //printf("%d\n",sizeof(input));
+      //strncpy(hist[history_len-1], input, 256);
       //int j = 0;
       //for (;j<history_len;++j)
       //printf("j is %d, command |%s|\n",j,history[j]);
