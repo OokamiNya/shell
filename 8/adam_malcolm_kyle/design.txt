@@ -28,14 +28,14 @@ program.c
 	/*======== void process() ==========
 	Inputs:  char *start	
 
-	Takes in user input and breaks on ';' delimeter
+	Takes in user input and breaks on ';' delimiter
 	Processes each token
 	====================*/
 
 	/*======== void execute() ==========
 	Inputs:  char *start
 	
-	Takes in user input and breaks it up by arguement into an
+	Takes in user input and breaks it up by argument into an
 	array
 	Sends array to appropriate function depending on nature of
 	command
@@ -50,7 +50,7 @@ program.c
 	/*======== void child_process() ==========
 	Inputs:  char * args[]
 
-	Creates a forked process that executes the command dicatated by
+	Creates a forked process that executes the command dictated by
 	args
 	====================*/
 
@@ -82,7 +82,7 @@ pipe.c
 	/*======== void piping() ==========
 	Inputs:  char * args[], int max
 
-	 Takes a an array comprising of commands that were seperated
+	 Takes a an array composed of commands that were seperated
 	by "|"
 	Processes each command using three methods
 	Deletes woo.txt, a file used during piping
