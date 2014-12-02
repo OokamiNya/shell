@@ -17,9 +17,7 @@
 3.)bugs
 	-when gibberish is entered it doesn’t come up as an error
 	(but now it prints a line, then just prints the prompt again)
-	-sometimes this pops up, not exactly sure why because running the exact same command again doesn’t always recreate the error?
-		turtle(1843,0x7fff75358310) malloc: *** error for object 0x7fbd0a700550: pointer being freed was not allocated
-	 
+	-Freeing! what runs on my mac isn’t running on Mary’s ubuntu, and what’s running on Mar’s ubuntu isn’t running on my mac! so we just commented out freeing in main, and left this comment there too if you want to test it out
 
 FUNCTION HEADERS
 

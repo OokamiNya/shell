@@ -57,13 +57,15 @@ int main(){
     parse(args, t);
     execute(args);
 
+    //THIS FREES THE MEMORY AND RUNS ON MY MAC BUT NOT ON MARY'S
+    //UBUNTU SYSTEM, NOT EXACTLY SURE IF IT'S "WRONG"
     /* i = 0; */
     /* while(i < c){ */
     /*   free(temp[i]); */
     /*   i++; */
-    /* } */
-    
+    /* } */    
     /* free(temp); */
+
     print_prompt();
   }
 
