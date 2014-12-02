@@ -31,12 +31,46 @@ non-coding related things to do:
 #include "shell.h"
 
 
+
+int count_chars(char * s, char c){
+  int counter = 0;
+  int i = 0;
+
+  while( i < strlen(s) ){
+  
+    if( s[i] == c ){
+      /*if ( strcmp(c,">") ){
+	if ( !(s[i + 1]) ){
+	counter++;
+	}else if ( strcmp( s[i + 1], ">") != 0 ){
+	counter ++;
+	}
+	}		   
+	}else{*/
+      counter++;
+    }
+    i++;
+  }
+  return counter;
+}
+
 int main(){
 
   print_prompt();
 
   while(1){
     signal(SIGINT, sighandler);
+
+    //char t[256];
+    //fgets(t, sizeof(t), stdin);
+    //t[strlen(t)-1]='\0';
+    
+
+    // printf("\n%s\n", s1);
+
+    //int c = 0;
+    //c += count_chars(s1 , ' ');
+
 
     char ** args; //allocate space for up to 64 strings of up to 32 characters each
     args = (char**)malloc(sizeof(char *) * 64); //should we change this?
@@ -92,9 +126,7 @@ void print_array(char ** args){
   printf("\n");
 }
 
-
 void parse(char ** args){
-
   char s1[256];
   fgets(s1, sizeof(s1), stdin);
   s1[strlen(s1)-1]='\0';
@@ -160,7 +192,7 @@ void redirect(int type,int i, char ** args){
 	int fd = open(args[i+1], O_RDWR | O_CREAT | O_APPEND , 0644);
 	dup2(fd, STDOUT_FILENO);
       }
-      char ** part1 = (char**)malloc(sizeof(char*) * i);
+      char ** part1;// = (char**)malloc(sizeof(char*) * i);
       
       int j = 0;
       while(j < i){
@@ -170,8 +202,8 @@ void redirect(int type,int i, char ** args){
 
       execvp(part1[0], part1);
       //in case execvp doesn't run:
-      kill(getpid(),SIGTERM);
-      //it isn't necessary to free part1 or reset the file table values, since the child is killed
+      
+      kill(getpid(),SIGTERM);      
 
     }else{
       wait(&status);
@@ -186,7 +218,7 @@ int execute(char ** args){
   if((i = contains(args,";")) != -1){
     //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
-    char ** part1 = (char**)malloc(sizeof(char*) * i);
+    char ** part1;// = (char**)malloc(sizeof(char*) * i);
     
     int j = 0;
     while(j < i){
@@ -197,6 +229,7 @@ int execute(char ** args){
     args += (i + 1);
 
     execute(part1);
+    //free(part1);
     execute(args);
     
   }else if((i = contains(args,"<")) != -1  ){
@@ -267,22 +300,22 @@ int execute(char ** args){
     remove("buffer.txt");
 
   }else if((i = contains(args,"cd")) != -1){
+    char * path = args[1];
     if(!args[1]){
       chdir(getenv("HOME"));
+      
     }else{
-      /*int j = 0;
-	char * path = args[1]; 
-	while( j < strlen(path) ){
-	if ( strcmp(path[j], "~") == 0 ){
-	char * newpath;
-	newpath = strcat( strsep(path),getenv("HOME") );
-	  
-	chdir(path2);
-	}
-	j ++;
-	}*/
-      // ^^ was trying to work on ~
-      chdir(args[1]);
+      if ( strrchr( path, '~' )){
+	if ( strcmp("~", path) !=0){ // if just not just ~
+	  char * path2;
+	  path2 = strrchr( path, '~');
+	  path2 += 2;
+	  chdir(path2);
+	}else // if just ~
+	  chdir(getenv("HOME"));	
+      }else{ // regular path
+      	chdir(path);
+      }
     }
   }else if((i = contains(args,"exit")) != -1){
     exit(-1);
