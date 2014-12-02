@@ -2,49 +2,53 @@ seashell
 by Aida Piccato and Madina Radjabova
 
 Features:
-	Accounts for 'cd' and 'exit'
-	Can execute a command with multiple arguments
-	Can parse and read multiple commands on a line, separated by a semicolon.
-	Implements simple redirection ('<','>','>>'). When redirecting output, correctly redirect the output of a command with multiple arguments!
+	-Accounts for 'cd' and 'exit'
+	-Can execute a command with multiple arguments
+	-Can parse and read multiple commands on a line, separated by a semicolon.
+	-Implements simple redirection ('<','>','>>'). When redirecting output,
+	correctly redirects the output of a command with multiple arguments!
 
 Attempted:
-
+	Piping, but we weren't able to connect the output of one file
+	to the input of the other. Currently, output is just
+	placed into a file called pipes_temp.
 Bugs:
-	
-int count_tokens(char *line, char delim) {
-  char *p = line;
-  int count = 1;
-  while (*p){
-    if (*p == delim) {
-      count++;
-    }
-    p++;
-  }
-  return count;
-}
+	Error will be thrown if you include a space after a semicolon
+	when separating the different commands.	
+
 Files & Function Headers:
 	parse.c
 		Handles the parsing of lines, into commands and arguments
 		============== char** parse_commands() ==================
 		Inputs: char input[256]
 		Returns: Array of strings where each string is a command and its arguments.
-		Counts the number of commands separated by a semicolon in a line, then parses through those commands placing them into comm_array, which has a NULL terminator. 
+		Counts the number of commands separated by a semicolon in a line, then parses
+		through those commands placing them into comm_array, which has a NULL terminator. 
 		============== char** parse_args() ======================
 		Inputs: char *command
 		Returns: Array of strings, the first string being the command, the other arguments
-		Counts the number of tokens in a command separated by " ". Places the first token(the command) into args_array[0]. Includes NULL terminator.
+		Counts the number of tokens in a command separated by " ". Places the first token
+		(the command) into args_array[0]. Includes NULL terminator.
 		============== int count_tokens() =======================
 		Inputs: char *line, char delim
 		Returns: Number of tokens in a string separated by delimiting character.
-		Used to parse arguments and commands, finding the different tokens separated by ' ' and ';', respectively.
+		Used to parse arguments and commands, finding the different tokens separated
+		by ' ' and ';', respectively.
 
 	redirect.c
 		Handles redirection using >,>>,<.
 		============== int redir_in() ===========================
 		Inputs: char** args
-		Handles input redirection with '<'. Reads a designated input_file, the name of which is found in args array, and uses dup2 to replace its file descriptor to that of stdin. It then executes the file, also found in args array, which will use whatever was in input_file and stdin. 
+		Handles input redirection with '<'. Reads a designated input_file, the name
+		of which is found in args array, and uses dup2 to replace its file descriptor
+		to that of stdin. It then executes the file, also found in args array, which
+		will use whatever was in input_file and stdin. 
 		============== int redir_out() ==========================
 		Inputs: char **args, int index
-		Handles output redirection with '>' or '>>'. Index is the index of the flag in args array. It first determines, wheteher args[index] is > or >>, and opens the desires output file (found in args) accordingly. It then duplicates the file descriptor of stdout to the new output file, and executes the command (found in args array). 
+		Handles output redirection with '>' or '>>'. Index is the index of the flag
+		in args array. It first determines, wheteher args[index] is > or >>, and
+		opens the desires output file (found in args) accordingly. It then duplicates
+		the file descriptor of stdout to the new output file, and executes the command
+		(found in args array). 
 
 	
