@@ -101,19 +101,33 @@ void redirpipe(char** args, char ** args2) {
     int pfds[2];
 
     pipe(pfds);
-
+    int i =0;
+    while (args[i]){
+      if (!strcmp(args[i]," ")){
+        args[i]=args[i+1];
+      }
+      i++;
+    }
+    i =0;
+    while (args2[i]){
+      if (!strcmp(args[i]," ")){
+        args2[i]=args[i+1];
+      }
+      i++;
+    }
 
 
 
     if (!fork()) {
-        //close(1);       /* close normal stdout */
+        close(1);       /* close normal stdout */
         dup2(STDOUT_FILENO,pfds[1]);   /* make stdout same as pfds[1] */
         close(pfds[0]); /* we don't need this */
-        //printf("%s\n",args2[0]);
+        printf("%s\n",args[0]);
         execvp(args[0], args);
+        //execlp("ls","ls", NULL);
     } else {
         wait(NULL);
-        //close(0);       /* close normal stdin */
+        close(0);       /* close normal stdin */
         int backup = dup(STDIN_FILENO);
         dup2(pfds[0],STDIN_FILENO);   /* make stdin same as pfds[0] */
         close(pfds[1]); /* we don't need this */
