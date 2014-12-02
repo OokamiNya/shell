@@ -32,7 +32,7 @@ static void sighandler(int signo) {
 }
 
 char isRed(char c) {
-  return c == '>' || c == '<' || c == '|';
+  return c == '>' || c == '<';
 }
 
 char * clean(char * input) { //Alters string, so no malloc
@@ -68,13 +68,25 @@ char * clean(char * input) { //Alters string, so no malloc
 int parse(char * input) {
   int c = 1;
   int i, j;
-  for (i=0; i<strlen(input); i++) {
-    if (isRed(input[i]))
-      c++;
+  char * ph = input; //Placeholder
+
+  while (ph = strchr(ph, '>')) {
+    c++;
+    ph++;
   }
-  
+  ph = input;
+  while (ph = strchr(ph, '<')) {
+    c++;
+    ph++;
+  }
+  ph = input;
+  while (ph = strstr(ph, ">>")) {
+    c--;
+    ph+=2;
+  }
+  ph = input;
+
   char ** commands = (char **) malloc(sizeof(char **)*c);
-  char * ph = input;
   j = -2;
   for (i=0; i<c; i++) {
     j = j+2; //j starts at 0, 1, or 2 depending on:
@@ -84,17 +96,17 @@ int parse(char * input) {
     commands[i] = (char *) malloc(1024);
     for (; j<strlen(ph) && !isRed(ph[j]); j++) {}
     if (isRed(ph[j])) {
-      if (ph[j-1] == ' ') {
+      if (ph[j+1] == '>') { //>>
+	strncpy(commands[i], ph, j);
+	commands[i][j-1] = 0;
+	ph = ph+j;
+	j = 0;
+      }
+      else { //> or <
 	strncpy(commands[i], ph, j);
 	commands[i][j] = 0;
 	ph = ph+j;
 	j = -1;
-      }
-      else if (ph[j-2] == ' ') {
-	strncpy(commands[i], ph, j-1);
-	commands[i][j-1] = 0;
-	ph = ph+j-1;
-	j = 0;
       }
     }
     else { //Allows for something like cat>file without spaces
@@ -108,7 +120,7 @@ int parse(char * input) {
   /*for (i=0; i<c; i++) {
     printf("%s\n", commands[i]);
     }*/
-
+  
   run(commands, c);
   
   return 0;
@@ -119,7 +131,7 @@ int separate(char * input) {
   char * clean_step = malloc(1024);
 
   while ((step = strsep(&input, ";"))) {
-    strncpy(clean_step, step, 1024);
+    strncpy(clean_step, step, 1024); //Duplicates step because clean alters string
     parse(clean(clean_step));
   }
   free(clean_step);
@@ -187,9 +199,14 @@ int run(char ** commands, int c) {
       int i, fd;
       char * file;
       for (i=c-1; i>=0; i--) {
-	if (commands[i][0] == '>') {
+	if (commands[i][0] == '>' && commands[i][1] == '>') {
+	  file = clean(commands[i]+2); //Ignores >>
+	  fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0644);
+	  dup2(fd, STDOUT_FILENO);
+	}
+	else if (commands[i][0] == '>') {
 	  file = clean(commands[i]+1); //Ignores >
-	  fd = open(file, O_CREAT | O_WRONLY);
+	  fd = open(file, O_CREAT | O_WRONLY, 0644);
 	  dup2(fd, STDOUT_FILENO);
 	}
 	else if (commands[i][0] == '<') {
@@ -198,7 +215,7 @@ int run(char ** commands, int c) {
 	  dup2(fd, STDIN_FILENO);
 	}
 	else {
-	  char ** args = sparse(commands[i]);
+	  char ** args = sparse(clean(commands[i]));
 	  ssfree(commands, c);
 	  if (execvp(args[0], args))
 	    printf("%s\n", strerror(errno));
@@ -217,10 +234,11 @@ int run(char ** commands, int c) {
   return 0;
 }
 
-void main_run(char * hostname, char * cwd, char * cwdp, struct passwd *pw) {
+void main_run(char * hostname, char * cwd, struct passwd *pw) {
   int status;
   char cwd_new[4096];
   int pipefd[2];
+  char * check;
   pipe(pipefd);
   cpid = fork();
   valid = 1;
@@ -244,7 +262,7 @@ void main_run(char * hostname, char * cwd, char * cwdp, struct passwd *pw) {
     }
     else
       printf("Error exiting\n");
-    printf("CD: %s\n", cwd_new);
+
     if (chdir(cwd_new) && valid)
       printf("%s\n", strerror(errno));
   }
@@ -253,12 +271,16 @@ void main_run(char * hostname, char * cwd, char * cwdp, struct passwd *pw) {
     getcwd(cwd, 4096);
     gethostname(hostname, 4096);
     getpwuid(getuid());
-    cwdp = strstr(cwd, pwd) + strlen(pwd) - 1;
-    *cwdp = '~';
-    printf("%s@%s:%s$ ", getlogin(), hostname, cwdp);
+    check = strstr(cwd, pwd);
+    if (check) {
+      cwd = cwd + strlen(pwd) - 1;
+      *cwd = '~';
+    }
+    printf("%s@%s:%s$ ", getlogin(), hostname, cwd);
     char * input = (char *) malloc(1024);
     fgets(input,1024,stdin);
     input[strlen(input)-1] = 0; //Removes newline
+	
     separate(input);
     free(input);
     getcwd(cwd, 4096);
@@ -287,6 +309,6 @@ int main() {
   struct passwd *pw = getpwuid(getuid());
 
   while (1) {
-    main_run(hostname, cwd, cwdp, pw);
+    main_run(hostname, cwd, pw);
   }
 }
