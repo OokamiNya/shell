@@ -63,22 +63,18 @@ int doPipeStuff(char* arg){
     int boolright=countchar(split_buffer,'>');
     int i=0;
     if (!boolleft && !boolright){
-      while (arg_buffer=strsep(&split_buffer," ")){
-	if (arg_buffer[0] > 0){
+      while (arg_buffer=strsep(&split_buffer," "))
+	if (arg_buffer[0] > 0)
 	  addresses[i++]=arg_buffer;
-	}
-      }
       i=0;
     }
-    if ( fork()){
-      //reset stdin/out
-      close(file_in);
-      close(file_out);
-      dup2(stdin_buffer,STDIN_FILENO);
-      dup2(stdout_buffer,STDIN_FILENO);
-      wait(-1);
-    }else{
-      if (boolleft==1 && !command_index){
+    if (! fork()){
+      if(command_index){//if not at first command
+	file_in = open("piped",O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
+	printf("open! piped for command %s\n",addresses[0]);
+      }else if (boolleft==1){
 	char* split_buffer2 = calloc(256,sizeof(char));
 	split_buffer2 = strsep(&split_buffer_buffer, ">"); 
 	while (arg_buffer=strsep(&split_buffer2," "))
@@ -89,31 +85,33 @@ int doPipeStuff(char* arg){
 	dup2(file_in,STDIN_FILENO);
 	close(file_in);
       }
-      if (boolright == 1 && commands-command_index-1 == 0){
+      if(commands-command_index-1){//if not at last command
+	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
+	printf("wrote piped for command %s\n",addresses[0]);
+	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
+      }else if (boolright == 1){
 	char* split_buffer2 = calloc(256,sizeof(char));
 	split_buffer2 = strsep(&split_buffer_buffer, ">");
 	while (arg_buffer=strsep(&split_buffer2," "))
 	  addresses[i++]=arg_buffer;
 	split_buffer2 = strsep(&split_buffer_buffer, ">");
 	//strsep for spaces
-	printf("into this file: %s\n",split_buffer2);
 	file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC);
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
       }
-      if(command_index){//if not at first command
-	file_in = open("piped",O_RDONLY);
-	dup2(file_in,STDIN_FILENO);
-	close(file_in);
-	printf("open piped for command %s\n",addresses[0]);
-      }
-      if(commands-command_index-1){//if not at last command
-	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
-	dup2(file_out,STDOUT_FILENO);
-	printf("wrote piped for command %s\n",addresses[0]);
-	close(file_out);
-      }
+      
+      
       execvp(addresses[0],addresses);
+    }else{
+      //reset stdin/out
+      wait(-1);
+      dup2(stdin_buffer,STDIN_FILENO);
+      dup2(stdout_buffer,STDIN_FILENO);
+      close(stdin_buffer);
+      close(stdout_buffer);
+
     }
       
   }
