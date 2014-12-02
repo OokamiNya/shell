@@ -31,7 +31,8 @@ Files & Function Headers:
 	  -- return string is stripped of newline and null-terminated
 
 	- char hash()
-	  -- 
+	  -- returns a char which is used as an int by get_nth_donger in main
+	  -- hashes the current working directory to generate the char
 
 	- interino main()
 	  -- interino is defined as char * we just wanted to feel special
