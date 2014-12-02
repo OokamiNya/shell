@@ -31,68 +31,48 @@ non-coding related things to do:
 #include "shell.h"
 
 
-
-int count_chars(char * s, char c){
-  int counter = 0;
-  int i = 0;
-
-  while( i < strlen(s) ){
-  
-    if( s[i] == c ){
-      /*if ( strcmp(c,">") ){
-	if ( !(s[i + 1]) ){
-	counter++;
-	}else if ( strcmp( s[i + 1], ">") != 0 ){
-	counter ++;
-	}
-	}		   
-	}else{*/
-      counter++;
-    }
-    i++;
-  }
-  return counter;
-}
-
 int main(){
+
+  printf("waht??????");
 
   print_prompt();
 
   while(1){
     signal(SIGINT, sighandler);
 
-    //char t[256];
-    //fgets(t, sizeof(t), stdin);
-    //t[strlen(t)-1]='\0';
+    char t[256];
+    fgets(t, sizeof(t), stdin);
+    t[strlen(t)-1]='\0';
     
+    int c = 0;
+    c += count_chars(t , ' ');
+    /* c += count_chars(t , '>');
+    c += count_chars(t , '<');
+    c += count_chars(t , ';');
+    c += count_chars(t , '|');*/
 
-    // printf("\n%s\n", s1);
+    c += 1;
 
-    //int c = 0;
-    //c += count_chars(s1 , ' ');
-
-
-    char ** args; //allocate space for up to 64 strings of up to 32 characters each
-    args = (char**)malloc(sizeof(char *) * 64); //should we change this?
+    char ** args; 
+    args = (char**)malloc(sizeof(char *) * c); 
     char ** temp = args;
 
     int i = 0;
-    while(i < 32){
+    while(i < c){
       args[i] = (char*)malloc(sizeof(char)*32);
       i++;
     }
 
-    parse(args);
+    parse(args , t);
     execute(args);
 
     i = 0;
-    while(i < 64){
+    while(i < c){
       free(temp[i]);
       i++;
     }
     
     free(temp);
-    
     print_prompt();
   }
 
@@ -107,6 +87,18 @@ static void sighandler(int signo){
   //print_prompt();
 }
 
+
+int count_chars(char * s, char c){
+  int counter = 0;
+  int i = 0;
+  while( i < strlen(s) ){
+    if( s[i] == c ){
+      counter++;
+    }
+    i++;
+  }
+  return counter;
+}
 
 void print_prompt(){
   char path[256];
@@ -126,11 +118,11 @@ void print_array(char ** args){
   printf("\n");
 }
 
-void parse(char ** args){
-  char s1[256];
+void parse(char ** args , char * s1){
+  /*char s1[256];
   fgets(s1, sizeof(s1), stdin);
   s1[strlen(s1)-1]='\0';
-
+  */
   char * s = s1;
   char * temp = strsep(&s, " ");
 
@@ -192,7 +184,7 @@ void redirect(int type,int i, char ** args){
 	int fd = open(args[i+1], O_RDWR | O_CREAT | O_APPEND , 0644);
 	dup2(fd, STDOUT_FILENO);
       }
-      char ** part1;// = (char**)malloc(sizeof(char*) * i);
+      char ** part1 = (char**)malloc(sizeof(char*) * i);
       
       int j = 0;
       while(j < i){
@@ -218,7 +210,7 @@ int execute(char ** args){
   if((i = contains(args,";")) != -1){
     //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
 
-    char ** part1;// = (char**)malloc(sizeof(char*) * i);
+    char ** part1 = (char**)malloc(sizeof(char*) * i);
     
     int j = 0;
     while(j < i){
@@ -229,7 +221,7 @@ int execute(char ** args){
     args += (i + 1);
 
     execute(part1);
-    //free(part1);
+    free(part1);
     execute(args);
     
   }else if((i = contains(args,"<")) != -1  ){
