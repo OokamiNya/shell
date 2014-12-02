@@ -3,14 +3,13 @@
 	-Forks and executes commands
 	-Parses multiple commands on one line
 	-Redirects using > , >> , <
-	-Pipes
+	-Pipes (one per command)
 	-parse works with more than one space
 	-cd use special character ‘~’ when cd-ing
 
 
-2.)attempted
+2.)attempted (to varying extents)
 	-there must be at least one space between special characters (; ,>, >>, <, |)
-	-only one pipe per line works
 	-sig handling ^C only kinda sorta works
 	 (left in code, will exit current command but won’t print prompt again)
 	
