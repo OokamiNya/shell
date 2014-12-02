@@ -12,12 +12,18 @@ Features:
 Attempted:
 	Finding a better name for the program
 	Considering the spaces for < > | and ;, but couldnt get strsep to
-	work the way I wanted it to
-
-Bugs:
+	work the way I wanted it to.
+	Tried to rewrite it myself, but it didn't work that well
+	(code is commented out under char* parseString())
+	couldn't get it to work similar to strsep where the original string
+	was modified and the first part is returned.
 	Commands using < > | ; will not work if there are spaces on either side.
-	Will only work for examples like: cd ..;ls -al
+	will only work for examples like: cd ..;ls -al
+	
+Bugs:
 	Reading the joke may cause a loss in brain cells
+	Because a temp file is used for piping, if you ls as an input for piping,
+	then you can see the tempfile there
 
 Function Headers under shell.c (handles everything):
 	=====int countDelim()=====

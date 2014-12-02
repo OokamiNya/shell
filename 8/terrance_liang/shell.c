@@ -60,6 +60,17 @@ char *getHomeDir(){
   return tempdir;
 }
 
+/*
+char *parseString(char *stringy, char *delim){
+  //trying to get parsing by a string delimeter. Not successful :(
+  char *temp = (char *)malloc(500);
+  temp = strstr(stringy,delim);
+  strncpy(stringy,stringy,temp-stringy);
+  printf("First part: %s \n", stringy);
+  return temp+strlen(delim);
+}
+*/
+
 void redirectOut(char *output, char *command ){
   //redirecting out ">"
   int childcom = fork();
