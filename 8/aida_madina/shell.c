@@ -4,10 +4,13 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "parse.h"
 #include "pipe.h"
 #include "redirect.h"
-
+int count_tokens(char *, char);
+char **parse_args(char *);
+char **parse_commands(char[]);
+int array_len(char **);
+void free_array(char **);
 int main() {
   char input[256];
   char **commands;
@@ -36,7 +39,7 @@ int main() {
       args = parse_args(commands[i]);
 
       if (!strcmp(args[0],"exit")) {
-	      exit(0);
+        exit(0);
       }
     
       else if (!strcmp(args[0],"cd")) {
@@ -47,10 +50,10 @@ int main() {
       }
       int j = 0;
       while (args[j]) {
-    	  if (!strcmp(args[j], ">")) {
+        if (!strcmp(args[j], ">")) {
           flag_redir_index = j;
-    	    flag_redir = ">";
-  	    }
+          flag_redir = ">";
+        }
         else if (!strcmp(args[j],">>")) {
           flag_redir_index = j;
           flag_redir = ">>";
@@ -58,7 +61,7 @@ int main() {
         else if (!strcmp(args[j],"<")) {
           flag_redir = "<";
         }
-    	  j++;
+        j++;
       }  
 
       if (flag_redir) {
@@ -81,10 +84,97 @@ int main() {
         waitid(P_PID, pid, infop, WEXITED);
       }
       i++;
-      free_array(args);
+      //free_array(args);
     }
-    free_array(commands);
+    //free_array(commands);
   }
 }
+int count_tokens(char *line, char delim) {
+  char *p = line;
+  int count = 0;
+  while (*p) {
+    if (*p == delim) {
+      count++;
+    }
+    p++;
+  }
+  return count;
+}
+char **parse_args(char *command) {
+  int num_args = count_tokens(command,' ');
+    char **args_array = (char**)malloc(sizeof(char *)*num_args);
+    int j = 0;
+    while (j < 32) {
+      args_array[j] = (char *)malloc(sizeof(char)*32);
+      j++;
+    }
+
+    args_array[0] = strtok(command," ");
+    int i = 1;
+    while (i <= num_args) {
+      args_array[i] = strtok(NULL," ");
+      i++;
+    }
+    args_array[i] = NULL;
+    return args_array;
+ }
+
+char** parse_commands(char input[256]) {
+  char *commands = input;
+  int num_commands = count_tokens(commands,';');
+  char **comm_array = (char**)malloc(sizeof(char *)*num_commands);
+  int j = 0;
+  while (j < 32) {
+    comm_array[j] = (char *)malloc(sizeof(char)*32);
+    j++;
+  }
+
+  comm_array[0] = strtok(input, ";");
+  int k = 1;
+  while (k < num_commands){
+    comm_array[k] = strtok(NULL, ";");
+    if (k > num_commands)
+      return 0;
+    k++;
+  }
+  comm_array[k] = NULL;
+  return comm_array;
+}
+
+
+void free_array(char **array) {
+  int j = array_len(array) - 1; 
+  printf("%s\n",array[j]);
+  while (j >= 0) {
+    printf("%d: %s\n", j, array[j]);
+    free(array[j]);
+    j--;
+  }
+  /*
+  int k;
+  while (array[j] && j >= 0) {
+    printf("%p\n", &(array[j]));
+    k = 31;
+    while (array[j][k] && k >= 0) {
+      printf("Address of Char %p\n", &(array[j][k]));
+      free(&(array[j][k]));
+      k--;
+    }
+    free(array[j]);
+    j--;
+  }
+  */
+  //free(array);
+}
+
+int array_len(char **array) {
+  int count = 0;
+  while (array[count]) {
+    count++;
+  }
+  return count;
+}
+
+
 
 
