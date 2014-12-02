@@ -1,5 +1,5 @@
 What our shell does:
-
+--------------------
 -Runs all basic commands (ls, cat, emacs...) with any number of 
 arguments
 -Handles cd
@@ -11,19 +11,19 @@ arguments
 
 
 What our shell was supposed to do:
-
+----------------------------------
 -Handle tab-completion using "char * my_fgets(...)" in 
 executor.c
 -Handle SIGINTs using "sighandler" 
-
+-Handle redirects
 
 Bugs and other issues to consider:
-
+----------------------------------
 None known.
 
 
 Function headers:
-
+-----------------
 static void sighandler(int signo)
 What it does: Attempts to handle the SIGINT signal by exiting
 if it's a child processes, and printing a newline otherwise.
