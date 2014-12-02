@@ -1,4 +1,4 @@
-Shell
+Strerror From The Black Lagoon
 by Adam DeHovitz, Malcolm Wells, Kyle Oleksiuk
 
 Features:
