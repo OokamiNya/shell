@@ -1,4 +1,12 @@
-apiccato97 console  Nov 16 10:49 
-apiccato97 ttys000  Dec  1 17:56 
-apiccato97 console  Nov 16 10:49 
-apiccato97 ttys000  Dec  1 17:56 
+design.txt
+exec
+makefile
+pipe.c
+pipe.h
+pipe.o
+redirect.c
+redirect.h
+redirect.o
+shell.c
+shell.o
+text
