@@ -12,7 +12,7 @@ char* trim(char *);
 
 void printprompt();
 
-void execute();
+int execute();
 
 void cd(char *);
 

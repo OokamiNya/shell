@@ -10,17 +10,19 @@ FEATURES
 	* Can make you almost forget you're not using bash!
 	* Attempts to fight against User Silliness Syndrome! 'ls           -l' can't fight us!
 	* Handles empty commands (" ; ")
-
+	* Handles simply pressing the enter key like bash 
+	(by reprinting prompt!)
+	* Somewhat redirects using 2> , 2>>
 
 ATTEMPTED FEATURES
 ----------------------------------------------------------------------------
 	* Multiple piping clearly does not adhere to bash's multiple piping.
+	* Redirection of stderr does not entirely adhere to bash's 2> / 2>>
 
 BUGS
 ----------------------------------------------------------------------------
 	* Multiple piping returns funkiness.
-	* Attempts to cd .. past the home (~) directory will result in a segfaults.
-	* Attempts to put a random semicolon at the beginning or end of your command will result in a segfault.
+	* Attempts to cd .. past the home (~) directory will result in segfaults (cannot access root directory).
 
 
 FILES AND FUNCTION HEADERS
@@ -199,4 +201,18 @@ redirect.c: home of our redirection functions and magical creatures!
 	to this temporary file. After this, we delete the temporary file--
 	who said temp ever existed?!
 	==============================================*/ 
+	
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+non-existent-unicorn.c
+
+	/*======== Unicorns magic-ify() =======================
+	Inputs:  unicorn powder, unicorn horn
+	Returns: unicorn
+	 
+	Creates an unicorn out of thin air! May or may not 
+	be visible to others. Guaranteed to receive raised
+	eyebrows! Perfect for driving away perfectly normal
+	people!
+	==============================================*/ 

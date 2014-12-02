@@ -16,10 +16,14 @@ int main() {
     printprompt();    
     int i;
     char ** parsed = parser();//array of user inputed commands
-    //printf("parsed[0]: '%s'\n", parsed[0]);
-    for (i = 0; parsed[i]; i++){
-      //printf("parsed[%d]:%s\n",i, parsed[i]);
-      execute(parsed[i]);
+  
+    if (parsed != NULL){
+      //printf("parsed[0]: '%s'\n", parsed[0]);
+      for (i = 0; parsed[i]; i++){
+	//printf("parsed[%d]:%s\n",i, parsed[i]);
+	if (parsed[i] != NULL)
+	  execute(parsed[i]);
+      }
     }
   }
   return 0;
@@ -100,28 +104,38 @@ char** parser(){
   char *sep;
   char** args = (char**)(malloc(sizeof(char*)));
   int i = 0;
-
   //deleting trailing newspace
   s1 = strsep(&s1, "\n");  
-  
-  //parsing our command by semicolons
-  while (sep = strsep(&s1, ";")){
-    args = (char**)realloc(args, sizeof(char*)*(i+1));
-    char * temp = (char *)malloc(sizeof(char)*256);
-    strcpy(temp, sep);
-    if (temp[0] != '\0') { //if there isn't an empty argument
-      temp = trim(temp);
-      args[i] = temp;
-      i++;
+  s1 = trim(s1);
+  //if nothing is typed (hit enter or just spaces), then simply reprint prompt
+  if ((s1 && s1[0] == '\0')){
+    //printf("emptiness sucks\n");
+    return NULL;
+  }
+  else {
+    //parsing our command by semicolons
+    while (sep = strsep(&s1, ";")){
+      args = (char**)realloc(args, sizeof(char*)*(i+1));
+      char * temp = (char *)malloc(sizeof(char)*256);
+      strcpy(temp, sep);
+      if (temp && (temp[0] != '\0')) { //if there isn't an empty argument
+	temp = trim(temp);
+	args[i] = temp;
+	i++;
+      }
+      else {
+	printf("skipped null\n");
+      }
+    }
+    if (!i)//if i == 0, aka no inputs
+      return NULL;
+    else {
+      //adding terminating null to properly terminate our array
+      args = (char**)realloc(args, sizeof(char*)*(i));
+      args[i] = NULL;
+      return args;
     }
   }
-  //printf("i: %d\n", i); 
-  if (i) { //ensures there's actually something in the array 
-  //adding terminating null to properly terminate our array
-    args = (char**)realloc(args, sizeof(char*)*(i));
-    args[i] = NULL;
-  }
-  return args;
 }
 
 /*======== void printprompt() =======================
@@ -147,7 +161,7 @@ void printprompt() {
   
   Executes a single command (ls -l | wc would be considered one command in our case). First, we check for any type of redirection-esque commands (<, >, >>, |) and take care of those commands. If there are no redirection-esque commands, then we simply parse on spaces. If our command is 'cd' or 'exit' or 'quit' then we cd, exit, or quit. Otherwise, we fork and let our child process execvp and run the command. 
   ==============================================*/
-void execute(char a[256]){
+int execute(char a[256]){
   char *s1 = a;
   char *sep;
   char** arg = (char**)(malloc(sizeof(char*)));
@@ -158,8 +172,13 @@ void execute(char a[256]){
   int has = has_redirect(s1);
   //printf("has:%d\n", has);
 
+  //if something like 'ls ;' 
+  if (s1[0] == '\0'){
+    //printf("empty arg\n");
+    return 0;
+  }
   //if redirection is necessary (has <, >, |)
-  if (has){
+  else if (has){
     redirection(s1, has);
   }
   
@@ -197,9 +216,11 @@ void execute(char a[256]){
       f = fork();
       if (f == 0) {//child process
 	if (execvp(arg[0], arg) == -1){//execvp returns -1 if error returned --> aka command does not exist or other wonky error
-	  // printf("errno: %d\n", errno);
-	  //printf("strerrno: %s\n", strerror(errno));
-	  printf("%s: command not found\n", arg[0]);	}
+	  //printf("errno: %d\n", errno);
+	  printf("%s\n", strerror(errno));
+	  //printf("%s: command not found\n", arg[0]);	
+	  return -1;
+	}
       }
       else {//parent process
 	wait(&status);
@@ -207,6 +228,7 @@ void execute(char a[256]){
       } 
     }
   }
+  return 0;
 }
 
 //gets rid of trailing and leading white space
@@ -223,7 +245,7 @@ char* trim (char * s) {
     l--;
   }
   //leading white space -- forward
-  while(* s && isspace(* s)){
+  while(*s && isspace(*s)){
     s++;
     l--;
   }
