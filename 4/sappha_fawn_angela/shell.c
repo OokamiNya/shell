@@ -16,11 +16,13 @@ int main() {
     printprompt();    
     int i;
     char ** parsed = parser();//array of user inputed commands
+  
     if (parsed != NULL){
       //printf("parsed[0]: '%s'\n", parsed[0]);
       for (i = 0; parsed[i]; i++){
 	//printf("parsed[%d]:%s\n",i, parsed[i]);
-	execute(parsed[i]);
+	if (parsed[i] != NULL)
+	  execute(parsed[i]);
       }
     }
   }
@@ -116,19 +118,23 @@ char** parser(){
       args = (char**)realloc(args, sizeof(char*)*(i+1));
       char * temp = (char *)malloc(sizeof(char)*256);
       strcpy(temp, sep);
-      if (temp[0] != '\0') { //if there isn't an empty argument
+      if (temp && (temp[0] != '\0')) { //if there isn't an empty argument
 	temp = trim(temp);
 	args[i] = temp;
 	i++;
       }
+      else {
+	printf("skipped null\n");
+      }
     }
-    //printf("i: %d\n", i); 
-    if (i) { //ensures there's actually something in the array 
+    if (!i)//if i == 0, aka no inputs
+      return NULL;
+    else {
       //adding terminating null to properly terminate our array
       args = (char**)realloc(args, sizeof(char*)*(i));
       args[i] = NULL;
+      return args;
     }
-    return args;
   }
 }
 
@@ -166,8 +172,13 @@ int execute(char a[256]){
   int has = has_redirect(s1);
   //printf("has:%d\n", has);
 
+  //if something like 'ls ;' 
+  if (s1[0] == '\0'){
+    //printf("empty arg\n");
+    return 0;
+  }
   //if redirection is necessary (has <, >, |)
-  if (has){
+  else if (has){
     redirection(s1, has);
   }
   

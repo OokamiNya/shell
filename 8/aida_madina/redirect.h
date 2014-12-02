@@ -4,5 +4,5 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
-int redir_int(char **);
+int redir_in(char **);
 int redir_out(char **, int);
