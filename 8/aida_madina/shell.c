@@ -4,6 +4,7 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <sys/types.h>
 
 int count_commands(char input[256]);
 int count_args(char *command);
@@ -22,7 +23,8 @@ int main() {
   int exit_val = 105;
   int flag_redir_type = 0;
   int file;
-  
+  int flag_pipe = 0;
+
   while(1) {
     printf("seashell:%s$ ", getcwd(cwd, sizeof(cwd)));
     fgets(input, sizeof(input), stdin);
@@ -71,6 +73,9 @@ int main() {
             flag_redir_type = 3;
             flag_redir = j;
           }
+          else if (!strcmp(args_array[j],"|")) {
+	    flag_pipe = j;
+	  }
           j++;
         }  
         args_array[j]=NULL;
@@ -78,7 +83,7 @@ int main() {
 
       if (!strcmp(comm,"cd")) {
         if (!args_array[1]) {
-           chdir(getenv("HOME"));
+	  chdir(getenv("HOME"));
         }
         chdir(args_array[1]);
       }
@@ -111,6 +116,59 @@ int main() {
         }
         flag_redir = 0;
         flag_redir_type = 0;
+      }
+      
+      else if (flag_pipe) {
+	file = open("pipes_temp", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	int pid = fork();
+	if (!pid) {
+	  dup2(file, STDOUT_FILENO);
+	  int n;
+	  char *exec_args[10];
+	  for(n = 0; n < flag_pipe; n++) {
+	    exec_args[n] = args_array[n];
+	  }
+	  exec_args[n] = NULL;
+	  execvp(args_array[0], exec_args);
+	  
+	  //char str[10000];
+	  //fgets(str, sizeof(str), file);
+	  
+	  int fd[2];
+	  pid_t childpid;
+
+	  pipe(fd);
+	  if(childpid = fork() == -1) {
+	    perror("fork");
+	    exit(1);
+	  }
+
+	  if(childpid == 0) {
+	    close(fd[0]);
+	  }
+	  else {
+	    close(fd[1]);
+	  }
+
+	  /*
+	  for(n = flag_pipe + 1; n < 10; n++) {
+	    exec_args[n - flag_pipe - 1] = args_array[n];
+	  }
+	  exec_args[n] = NULL;
+
+	  if( popen2(exec_args, &infp, &outfp) <= 0) {
+	    printf("Unable to execute program.");
+	    exit(1);
+	  }
+	  write(infp, str, sizeof(str));
+		     
+	  //execvp(args_array[flag_pipe + 1], exec_args);
+	  //execvp("rm", &"rm pipes_temp\0");
+	  */
+
+	  exit(0);
+	}	
+	close(file);
       }
 
       else {

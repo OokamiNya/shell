@@ -92,7 +92,7 @@ interino main() {
       int j = 0;
       char **subcommand = NULL; 
       for (; command[j];j++) {
-	if (strchr(command[j],'>')) {
+	if (strchr(command[j],'>') || strchr(command[j],'<')) {
 	  subcommand = realloc(subcommand,sizeof(char*)*(j+1));
 	  subcommand[j] = NULL;
 	  if (command[j+1]) {
@@ -104,13 +104,43 @@ interino main() {
 	    }
 	    else {
 	      int file;
-	      if (!strcmp(command[j],">>")) {
+	      /*printf("%i",strcmp(command[j],">"));
+	      if (!strcmp(command[j],">")) {
+		printf("%i",strcmp(command[j],">>"));
+		if (!strcmp(command[j],">>")) {
+		  file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
+		  printf("appendout\n");
+		}
+		else {
+		  file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+		  printf("ovwrtout\n");
+		}
+		dup2(file, STDOUT_FILENO);
+	      }
+	      else if (!strcmp(command[j],"<")) {
+		if (!strcmp(command[j],"<<")) {
+		  file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
+		  printf("appendin\n");
+		}
+		else {
+		  file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+		  printf("ovrwtin\n");
+		}
+		dup2(file, STDIN_FILENO);
+		}*/
+	      if (!strcmp(command[j],">>"))
 		file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
-	      }
-	      else {
+	      else if (!strcmp(command[j],">"))
 		file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+	      else if (!strcmp(command[j],"<"))
+		file = open(out, O_RDWR, 0777);
+	      if (strchr(command[j],'>'))
+		dup2(file, STDOUT_FILENO);
+	      else {
+		printf("HIMOM\n");
+		dup2(file,STDIN_FILENO);
+		close(file);
 	      }
-	      dup2(file, STDOUT_FILENO);
 	      execvp(subcommand[0],subcommand);
 	      return "( ͝° ͜ʖ͡°)つ";
 	    } 
