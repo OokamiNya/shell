@@ -153,10 +153,11 @@ void execute(){
   }
   // `cd`
   else if (!strcmp(argv[0], "cd")){
-    if (!argv[1])
-      argv[1] = HOME;
-    if (chdir(argv[1]) < 0)
-      printf("cd: %s: %s\n", argv[1], strerror(errno));
+    char *dir = argv[1];
+    if (!dir)
+      dir = HOME;
+    if (chdir(dir) < 0)
+      printf("cd: %s: %s\n", dir, strerror(errno));
   }
   else{
     f = fork();
@@ -211,15 +212,14 @@ char ** parseInput(char *input, char *delim){
 }
 
 void shell(){
-  char *input = malloc(sizeof *input);
-  int count;
+  char input[BUFFER_LEN];
+  int count = 0;
   while (1){
     printPrompt();
     // Exit on EOF
     if (!fgets(input, BUFFER_LEN, stdin)){
       printf("\n");
-      free(input);
-      break;
+      return;
     }
     commands = parseInput(input, ";");
     count = 0;
