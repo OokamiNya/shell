@@ -1,0 +1,12 @@
+total 124
+drwxrwxr-x  3 madina madina  4096 Dec  2 00:26 .
+drwxrwxr-x 19 madina madina  4096 Dec  1 20:50 ..
+drwx------  2 madina madina  4096 Dec  1 22:58 backup- gives free() error
+-rw-r--r--  1 madina madina  1236 Dec  1 23:50 cat
+-rw-rw-r--  1 madina madina  2388 Dec  1 23:47 design.txt
+-rwxrwxr-x  1 madina madina 13554 Dec  2 00:26 exec
+-rw-rw-r--  1 madina madina    76 Dec  1 23:47 makefile
+-rw-r--r--  1 madina madina     0 Dec  2 00:26 pipes_temp
+-rw-rw-r--  1 madina madina  4245 Dec  2 00:26 shell.c
+-rw-rw-r--  1 madina madina  3487 Dec  1 23:52 shell.c~
+-rw-rw-r--  1 madina madina  5488 Dec  2 00:26 shell.o
