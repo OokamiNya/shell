@@ -58,6 +58,18 @@ void redirect_out(char * command, char * file, int mode){
   the file if it already exists.
   --> If mode == 2, we will create (if necessary) or append to 
   the file if it already exists.
+  *** Note ***
+  Because of our execute function, this function may or may not
+  work entirely like bash's 2>/2>>. We are unable to access the error returned by execvp inside our function and hence, redirecting
+  strerr and calling the command will not result in an error (since
+  execute is not causing an error, a forked fxn is). Hence,
+  we let execute have an integer return type. If execvp is unable
+  to run, then print the error message returned by strerror(errno). 
+  If -1 is returned, we know execvp did not work (an error occurred)
+  and redirect stdout (which has the error message) to the file
+  instead. Because this means that we must check the value of
+  execute first, we end up printing out the error message as well--
+  something bash does not do.
   ==============================================*/ 
 void redirect_err(char * command, char * file, int mode){
   command = trim(command);
@@ -78,7 +90,7 @@ void redirect_err(char * command, char * file, int mode){
   int success = execute(temp);
   //printf("success: %d\n", success);
   if (success == -1){ // not successful
-    //printf("redirecting stdout\n");
+    printf("redirecting stdout\n");
     redirect_out(temp, file, mode);
   }
   else {

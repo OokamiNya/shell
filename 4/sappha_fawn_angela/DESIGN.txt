@@ -15,12 +15,12 @@ FEATURES
 ATTEMPTED FEATURES
 ----------------------------------------------------------------------------
 	* Multiple piping clearly does not adhere to bash's multiple piping.
+	* Redirection of stderr does not entirely adhere to bash's 2> / 2>>
 
 BUGS
 ----------------------------------------------------------------------------
 	* Multiple piping returns funkiness.
-	* Attempts to cd .. past the home (~) directory will result in a segfaults.
-	* Attempts to put a random semicolon at the beginning or end of your command will result in a segfault.
+	* Attempts to cd .. past the home (~) directory will result in segfaults (cannot access root directory).
 
 
 FILES AND FUNCTION HEADERS
