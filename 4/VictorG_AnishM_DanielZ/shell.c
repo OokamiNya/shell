@@ -96,27 +96,25 @@ void redirin(char** args, char * source){
   execvp(args[0], args);
   return;
 }
+
 void redirpipe(char** args, char ** args2) {
-  int pid;
-  int fd[2];
-  
-  pipe(fd);
-  
-  if (!(pid = fork())) {
-    dup2(fd[0], 0);
-    close(fd[1]);
-    execvp(args[0], args);
+  pid_t child = fork();
+  int check2;
+  int w;
+  if (child==0){
+    redirout(args,"check.txt");
+  }  
+  else {
+    check1 = wait(&check2);
+    int i = 0;
+    for (i;i<8;i++){
+      args2[i]=args2[i+1];
+    }
+    args2[8]='\0';
+    redirin(args2,"check.txt");
   }
-  else{
-    wait(NULL);
-    dup2(fd[1], 1);
-    close(fd[0]);
-    execvp(args2[0], args2);
-  }
-  //do pipestuff,
-  //args should preferably be the first set of commands to execute,
-  //args 2 is the second set of commands to execute, i see this as the easiest way.
 }
+
 void run(char *input){
   if (!strcmp(input,"\n")){//so you can hit enter with no commands
     return;
