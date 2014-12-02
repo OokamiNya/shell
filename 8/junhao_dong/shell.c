@@ -199,7 +199,7 @@ char ** parseInput(char *input, char *delim){
 	  char tmp[BUFFER_LEN];
 	  strcpy(tmp,HOME);
 	  strcat(tmp,arg+1);
-!	  strcpy(arg,tmp);
+	  strcpy(arg,tmp);
 	}
 	argv[size] = arg;
 	size++;
@@ -211,14 +211,15 @@ char ** parseInput(char *input, char *delim){
 }
 
 void shell(){
-  char *input;
+  char *input = malloc(sizeof *input);
   int count;
   while (1){
     printPrompt();
     // Exit on EOF
     if (!fgets(input, BUFFER_LEN, stdin)){
       printf("\n");
-      return;
+      free(input);
+      break;
     }
     commands = parseInput(input, ";");
     count = 0;
