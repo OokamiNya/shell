@@ -100,17 +100,16 @@ void redirin(char** args, char * source){
 void redirpipe(char** args, char ** args2) {
   pid_t child = fork();
   int check1,check2;
-  int w;
   if (child==0){
     redirout(args,"check.txt");
   }  
   else {
     int check1 = wait(&check2);
     int i = 0;
-    for (i;i<8;i++){
+    for (i;i<10;i++){
       args2[i]=args2[i+1];
     }
-    args2[8]='\0';
+    args2[10]='\0';
     redirin(args2,"check.txt");
   }
 }
