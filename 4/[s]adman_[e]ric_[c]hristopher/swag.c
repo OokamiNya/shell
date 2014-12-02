@@ -9,7 +9,7 @@
 #include <errno.h>
 
 int currentPID;
-//counts the num of substr in string (Arguments: char* , char)
+//counts the num of substr in string
 int countchar(char* str,char substr){
   int ans=0;
   int index=0;
@@ -20,7 +20,6 @@ int countchar(char* str,char substr){
   return ans;
 }
 
-//Parses arguments by semicolons and sends each argument to doPipeStuff (Arguments: char*)
 int wrap_with_semicolons_LOL(char* stuff){
   char* semicolon_buffer=calloc(256,sizeof(char));
   while(semicolon_buffer=strsep(&stuff,";")){
@@ -29,7 +28,7 @@ int wrap_with_semicolons_LOL(char* stuff){
   return 0;
 }
 
-//removes whitespace (Arguments: , char*)
+//removes whitespace
 char * strip(char * src){
   //removes leading whitespace
   while(src[0] == ' '){
@@ -44,8 +43,7 @@ char * strip(char * src){
   return src;
 }
 
-//The main function for executing command line args. Mainly used for checking if there are any redirection symbols.
-//Parses by pipes first, then checks for < and > accordingly. (Arguments: char*)
+//pipe accepts the whole line of args, 
 int doPipeStuff(char* arg){
   char* split_buffer=calloc(256,sizeof(char));
   char* split_buffer_buffer=calloc(256,sizeof(char));
@@ -103,21 +101,8 @@ int doPipeStuff(char* arg){
 	dup2(file_out,STDOUT_FILENO);
 	close(file_out);
       }
-<<<<<<< HEAD
       
       
-=======
-      if(command_index){//if not at first command
-	file_in = open("piped",O_RDONLY);
-	dup2(file_in,STDIN_FILENO);
-	close(file_in);
-      }
-      if(commands-command_index-1){//if not at last command
-	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
-	dup2(file_out,STDOUT_FILENO);
-	close(file_out);
-      }
->>>>>>> 9370f01cc3b803ac3669b29f9eb4b3ec60842e25
       execvp(addresses[0],addresses);
     }else{
       //reset stdin/out
@@ -132,8 +117,6 @@ int doPipeStuff(char* arg){
   }
   return 0;
 }
-
-//Sighandler modified so ctrl+c would only exit our processes and not the shell
 static void sighandler(int signo){
   if (signo == SIGINT && !getpid()){
     printf("caught interrupt\n");
@@ -143,7 +126,7 @@ static void sighandler(int signo){
   }
 }
 
-//Main runs the shell and also handles the cd command
+
 int main(){
   signal(SIGINT, sighandler);
   printf("shell PID:%d\n", getpid());
@@ -181,6 +164,7 @@ int main(){
       
     }
   }
+  //ls | grep poop > swag.txt
   remove("piped");
   return 0;
 }
