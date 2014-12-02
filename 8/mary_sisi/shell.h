@@ -2,7 +2,12 @@
 /*
 Returns 0 for no reason whatsoever.
 
-In the infinite loop, an array of strings (char ** args) is allocated to hold user input (see parse() below) and handle said user input (see execute() below).  Since fgets() is called in parse(), the loop will pause and wait for user input each time through.
+In the infinite loop:
+- fgets() is called to get user input
+- an array of strings (char ** args) is allocated to hold user input
+- the user input is parsed (using spaces as delimiters) into separate strings (see parse() below)
+and
+- said user input is handled/executed (see execute() below)
  */
 
 
@@ -17,6 +22,12 @@ It would work the first time but thereafter would erupt.
 **UPDATE** (sorry I didn't delete the above part, I just didn't want to abandon the poetic embellishment)
 This function basically works now, because it's called _inside_ the while loop in main().  It doesn't do much.  It just prevents a keyboard interrupt from closing our shell entirely and returning to bash.  But since it _really_ doesn't do much, you have to hit Enter/Return to satisfy fgets() as called in parse() in order to regain the prompt.
  */
+
+
+int count_chars(char * s, char c);
+/*
+Returns the number of times char 'c' appears in string 's'.
+*/
 
 
 void print_prompt();
@@ -35,9 +46,11 @@ Used it for testing purposes only.  It is not called anywhere in the program.
  */
 
 
-void parse(char ** args);
+void parse(char ** args, char * s1);
 /*
-Uses fgets() to parse user input from the command-line prompt into an array of strings.
+input:
+- args is pre-allocated char **
+- s1 is string of user input
 
 The parameter is used as a buffer: 'args' must have space allocated to hold the array of strings assigned to it inside parse().  (The only time parse() is called is in main(), and the char ** args is allocated before it is used as a buffer via parse().)
 
@@ -104,5 +117,6 @@ The n-1 condition checks for an "exit" call.  The shell will close, and you will
 
 The n condition (i.e. "else") will fork a child to execute the commands stored in 'args'.  In the case that execvp() is not called, you will get a fun message, and the child process will be terminated using kill().  The parent will resume after execvp() has usurped the child or the child has been terminated.
  */
+
 
 //Alleluia.

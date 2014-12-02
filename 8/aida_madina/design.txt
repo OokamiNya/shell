@@ -11,7 +11,17 @@ Attempted:
 
 Bugs:
 	
-
+int count_tokens(char *line, char delim) {
+  char *p = line;
+  int count = 1;
+  while (*p){
+    if (*p == delim) {
+      count++;
+    }
+    p++;
+  }
+  return count;
+}
 Files & Function Headers:
 	parse.c
 		Handles the parsing of lines, into commands and arguments
@@ -26,7 +36,7 @@ Files & Function Headers:
 		============== int count_tokens() =======================
 		Inputs: char *line, char delim
 		Returns: Number of tokens in a string separated by delimiting character.
-		Used in parse_args and parse_commands to find the different tokens separated by ' ' and ';', respectively.
+		Used to parse arguments and commands, finding the different tokens separated by ' ' and ';', respectively.
 
 	redirect.c
 		Handles redirection using >,>>,<.
