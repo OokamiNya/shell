@@ -11,7 +11,7 @@ int count_args(char *command);
 int main() {
   char input[256];
   char *comm_array[10];
-  char *command;
+  
   int num_commands;
   int pid;
   int *status;
