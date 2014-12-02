@@ -102,6 +102,9 @@ void redirpipe(char** args, char ** args2) {
 
     pipe(pfds);
 
+
+
+
     if (!fork()) {
         //close(1);       /* close normal stdout */
         dup2(STDOUT_FILENO,pfds[1]);   /* make stdout same as pfds[1] */
@@ -110,8 +113,11 @@ void redirpipe(char** args, char ** args2) {
         execvp(args[0], args);
     } else {
         //close(0);       /* close normal stdin */
+        int backup = dup(STDIN_FILENO);
         dup2(pfds[0],STDIN_FILENO);   /* make stdin same as pfds[0] */
         close(pfds[1]); /* we don't need this */
+        dup2 (backup, STDIN_FILENO);
+
         execvp(args2[0], args2);
     }
 }
