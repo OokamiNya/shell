@@ -14,4 +14,10 @@ BUGS:
   If you try to break and mess around with redirection, such as putting multiple pipes and nonsense, your shell will be spammed   with faces, as you deserve it.
   
 Function Headers:
+countchar - counts the num of substr in string (Arguments: char* , char)
+wrap_with_semicolons_LOL - Parses arguments by semicolons and sends each argument to doPipeStuff (Arguments: char*)
+strip - removes whitespace (Arguments: , char*)
+doPipeStuff - The main function for executing command line args. Mainly used for checking if there are any redirection symbols. Parses by pipes first, then checks for < and > accordingly. (Arguments: char*)
+
+
   
