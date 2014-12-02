@@ -70,17 +70,17 @@ int parse(char * input) {
   int i, j;
   char * ph = input; //Placeholder
 
-  while (ph = strchr(ph, '>')) {
+  while ((ph = strchr(ph, '>'))) {
     c++;
     ph++;
   }
   ph = input;
-  while (ph = strchr(ph, '<')) {
+  while ((ph = strchr(ph, '<'))) {
     c++;
     ph++;
   }
   ph = input;
-  while (ph = strstr(ph, ">>")) {
+  while ((ph = strstr(ph, ">>"))) {
     c--;
     ph+=2;
   }
@@ -96,13 +96,13 @@ int parse(char * input) {
     commands[i] = (char *) malloc(1024);
     for (; j<strlen(ph) && !isRed(ph[j]); j++) {}
     if (isRed(ph[j])) {
-      if (ph[j+1] == '>') { //>>
+      if (ph[j+1] == '>' && ph[j] == '>') { //For >>
 	strncpy(commands[i], ph, j);
 	commands[i][j-1] = 0;
 	ph = ph+j;
 	j = 0;
       }
-      else { //> or <
+      else { //For > or <
 	strncpy(commands[i], ph, j);
 	commands[i][j] = 0;
 	ph = ph+j;
@@ -142,6 +142,8 @@ int separate(char * input) {
 char ** sparse(char * command) {
   int c = 1;
   int i;
+  if (command[strlen(command)-1] == ' ') //Clean should fix this but sometimes it doesn't
+    command[strlen(command)-1] = 0;
   int size = strlen(command);
 
   for (i=0; i<size; i++) {
@@ -196,8 +198,9 @@ int run(char ** commands, int c) {
       //printf("%d\n", WTERMSIG(status));
     }
     else {
-      int i, fd;
+      int i, j, fd, f2;
       char * file;
+
       for (i=c-1; i>=0; i--) {
 	if (commands[i][0] == '>' && commands[i][1] == '>') {
 	  file = clean(commands[i]+2); //Ignores >>
@@ -206,7 +209,7 @@ int run(char ** commands, int c) {
 	}
 	else if (commands[i][0] == '>') {
 	  file = clean(commands[i]+1); //Ignores >
-	  fd = open(file, O_CREAT | O_WRONLY, 0644);
+	  fd = open(file, O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	  dup2(fd, STDOUT_FILENO);
 	}
 	else if (commands[i][0] == '<') {
@@ -215,22 +218,50 @@ int run(char ** commands, int c) {
 	  dup2(fd, STDIN_FILENO);
 	}
 	else {
-	  char ** args = sparse(clean(commands[i]));
-	  ssfree(commands, c);
-	  if (execvp(args[0], args))
-	    printf("%s\n", strerror(errno));
-	  exit(-1);
+	  char * p;
+	  if ((p = strchr(commands[i], '|'))) {
+	    *p = 0;
+	    p++; //Now 1 after pipe
+	    int pfd[2];
+	    pipe(pfd);
+	    f2 = fork();
+	    if (f2) {
+	      dup2(pfd[1], STDOUT_FILENO);
+	      close(pfd[0]);
+	      char ** args = sparse(clean(commands[i]));
+	      ssfree(commands, c);
+	      if (execvp(args[0], args))
+		printf("%s\n", strerror(errno));
+	      exit(-1);
+	    }
+	    else {
+	      dup2(pfd[0], STDIN_FILENO);
+	      close(pfd[1]);
+	      char ** args = sparse(clean(p));
+	      ssfree(commands, c);
+	      if (execvp(args[0], args))
+		printf("%s\n", strerror(errno));
+	      exit(-1);
+	    }
+	  }
+	  else { //No pipes
+	    char ** args = sparse(clean(commands[i]));
+	    ssfree(commands, c);
+	    if (execvp(args[0], args))
+	      printf("%s\n", strerror(errno));
+	    exit(-1);
+	  }
 	}
+	char ** args = sparse(commands[0]); //Default
+	//Should only occur if bad input (allows for error message)
+	ssfree(commands, c);
+	if (execvp(args[0], args))
+	  printf("%s\n", strerror(errno));
+	exit(-1);
       }
-      char ** args = sparse(commands[0]); //Default
-      //Should only occur if bad input (allows for error message)
-      ssfree(commands, c);
-      if (execvp(args[0], args))
-	printf("%s\n", strerror(errno));
-      exit(-1);
     }
   }
-  
+    
   return 0;
 }
 
