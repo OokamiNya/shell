@@ -1,21 +1,14 @@
 /*
 
-simple optional features/improvements:
+potential future features/improvements:
 - improve sighandler for Ctrl+C (kinda sorta works)
-- make parse() work without spaces between everything // might be harder than i though
-
-not-so-simple optional features:
+- make parse() work without spaces between everything
 - up arrow to view history
 - tab to display and/or fill in options while typing
 - * as a wildcard
 - & to run things in the background
 - ~ as a directory shortcut
 - assign values to variables and such (not happening)
-
-non-coding related things to do:
-- finish readme.txt about project
-- finish header file
-- finish makefile
 
  */
 
@@ -33,8 +26,6 @@ non-coding related things to do:
 
 int main(){
 
-  printf("waht??????");
-
   print_prompt();
 
   while(1){
@@ -46,10 +37,10 @@ int main(){
     
     int c = 0;
     c += count_chars(t , ' ');
-    /* c += count_chars(t , '>');
-    c += count_chars(t , '<');
-    c += count_chars(t , ';');
-    c += count_chars(t , '|');*/
+    /* c += count_chars(t , '>'); */
+    /* c += count_chars(t , '<'); */
+    /* c += count_chars(t , ';'); */
+    /* c += count_chars(t , '|'); */
 
     c += 1;
 
@@ -59,20 +50,20 @@ int main(){
 
     int i = 0;
     while(i < c){
-      args[i] = (char*)malloc(sizeof(char)*32);
+      args[i] = (char*)malloc(sizeof(char) * 32);
       i++;
     }
 
-    parse(args , t);
+    parse(args, t);
     execute(args);
 
-    i = 0;
-    while(i < c){
-      free(temp[i]);
-      i++;
-    }
+    /* i = 0; */
+    /* while(i < c){ */
+    /*   free(temp[i]); */
+    /*   i++; */
+    /* } */
     
-    free(temp);
+    /* free(temp); */
     print_prompt();
   }
 
@@ -80,19 +71,18 @@ int main(){
 }
 
 
-//I wish this worked.  It does not.
 static void sighandler(int signo){
   printf("\n");
-  //main();
-  //print_prompt();
+  /* main(); */
+  /* print_prompt(); */
 }
 
 
 int count_chars(char * s, char c){
   int counter = 0;
   int i = 0;
-  while( i < strlen(s) ){
-    if( s[i] == c ){
+  while(i < strlen(s)){
+    if(s[i] == c){
       counter++;
     }
     i++;
@@ -100,10 +90,10 @@ int count_chars(char * s, char c){
   return counter;
 }
 
+
 void print_prompt(){
   char path[256];
-  getcwd(path, 256);  
-  
+  getcwd(path, 256);
   printf("%s$ ", path);
 }
 
@@ -118,11 +108,11 @@ void print_array(char ** args){
   printf("\n");
 }
 
+
 void parse(char ** args , char * s1){
-  /*char s1[256];
-  fgets(s1, sizeof(s1), stdin);
-  s1[strlen(s1)-1]='\0';
-  */
+  /* char s1[256]; */
+  /* fgets(s1, sizeof(s1), stdin); */
+  /* s1[strlen(s1)-1]='\0'; */
   char * s = s1;
   char * temp = strsep(&s, " ");
 
@@ -135,9 +125,11 @@ void parse(char ** args , char * s1){
     temp = strsep(&s," ");
   }
 
-  //i = 0;
-  /* char ** temp_args;
-     while(args[i]){
+  //Below is abandoned code.  May it rest in peace.
+  /*
+    i = 0;
+    char ** temp_args;
+    while(args[i]){
        char * part = strsep( &(args[i]) , ">");
        int j = 0;
        while(part){
@@ -145,13 +137,15 @@ void parse(char ** args , char * s1){
          j++;
        }
        i = j + i;
-     }
-  
-    targs[i] = 0;*/
+    }
+    temp_args[i] = 0;
+  */
 
-  //termination
+  //termination of args
   args[i] = NULL;
-  //args = targs;
+
+  //args = temp_args;
+
 }
 
 
@@ -167,7 +161,7 @@ int contains(char ** args, char * c){
 }
 
 
-void redirect(int type,int i, char ** args){
+void redirect(int type, int i, char ** args){
 
     int f = fork();
     int status;
@@ -177,13 +171,14 @@ void redirect(int type,int i, char ** args){
       if (type == 0){ // <
 	int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
 	dup2(fd, STDIN_FILENO);
-      }else if (type == 2){ // >
+      }else if(type == 2){ // >
 	int fd = open(args[i+1], O_RDWR | O_CREAT, 0644);
 	dup2(fd, STDOUT_FILENO);
-      }else if(type == 1){ //>>
+      }else if(type == 1){ // >>
 	int fd = open(args[i+1], O_RDWR | O_CREAT | O_APPEND , 0644);
 	dup2(fd, STDOUT_FILENO);
       }
+
       char ** part1 = (char**)malloc(sizeof(char*) * i);
       
       int j = 0;
@@ -193,8 +188,8 @@ void redirect(int type,int i, char ** args){
       }
 
       execvp(part1[0], part1);
-      //in case execvp doesn't run:
-      
+
+      //in case execvp doesn't run:      
       kill(getpid(),SIGTERM);      
 
     }else{
@@ -203,12 +198,13 @@ void redirect(int type,int i, char ** args){
 
 }
 
+
 int execute(char ** args){
 
   int i;
 
   if((i = contains(args,";")) != -1){
-    //printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i);
+    /* printf("\nCOMMAND WITH ';' AT INDEX %d\n\n", i); */
 
     char ** part1 = (char**)malloc(sizeof(char*) * i);
     
@@ -224,20 +220,20 @@ int execute(char ** args){
     free(part1);
     execute(args);
     
-  }else if((i = contains(args,"<")) != -1  ){
-    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
-    redirect( 0,i,args );
+  }else if((i = contains(args,"<")) != -1){
+    /* printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i); */
+    redirect(0, i, args);
     
-  }else if((i = contains(args,">>")) != -1  ){
-    //printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i);
-    redirect( 1,i,args );
+  }else if((i = contains(args,">>")) != -1){
+    /* printf("\nCOMMAND WITH '<' AT INDEX %d\n\n",i); */
+    redirect(1, i, args);
 
-  }else if((i = contains(args,">")) != -1  ){
-    //printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i);
-    redirect( 2,i,args );    
+  }else if((i = contains(args,">")) != -1){
+    /* printf("\nCOMMAND WITH '>' AT INDEX %d\n\n",i); */
+    redirect(2, i, args);    
 
-  }else if((i = contains(args,"|")) != -1  ){
-    //printf("COMMAND WITH '|' AT INDEX %d\n",i);
+  }else if((i = contains(args,"|")) != -1){
+    /* printf("\nCOMMAND WITH '|' AT INDEX %d\n\n",i); */
 
     char ** part1 = (char**)malloc(sizeof(char*) * (i + 3));
     int j = 0;
@@ -254,8 +250,9 @@ int execute(char ** args){
 
     args += (i + 1);
 
-    //print_array(args);
+    /* print_array(args); */
 
+    //sets 'i' so that 'part2' will end before hitting the next special character
     if((i = contains(args,";")) != -1){
     }else if((i = contains(args, "<")) != -1){
     }else if((i = contains(args, ">")) != -1){
@@ -265,7 +262,6 @@ int execute(char ** args){
       while(args[i]){
 	i++;
       }
-      //printf("i: %d\n",i);
     }
 
     char ** part2 = (char**)malloc(sizeof(char*) * (i + 3));
@@ -292,15 +288,15 @@ int execute(char ** args){
     remove("buffer.txt");
 
   }else if((i = contains(args,"cd")) != -1){
+
     char * path = args[1];
     if(!args[1]){
       chdir(getenv("HOME"));
-      
     }else{
-      if ( strrchr( path, '~' )){
-	if ( strcmp("~", path) !=0){ // if just not just ~
+      if (strrchr(path, '~')){
+	if (strcmp("~", path) !=0){ // if not just ~
 	  char * path2;
-	  path2 = strrchr( path, '~');
+	  path2 = strrchr(path, '~');
 	  path2 += 2;
 	  chdir(path2);
 	}else // if just ~
@@ -309,13 +305,17 @@ int execute(char ** args){
       	chdir(path);
       }
     }
+
   }else if((i = contains(args,"exit")) != -1){
+
     exit(-1);
+
   }else{
+
     int f = fork();
     int status;
     if(!f){
-      //print_array(args);
+      /* print_array(args); */
       execvp(args[0], args);
       //in case execvp doesn't run:
       printf("Not today, lad.\n");
@@ -323,6 +323,7 @@ int execute(char ** args){
     }else{
       wait(&status);
     }
+
   }
 
   return 0;
