@@ -30,7 +30,7 @@ void myexec(char *input){
   }
 }
 
-void piping(char * args[]){
+/*void piping(char * args[]){
   int check1,check2,check3;
   int i = fork();
   if (!i){
@@ -44,7 +44,7 @@ void piping(char * args[]){
     dup2(check1,STDIN_FILENO);
     execlp(args[2],args[2],NULL);
   }
-}
+}*/
 
 void semisep(char *s){
   int i=0;
