@@ -4,19 +4,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-/* to do 
-   - pipes
-   - history
-   - tabs
-   -  ????
-   - your mom
-   - easter eggs
-   - asciify
-   - !!!!!!!!!
-   -?!??
-   - ¿¿¿¿¿?
-*/
-
 #define interino char *
 
 char origin[256];
@@ -61,12 +48,10 @@ char * get_nth_donger(int n) {
 char hash() {
   char cwd[256];
   getcwd(cwd, sizeof(cwd));
-  //printf("%s",cwd);
   char c = 0;
   int i = 0;
   for (;cwd[i];++i) 
     c = c^cwd[i];
-  //printf("%i",c);
   return c;
 }
 
@@ -77,13 +62,9 @@ interino main() {
 
   getcwd(origin, sizeof(origin));
   table = strcat(origin,"/dongers.txt");
-  //printf(">>>%s<<<",table);
-  //get_nth_donger(2);
-  //exit(1);
   while ("( ‾ʖ̫‾)") {
     char done;
     printf("%s: ",get_nth_donger(hash()));
-    //printf("MY ASS\n");
     //printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
     char input[256];
     fgets(input,sizeof(input),stdin);
