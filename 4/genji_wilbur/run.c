@@ -73,7 +73,7 @@ int run_exec(char * cmd, char * filename, int fd[], int oflag)
 			
 			if( errno ){
 				if( errno != 22){
-					printf("-znshell: %s (%d)\n",strerror(errno),errno);
+					printf("-ZiNc: %s (%d)\n",strerror(errno),errno);
 				}
 			}
 			
@@ -87,7 +87,7 @@ int run_exec(char * cmd, char * filename, int fd[], int oflag)
 
 		execvp(args[0],args);
 		if (errno){
-			fprintf(stderr,"-znshell: %s\n",strerror(errno));
+			fprintf(stderr,"-ZiNc: %s\n",strerror(errno));
 			errno = 0;
 		}
 		exit(0);
@@ -106,7 +106,7 @@ int run_cd(char * command, char * filename, int fd[], int oflag)
 		int fd1 = open( filename, oflag, 0644);
 		if( errno ){
 			if (errno != 22) {
-				printf("-znshell: %s (%d)\n",strerror(errno),errno);
+				printf("-ZiNc: %s (%d)\n",strerror(errno),errno);
 			}
 		}
 		int x;
@@ -139,7 +139,7 @@ int run_exit(char * command, char * filename, int fd[], int oflag){
 		int fd1 = open( filename, oflag, 0644);
 		if( errno ){
 			if (errno != 22) {
-				printf("-znshell: %s (%d)\n",strerror(errno),errno);
+				printf("-ZiNc: %s (%d)\n",strerror(errno),errno);
 			}
 		}
 		int x;

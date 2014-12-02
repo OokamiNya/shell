@@ -17,7 +17,7 @@ int print_prompt(){
 		//printf("%s\n",cwd);
 	}
 
-	printf("%s$: ",cwdcopy);
+	printf("ZiNc/%s$: ",cwdcopy);
 	free(cwd);
 	return 0;
 }
