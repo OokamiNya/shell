@@ -1,0 +1,90 @@
+Unnamed Shell
+by Andrew Sikowitz
+
+Features:
+	Forks and executes commands!
+	Parses multiple commands on one line (using ;)!
+	Redirects >, <, >>, and a single pipe!
+	Has some control-C SIGINT functionality! (really annoying)
+	Prints input line like linux (so it’s confusing sometimes)!
+	Replaces home address with ~!
+
+Attempted:
+	Multiple pipes
+	Getting SIGINT to only close the current command
+
+Bugs:
+	SIGINT (Control-C) will stop running the current child altogether, so any commands after (with a semicolon) will not run.
+	Multiple pipes break it
+
+Files & Function Headers:
+shell.c
+	/*========== void sighandler(int signo) =========
+	Makes SIGINT and SIGUSR1 exit child process, and tells the parent via the valid variable.
+	==============*/
+
+	/*========== char isRed() =========
+	checks if a character is > or <
+	==============*/
+
+	/*========== char * clean(char * input) =========
+	Inputs: A char * that can be altereted
+	Returns: A pointer to that char * (might be offset a bit) that has been altered to remove extra spaces
+	==============*/
+
+	/*========== int parse(char * input) =========
+	Inputs: A char * piece that has been separated by semicolons already
+	Returns: 0
+	
+	Counts the number of redirection entities, then makes an array of strings of that number+1, each of which contains a command.
+	Commands with redirection will start with that char (e.g. “> file.txt”)
+	Sends these commands to run()
+	==============*/
+
+	/*========== int separate(char * input) =========
+	Inputs: A char * from fgets()
+	Returns: 0
+
+	Separates input by semicolons and runs parse() on them.
+	==============*/
+
+	/*========== char ** sparse(char * command) =========
+	Inputs: A char * (a command)
+	Returns: A char ** that can be execvp’d
+	
+	Counts number of spaces and separates char * by spaces into char ** args variable.
+	==============*/
+
+	/*========== void ssfree(char ** starstar, int c) =========
+	Input: A char **
+	No return
+	
+	Frees a char ** and the char *’s in it.
+	==============*/
+
+	/*========== int run(char ** commands, int c) =========
+	Input: A char ** from parse()
+	Returns: 0
+
+	Processes commands from parse().
+	Puts “cd” and “exit” on their own cases.
+		exit uses SIGUSR1 to tell parent it is exiting, then exits.
+	Rest of commands are processed in else clause.
+		Forks.
+		Checks for pipes and creates one.
+		Checks for redirection and dup2’s appropriately.
+		If no redirection, evecvp’s
+	==============*/
+
+	/*========== void main_run(char* hostname, char* cwd, struct passwd *pw) =========
+	Input: A bunch of strings so I don’t have the redefine them each time
+	No return
+
+	What was in int main() but was put here so that pipefd[2] is refreshed.
+	Forks so that the control-c break is possible. This creates a lot of problems, so before waiting the parent process waits to read a new cwd, which is sent by the child when it closes. Then it must kill the child with SIGUSR1 because it has paused.
+	Child process prints the bash line, using cwd, hostname, checking for username to replace with ~. Uses frets to get input, and runs separate(input) to run the string. Once done, writes cwd through a pipe to parent process.
+	==============*/
+
+	/*========== int main() =========
+	Adds signals. Initially prints PID. Creates some chars for the bash line and runs the infinite while loop on main_run.
+	==============*/

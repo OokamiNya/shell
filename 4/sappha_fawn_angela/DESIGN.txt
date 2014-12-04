@@ -1,0 +1,218 @@
+OWL:
+Angela Lin, Fawn Wong, Sappha O'Meara
+Period 4
+
+FEATURES
+----------------------------------------------------------------------------
+	* Forks and executes commands!
+	* Parses multiple commands (separated by semicolons) on one line!
+	* Redirects using >, <, >>!
+	* Can make you almost forget you're not using bash!
+	* Attempts to fight against User Silliness Syndrome! 'ls           -l' can't fight us!
+	* Handles empty commands (" ; ")
+	* Handles simply pressing the enter key like bash 
+	(by reprinting prompt!)
+	* Somewhat redirects using 2> , 2>>
+
+ATTEMPTED FEATURES
+----------------------------------------------------------------------------
+	* Multiple piping clearly does not adhere to bash's multiple piping.
+	* Redirection of stderr does not entirely adhere to bash's 2> / 2>>
+
+BUGS
+----------------------------------------------------------------------------
+	* Multiple piping returns funkiness.
+	* Attempts to cd .. past the home (~) directory will result in segfaults (cannot access root directory).
+
+
+FILES AND FUNCTION HEADERS
+==========================================================================
+
+shell.c: where our fantastical magic begins!
+	
+	/*======== static void sighandler() ============
+	Inputs:  int signo
+	Returns: N/A	
+	
+	Our signal handler, where we specify the behavior of
+	specific signals sent to our program:
+		*SIGINT: exits the program
+		
+	==============================================*/
+
+
+	/*======== int main() ==========================
+	Inputs: N/A
+	Returns: 0	
+	
+	Runs our function! Includes our specifications from 
+	our signal handler and tells our shell to 
+	continuously run until we call 'exit', 'quit', 
+	or send the SIGINT signal to it.
+
+	==============================================*/
+
+
+	/*======== char * trim() =======================
+	Inputs:  char *s
+	Returns: Pointer to the beginning of a string.
+
+	Removes leading and trailing whitespace on the string s.
+	Terminating '\0' is placed at the appropriate new location by strndup.
+	==============================================*/
+
+	/*======== void printprompt() =======================
+	Inputs:  N/A
+	Returns: N/A
+
+	Prints (to stdout) our shell's prompt, which is meant to mimic Linux's bash
+	prompt. It is the concatenation of the user's username, :, and Linux-esque 
+	pwd (~/stuff/substuff).
+	
+	For example...
+	if username is 'unicorns', pwd is '/home/unicorns/Desktop'...
+	our prompt will print 'unicorns:~/Desktop'
+
+	==============================================*/ 
+
+	/*======== void execute() =======================
+	Inputs:  char a[256]
+	Returns: N/A
+
+	Executes a single command (ls -l | wc would be considered 
+	one command in our case). First, we check for any type of
+	redirection-esque commands (<, >, >>, |) and take care of those
+	commands. If there are no redirection-esque commands, then we simply 
+	parse on spaces. If our command is 'cd' or 'exit' or 'quit' then we
+	cd, exit, or quit. Otherwise, we fork and let our child process execvp 
+	and run the command. 
+
+	==============================================*/ 
+
+
+	/*================= void cd() =======================
+	Inputs:  char* path
+	Returns: N/A
+
+	Changes our current working directory in a Linux-esque fashion:
+	If not given any arguments, then change working directory to ~.
+	Otherwise, it will change the current working directory to the 
+	given argument or yell at you.
+	
+	==============================================*/ 
+
+	/*======== char** parser() =======================
+	Inputs:  N/A
+	Returns: An array of strings, in which each element is a command
+	to be executed.
+	
+	Takes the user input and parses along the semicolons (;), adding
+	each element into the args array of strings. Then, we return this
+	array of strings. Handles extraneous semicolons.	
+
+	==============================================*/ 
+
+	/*======== char* get_id() =======================
+	Inputs:  N/A
+	Returns: A string representing the currently-logged-in user's uid.
+
+	A simple helper function which returns the current user's
+	uid as a dynamically allocated string.
+
+	==============================================*/ 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+redirect.c: home of our redirection functions and magical creatures!
+
+	/*======== int has_redirect() =======================	
+	Inputs:  char *i
+	Returns: An integer value that gives insight as to whether or not
+	the inputted string (i) originally had any fancy redirection symbols.
+
+	A helper function which manipulates the inputted string i (used as a fxn
+	in other contexts) to determine which redirection symbols exist.
+	
+		Return Value	Symbol Existent
+		--------------------------------
+			0		N/A
+			1		<
+			3		>
+			4		>>
+			5		|
+			6		2>
+			7		2>>
+
+		Note: 6 and 7 represent attempts to redirect stderr
+		Note: 2 is missing because skipping << seemed sad.
+
+	==============================================*/ 
+
+	/*======== void redirection() =======================
+	Inputs:  char *s, int mode
+	Returns: N/A
+	 
+	The grandpa redirection function. Takes care of
+	whatever redirection business is necessary based on mode,
+	which, in our code, is given the value returned by has_redirect().
+
+	==============================================*/ 
+
+	/*======== void redirect_in() =======================
+	Inputs:  char *command, char* file
+	Returns: N/A
+	 
+	Redirects stdin to a given file and executes the given command.
+	Ex: cat < DESIGN.txt will redirect stdin to DESIGN.txt and then 
+	cat, resulting in cat DESIGN.txt.
+	==============================================*/ 
+
+	/*======== void redirect_out() =======================
+	Inputs:  char *command, char* file, int mode
+	Returns: N/A
+	 	
+	Redirects stdout from executing the given command to the
+	given file. 
+	--> If mode == 1, we will create (if necessary) or rewrite
+	the file if it already exists.
+	--> If mode == 2, we will create (if necessary) or append to 
+	the file if it already exists.
+	==============================================*/ 
+
+	/*======== void redirect_err() =======================
+	Inputs:  char *command, char* file, int mode
+	Returns: N/A
+
+	Redirects stderr from executing the given command to the
+	given file. 
+	--> If mode == 1, we will create (if necessary) or rewrite
+	the file if it already exists.
+	--> If mode == 2, we will create (if necessary) or append to 
+	the file if it already exists.
+	==============================================*/ 
+
+	/*======== void pipeify() =======================
+	Inputs:  char *first, char* second
+	Returns: N/A
+	 	
+	Redirects the stdout from executing first to the stdin from 
+	executing second by redirecting stdout of the first command
+	to a temporary file, then redirecting stdin of the second command
+	to this temporary file. After this, we delete the temporary file--
+	who said temp ever existed?!
+	==============================================*/ 
+	
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+non-existent-unicorn.c
+
+	/*======== Unicorns magic-ify() =======================
+	Inputs:  unicorn powder, unicorn horn
+	Returns: unicorn
+	 
+	Creates an unicorn out of thin air! May or may not 
+	be visible to others. Guaranteed to receive raised
+	eyebrows! Perfect for driving away perfectly normal
+	people!
+	==============================================*/ 

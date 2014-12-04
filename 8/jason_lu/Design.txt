@@ -1,0 +1,69 @@
+JShell 
+by Jason Lu
+
+Features:
+	Forks and executes commands!
+	Parses multiple commands on one line!*
+	Redirects using > and >>
+    
+*Usually works
+Attempted:
+	Redirection with <
+Bugs:
+    The program sometimes ends up opening up multiple shells repeatedly. 
+    (This bug occurs very sporadically and irregularly so I was not able to isolate the problem.)  
+    
+    Sometimes you need to enter exit multiple times for the program to exit.
+    
+    Semicolons sometimes do not work if there are more than two
+    
+Files & Function Headers:
+
+redirect.c 
+    Contains all functions necessary for redirection
+    
+    Redirects output and executes commands
+	/*======== void redirect() ==========
+	Inputs:  char* file
+        	 char** args
+             char* r
+	Returns/Output: None
+    
+    Finds and returns file name
+	/*======== char* getname() ==========
+	Inputs:  
+        	 char** args
+             char* s
+	Returns: File name from args
+    
+    Removes redirection symbol and filename from args
+    /*======== char cmdarr() ==========
+	Inputs:  char** args
+             char* s
+        	 
+	Returns: 0
+    
+    Checks whether or not array has a redirection symbol
+    /*======== char* check() ==========
+	Inputs:  char** args
+             
+	Returns: Either a string of ">" , ">>" , "<" , "<<" or 0
+    
+shell.c
+    Handles input, forking and executing of commands
+    
+    
+    Parses String into array of strings
+    /*======== char** parse(){ ==========
+	Inputs:  char* input
+             char* s
+             
+	Returns: An array of arguments 
+    
+    Gets Input from Terminal
+    /*======== char* getinput()==========
+	Inputs:  char* input
+             
+	Returns: The user entered input as a string
+    
+    

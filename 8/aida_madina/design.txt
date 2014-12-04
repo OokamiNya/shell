@@ -2,17 +2,42 @@ seashell
 by Aida Piccato and Madina Radjabova
 
 Features:
-	Forks and executes commands! Accounts for 'cd' and 'exit'
-	Parses multiple commands on one line and executes each one 
-	Can summon a winged unicorn for fast & magical transit!
+	Accounts for 'cd' and 'exit'
+	Can execute a command with multiple arguments
+	Can parse and read multiple commands on a line, separated by a semicolon.
+	Implements simple redirection ('<','>','>>'). When redirecting output, correctly redirect the output of a command with multiple arguments!
 
 Attempted:
-
+	Piping, but we weren't able to connect the output of one file
+	to the input of the other. Currently, output is just
+	placed into a file called pipes_temp.
 Bugs:
-	At times, Aida's behavior is malfunctional. She gets sassy when
-	in presence of her chapstick. She insists that I mention it is
-	Burt's Bees "minty fresh" flavored chapstick. Upon smelling it,
-	I concur that it does indeed smell nice.
+	Entering a command that does not exist will result in a segmentation fault.
+	When entering multiple commands, you can't have spaces next to the semicolon. For example, 
+		ls -al;who -> WORKS
+		ls -al; who -> SEG FAULT
 
+Files & Function Headers:
+	shell.c
+		Handles parsing of commands and arguments, as well as execution.
+		Also handles our semi-piping function (this is not fully developed)
+		============== void parse() ==================
+		Inputs: char *line, int num, char *array[], char *delim
+		Parses multiple commands into an array of commands, multiple args into the array of args. 
+		============== int count_tokens() =======================
+		Inputs: char *line, char delim
+		Returns: Number of tokens in a string separated by delimiting character.
+		Used to parse arguments and commands, finding the different tokens separated by ' ' and ';', respectively.
 
+	redirect.c
+		Handles redirection using >,>>,<.
+		============== int redir_in() ===========================
+		Inputs: char *input_file, char* executable
+		Handles input redirection with '<'. Redirects input to executable file from input_file.
+		============== int redir_out() ==========================
+		Inputs: char *output_file, char *exec_args[], char *command, int type
+		Handles output redirection with '>' or '>>'. Redirects output from command to output_file. Type indicates whether the redirection flag is '>' or '>>'. exec_args are the arguments the command takes. 
+
+	test.c
+		Simple program used to test '>'
 	

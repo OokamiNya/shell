@@ -8,47 +8,69 @@
 
 #include "executor.h"
 
+int cont = 1;
+
+//grabs f from executor.c
+//f is the pid of kid, 0 if no kid
+extern int f;
+
 static void sighandler(int signo){
   if (signo == SIGINT){
-    printf("we stopped a thing 1?\n");
+    if (f){
+      exit(0);
+    }
+    else{
+      printf("\n");
+    }
   }
 }
 
 int main(){
   
-  /* piping things
-  int fd;
-  fd = open("loop.c", O_WRONLY | O_TRUNC);
-  dup2(fd, STDOUT_FILENO);
-  printf("Woo! This is working!");
-  */
+  signal(SIGINT, sighandler);
 
   printf("\n");
   chdir(getenv("HOME"));
-  signal(SIGINT, sighandler);
   
-  while(1){
+  while(cont){
+    //    printf("pid: %d\n", getpid());
 
     char input[256];
     char cwd[256];
     getcwd(cwd,256);
     cwd[strlen(cwd)] = 0;
 
+    //replaces home with ~
     char * newcwd = replace_string(cwd,getenv("HOME"),"~");
     
     printf("JAVO:%s> ",newcwd);
-    fgets(input, sizeof(input), stdin);
+    my_fgets(input, sizeof(input), stdin);
+    //my_fgets(input,sizeof(input),stdin);
     input[sizeof(input)] = 0;
-
-    if(!strcmp(input,"exit\n") || !strncmp(input,"cd",2)){
-      execute(input);
+    
+    char *s1 = input;
+    char *s2;
+    char *arg[256];
+    
+    int i = 0;
+    while(s1) {
+      //generates arg (array of arguments)
+      s2 = strsep(&s1, " ");
+      arg[i] = s2;
+      i++;
     }
-    else{
-      signal(SIGINT,sighandler);
-      executef(input);
-    }
+    
+    /*
+      minor cleaning up
+      last argument = NULL for execvp to work
+      newstr is the new second-to-last argument with \n removed
+    */
+    arg[i] = 0;
+    char * newstr;
+    newstr = strsep(&(arg[i-1]), "\n");
+    arg[i-1] = newstr;
+    execute(arg); 
   }
-  
-  return 1;
-
+  return 0;
 }
+

@@ -1,0 +1,61 @@
+Shell Project
+by Hyunwoo Jeung
+
+Features:
+	Executes commands
+	Executes multiple commands in one line
+	Redirection using < and >
+	Executes pipes
+
+Attempted:
+	Tried to implement piping using a pipe in c. 
+	
+Bugs:
+	Executing commands with too many spaces between attributes
+	occasionally does not work.
+	Piping with wc command does not work properly. 
+
+Files & Function Headers:
+shell.c
+	> char* removeNewLine()
+	  Input: char* s
+	  Returns: a string without a new line character at the end
+
+	  Replaces a new line character an the end of s with 0
+	  If s does not have new line, the original string is returned.
+
+	> char* removeSpace()
+	  Input: char* s
+	  Returns: a string without any spaces at the beginning and the end
+	  	   of the string
+
+	> char** splitSemi()
+	  Input: char* s
+	  Returns: an array of strings where each elements is a string
+	  	   separated by ;
+		   
+	> void execLine()
+	  Input: char* s
+
+	  Executes a command without <,> or |
+
+	> void execStdout()
+	  Input: char* s
+
+	  Executes a command with >
+
+	> void execStdin()
+	  Input: char* s
+
+	  Executes a command with <
+
+	> void execPipe()
+	  Input: char* s
+
+	  Executes a command with |
+
+	> void execute()
+	  Input: char* s
+
+	  Combines execLine(),execStdout(), execStdin(), and execPipe()
+	  Execues a command.

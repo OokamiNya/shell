@@ -4,19 +4,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-/* to do 
-   - pipes
-   - history
-   - tabs
-   -  ????
-   - your mom
-   - easter eggs
-   - asciify
-   - !!!!!!!!!
-   -?!??
-   - ¿¿¿¿¿?
-*/
-
 #define interino char *
 
 char origin[256];
@@ -61,12 +48,10 @@ char * get_nth_donger(int n) {
 char hash() {
   char cwd[256];
   getcwd(cwd, sizeof(cwd));
-  //printf("%s",cwd);
   char c = 0;
   int i = 0;
   for (;cwd[i];++i) 
     c = c^cwd[i];
-  //printf("%i",c);
   return c;
 }
 
@@ -77,13 +62,9 @@ interino main() {
 
   getcwd(origin, sizeof(origin));
   table = strcat(origin,"/dongers.txt");
-  //printf(">>>%s<<<",table);
-  //get_nth_donger(2);
-  //exit(1);
   while ("( ‾ʖ̫‾)") {
     char done;
     printf("%s: ",get_nth_donger(hash()));
-    //printf("MY ASS\n");
     //printf("ヽ༼ຈل͜ຈ༽ﾉ: ");
     char input[256];
     fgets(input,sizeof(input),stdin);
@@ -92,8 +73,10 @@ interino main() {
     
     for (;semicolon_parsed[i];++i) {
       char ** command = parse_string(semicolon_parsed[i]," ");
-      //realloc(history,sizeof(char *)*++history_len);
-      //history[history_len-1] = command;
+      //hist = (char **)realloc(hist,256*++history_len);
+      //printf("%s",hist[history_len-1]);
+      //printf("%d\n",sizeof(input));
+      //strncpy(hist[history_len-1], input, 256);
       //int j = 0;
       //for (;j<history_len;++j)
       //printf("j is %d, command |%s|\n",j,history[j]);
@@ -109,7 +92,7 @@ interino main() {
       int j = 0;
       char **subcommand = NULL; 
       for (; command[j];j++) {
-	if (strchr(command[j],'>')) {
+	if (strchr(command[j],'>') || strchr(command[j],'<')) {
 	  subcommand = realloc(subcommand,sizeof(char*)*(j+1));
 	  subcommand[j] = NULL;
 	  if (command[j+1]) {
@@ -121,13 +104,43 @@ interino main() {
 	    }
 	    else {
 	      int file;
-	      if (!strcmp(command[j],">>")) {
+	      /*printf("%i",strcmp(command[j],">"));
+	      if (!strcmp(command[j],">")) {
+		printf("%i",strcmp(command[j],">>"));
+		if (!strcmp(command[j],">>")) {
+		  file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
+		  printf("appendout\n");
+		}
+		else {
+		  file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+		  printf("ovwrtout\n");
+		}
+		dup2(file, STDOUT_FILENO);
+	      }
+	      else if (!strcmp(command[j],"<")) {
+		if (!strcmp(command[j],"<<")) {
+		  file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
+		  printf("appendin\n");
+		}
+		else {
+		  file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+		  printf("ovrwtin\n");
+		}
+		dup2(file, STDIN_FILENO);
+		}*/
+	      if (!strcmp(command[j],">>"))
 		file = open(out, O_CREAT | O_WRONLY | O_APPEND, 0644);
-	      }
-	      else {
+	      else if (!strcmp(command[j],">"))
 		file = open(out, O_CREAT | O_WRONLY| O_TRUNC, 0644);
+	      else if (!strcmp(command[j],"<"))
+		file = open(out, O_RDWR, 0777);
+	      if (strchr(command[j],'>'))
+		dup2(file, STDOUT_FILENO);
+	      else {
+		printf("HIMOM\n");
+		dup2(file,STDIN_FILENO);
+		close(file);
 	      }
-	      dup2(file, STDOUT_FILENO);
 	      execvp(subcommand[0],subcommand);
 	      return "( ͝° ͜ʖ͡°)つ";
 	    } 

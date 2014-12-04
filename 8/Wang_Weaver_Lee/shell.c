@@ -4,9 +4,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "shell.h"
 
-
-void parse(char *input);
 
 
 void mycd (char** commands, int numargs) { 
@@ -95,14 +94,9 @@ void redirect(char *input){
   dup2(stdouttmp, STDOUT_FILENO);
 
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 4688ce838c2e4b16b286b89f94b75331ffa8045c
 void process(char *input){
   if (strchr(input, '|')){
-    int numArgs;
+    int numArgs = 0;;
     char **commands = (char **) calloc(64, sizeof(char *));
     char *tmp = 0;
     tmp = strtok(input, "|");
@@ -114,20 +108,34 @@ void process(char *input){
       strcpy(commands[numArgs], tmp);
       numArgs++;
     } while(tmp = strtok(NULL, "|"));
-    commands[numArgs]=0;
+    commands[numArgs]=0;  
+    mypipe(commands, numArgs);
+    int i;
+    for (i= 0; i < numArgs; i++){
+      free(commands[i]);
+    }
+    free(commands);
   }
   else {
     redirect(input);
   }
 }
-<<<<<<< HEAD
+void mypipe(char **commands, int numArgs){
+  int i;
+  strcat(commands[0], " > tmpfilepi");
 
-void parse(char* input){
-  
- 
-=======
+  redirect(commands[0]);
+  for (i = 1; i < numArgs - 1; i++) {
+    strcat(commands[i], " < tmpfilepi > tmpfilepi1");
+    redirect(commands[i]);
+    remove("tmpfilepi");
+    rename("tmpfilepi1", "tmpfilepi");
+  }
+  strcat(commands[numArgs-1], " < tmpfilepi");
+  redirect(commands[numArgs-1]);
+  remove("tmpfilepi");
+}
 void parse(char * input){
->>>>>>> 4688ce838c2e4b16b286b89f94b75331ffa8045c
   char **commands = (char **) calloc(64, sizeof(char *));
   int i ;
   int numArgs = 0;

@@ -5,11 +5,14 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-// Execs a function, parsing the input and running execvp
+// Executes a specific function, parsing the input and running execvp
 int exec_line(char *input);
+// Handles all commands given by main()
 void runs_command(char *scpy);
+// Removes extraneous white spaces from str
 void trim(char *str);
-
+// Returns the cwd in a presentable string
+char * wrkdir();
 
 int main() {
   int status;
@@ -18,9 +21,14 @@ int main() {
   char *s1;
   char *s2;
   char *commands[1024];
+  char *cwd;
   
   while(1) {
-    printf("^_^: ");
+   cwd = wrkdir();
+    /*
+    getcwd( cwd, sizeof(cwd) );  //keep if we want to display the current working directory
+    */
+    printf("%s ^_^ : ", cwd);
     fgets(s,sizeof(s),stdin);
     
     int i=0;
@@ -39,18 +47,14 @@ int main() {
       commands[i]=s2;
     }
     commands[i] = NULL;
-    //
 
     for(i=0;scpy;i++) {
       scpy = commands[i];
       if(!scpy) {
 	break;
-
       }
       runs_command(scpy);
     } 
-
-   
   }
 }
 
@@ -74,7 +78,7 @@ void runs_command(char *scpy) {
       getcwd(direct,sizeof(direct));
       printf("Current Directory: %s\n",direct);
     }
-    
+    //> and >>
     else if(strchr(s,'>')) {
       char *scpy2 = (char *)malloc(1024);
       strcpy(scpy2, s);
@@ -118,7 +122,7 @@ void runs_command(char *scpy) {
       free(&tmp);
       */
     }
-    
+    //<
     else if(strchr(s,'<')) {
       char *scpy2 = (char *)malloc(1024);
       strcpy(scpy2, s);
@@ -131,12 +135,12 @@ void runs_command(char *scpy) {
       trim(second_cmd);
       //printf("first :%s:\n", first_cmd);
       //printf("secnd :%s:\n", second_cmd);
-      /*
+   
       int f, fd, s, temp, status;
       f = fork();
       
       if( !f ){
-	fd = open(second_cmd, O_RDONLY);
+	fd = open(second_cmd, O_RDONLY , 0644);
 	temp = dup(STDIN_FILENO);
 	dup2(STDIN_FILENO, temp);
 	dup2(fd, STDIN_FILENO);
@@ -147,37 +151,54 @@ void runs_command(char *scpy) {
       } else {
 	wait(NULL);
       } 
-      */ 
+
     }
-    
+    // | pipes
     else if(strchr(s,'|')) {
-      printf("registered |\n");
+    	int stdin_copy;
+    	char *s1;
+    	char *s2;
+    	char *commands[1024];
+    	char *jscpy = malloc(1024);
+    	int i;
+    	int in = 0;
+    	int out;
+    	s1 = s;
+    	for(i=0;s1;i++){
+    		s2 = strsep(&s1,"|");
+    		trim(s2);
+    		commands[i]=s2;
+    	}
+    	commands[i] = NULL;
 
-      char *s1;
-      char *s2;
-      char *commands[1024];
-      char *jscpy = malloc(1024);
-      int i;
-      s1 = s;
-      for(i=0;s1;i++){
-	s2 = strsep(&s1,"|");
-	trim(s2);
-	commands[i]=s2;
-      }
-      commands[i] = NULL;
+    	int fd[2];
 
-      for(i=0;jscpy;i++) {
-	jscpy = commands[i];
-	if(!jscpy) {
-	  break;
-	}
-	dup2(STDOUT_FILENO, STDIN_FILENO);
-	exec_line(jscpy);
-      } 
+    	for(i = 0; commands[i+1]; i++) {
+    		pipe(fd);
+    		out = fd[1];
+    		if(fork() == 0) {
+    			if (in != 0) {
+    				dup2(in, 0);
+    				close(in);
+    			}
 
-      
+    			if (out != 1) {
+    				dup2(out, 1);
+    				close(out);
+    			}
+    			exec_line(commands[i]);
+    		}
+    		close(fd[1]);
+			in = fd[0];
+    	}
+    	if (in != 0) {
+    		dup2(in,0);
+    	}
+    	
+	exec_line(commands[i]);
+    	
     }
-    
+    // ALL OTHER COMMANDS
     else {
       
       int f = fork();
@@ -193,7 +214,7 @@ void runs_command(char *scpy) {
 }
 
 int exec_line(char *s) {
-  printf("exec line: %s\n",s);
+  //printf("exec line: %s\n",s);
   trim(s);
   char* string2;
   char *array[256];
@@ -232,4 +253,26 @@ void trim(char *str) {
         str[i - begin] = str[i];
 
     str[i - begin] = '\0';
+}
+
+char * wrkdir(){
+  char *path = (char *)malloc(512);
+  path = getcwd( path, 512 );
+  char * temp = (char *)malloc(512);
+  temp = getcwd(temp, sizeof(temp) );
+  int branches = 0;
+  while( (temp = strsep(&path, "/")) ){
+    branches++;
+  }
+  if( branches <= 3 ){
+    path = getcwd(path, sizeof(path) );
+  } else {
+    path = getcwd(path, sizeof(path) );
+    int i = 0;
+    while(i<branches-3){
+      temp = strsep(&path, "/");
+      i++;
+    }
+  }
+  return path;
 }

@@ -9,44 +9,146 @@
 #include <errno.h>
 
 int currentPID;
-//runs command once, accepts a command line executable
-void swagexec(char *addresses){
-  addresses = strsep(&addresses, "\n");
-  char *ok2;
-  char *second [256];
-  int x = 0;
-  while (ok2){
-    ok2 = strsep(&addresses , " ");
-    second[x] = ok2;
-    x++;
+//counts the num of substr in string (Arguments: char* , char)
+int countchar(char* str,char substr){
+  int ans=0;
+  int index=0;
+  while(str[index]){
+    if (str[index++]==substr)
+      ans++;
   }
-  int pid = fork();
-  if (!pid)
-    execvp(second[0] , second);
-  else
-    printf("I'm not the child\n");
+  return ans;
 }
 
-void parse(char *string, char x){
-  while (string = strsep(&string, x)){
-    swagexec(string);    
+//Parses arguments by semicolons and sends each argument to doPipeStuff (Arguments: char*)
+int wrap_with_semicolons_LOL(char* stuff){
+  char* semicolon_buffer=calloc(256,sizeof(char));
+  while(semicolon_buffer=strsep(&stuff,";")){
+    doPipeStuff(semicolon_buffer);
   }
+  return 0;
 }
 
+//removes whitespace (Arguments: , char*)
+char * strip(char * src){
+  //removes leading whitespace
+  while(src[0] == ' '){
+    *src++;
+  }
+  //removes trailing whitespace
+  int index = (int)strlen(src) - 1;
+  while (src[index] == ' '){
+    src[index] = '\0';
+    index--;
+  }
+  return src;
+}
+
+//The main function for executing command line args. Mainly used for checking if there are any redirection symbols.
+//Parses by pipes first, then checks for < and > accordingly. (Arguments: char*)
+int doPipeStuff(char* arg){
+  char* split_buffer=calloc(256,sizeof(char));
+  char* split_buffer_buffer=calloc(256,sizeof(char));
+  char* arg_buffer=calloc(256,sizeof(char));
+  
+  int stdin_buffer=dup(STDIN_FILENO),
+    stdout_buffer=dup(STDOUT_FILENO),
+    file_in,
+    file_out,
+    commands=countchar(arg,124)+1,/*124 is pipe*/
+    command_index=0;
+  for (;command_index<commands;command_index++){
+    char** addresses= calloc(256,sizeof(char*));
+    split_buffer=strsep(&arg,"|");
+    strcpy(split_buffer_buffer,split_buffer);
+    int boolleft=countchar(split_buffer,'<');
+    int boolright=countchar(split_buffer,'>');
+    int i=0;
+    if (!boolleft && !boolright){
+      while (arg_buffer=strsep(&split_buffer," "))
+	if (arg_buffer[0] > 0)
+	  addresses[i++]=arg_buffer;
+      i=0;
+    }
+    if (! fork()){
+      if(command_index){//if not at first command
+	file_in = open("piped",O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
+	printf("open! piped for command %s\n",addresses[0]);
+      }else if (boolleft==1){
+	char* split_buffer2 = calloc(256,sizeof(char));
+	split_buffer2 = strsep(&split_buffer_buffer, ">"); 
+	while (arg_buffer=strsep(&split_buffer2," "))
+	  addresses[i++]=arg_buffer;
+      
+	split_buffer2 = strsep(&split_buffer_buffer, ">");
+	file_in = open(split_buffer2,O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
+      }
+      if(commands-command_index-1){//if not at last command
+	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
+	printf("wrote piped for command %s\n",addresses[0]);
+	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
+      }else if (boolright == 1){
+	char* split_buffer2 = calloc(256,sizeof(char));
+	split_buffer2 = strsep(&split_buffer_buffer, ">");
+	while (arg_buffer=strsep(&split_buffer2," "))
+	  addresses[i++]=arg_buffer;
+	split_buffer2 = strsep(&split_buffer_buffer, ">");
+	//strsep for spaces
+	file_out = open(split_buffer2 , O_WRONLY|O_CREAT|O_TRUNC);
+	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
+      }
+<<<<<<< HEAD
+      
+      
+=======
+      if(command_index){//if not at first command
+	file_in = open("piped",O_RDONLY);
+	dup2(file_in,STDIN_FILENO);
+	close(file_in);
+      }
+      if(commands-command_index-1){//if not at last command
+	file_out = open("piped",O_WRONLY|O_CREAT|O_TRUNC);
+	dup2(file_out,STDOUT_FILENO);
+	close(file_out);
+      }
+>>>>>>> 9370f01cc3b803ac3669b29f9eb4b3ec60842e25
+      execvp(addresses[0],addresses);
+    }else{
+      //reset stdin/out
+      wait(-1);
+      dup2(stdin_buffer,STDIN_FILENO);
+      dup2(stdout_buffer,STDIN_FILENO);
+      close(stdin_buffer);
+      close(stdout_buffer);
+
+    }
+      
+  }
+  return 0;
+}
+
+//Sighandler modified so ctrl+c would only exit our processes and not the shell
 static void sighandler(int signo){
-  if (signo == SIGINT && getpid() == 0){
+  if (signo == SIGINT && !getpid()){
     printf("caught interrupt\n");
     printf("%d\t%d\n", getpid(), currentPID);
-    //kill(currentPID, 9);
+    kill(currentPID, 9);
     currentPID = getpid();
   }
 }
 
-
+//Main runs the shell and also handles the cd command
 int main(){
   signal(SIGINT, sighandler);
-  printf("%d\n", getpid());
-  
+  printf("shell PID:%d\n", getpid());
+  umask(0000);
+
   char* args=calloc(256,sizeof(char));
   char** addresses=calloc(256,sizeof(char*));
   
@@ -55,14 +157,13 @@ int main(){
   int status;
   while (1){
     printf("(ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
-
     fgets(args,256,stdin);
     args = strsep(&args,"\n");
-
+    args = strip(args);
     char* p;
     for(p=args;*p;++p) *p= tolower(*p);
     //exit
-    if (! strcmp(args,"exit"))
+    if (! strncmp(args,"exit",4) && getpid())
       exit(0);
     //cd
     else if (! strncmp(args,"cd",2)){
@@ -70,23 +171,16 @@ int main(){
       chdir(args+3);
       getcwd(cwd,256);
       printf("%s\n", cwd);
-
     }else if(args[0]){//prevents empty lines
-      if (! strstr(args,"|") &&
-	  ! strstr(args,"<") &&
-	  ! strstr(args,">")){//if no pipe or redirects
-	//setup and exec
-	currentPID = getpid();
-	printf("Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
-      }else{
-	wait(&status);
-	printf("2nd :Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
-
-      }
-    }//plan how code will be put together with nested fancy
-    //for example:
-    //ls | grep poop > swag.txt
-
+      currentPID = getpid();
+      wrap_with_semicolons_LOL(args);
+      //printf("Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
+    }else{
+      wait(-1);
+      //printf("2nd :Shell PID: %d\tCurrent Process PID: %d\n", getpid(), currentPID);
+      
+    }
   }
-return 0;
+  remove("piped");
+  return 0;
 }

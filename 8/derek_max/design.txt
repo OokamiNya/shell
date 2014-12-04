@@ -1,0 +1,105 @@
+Shell.
+by Derek Tsui and Max Zhou
+
+Features:
+	- Forks and executes commands!
+	- Parses multiple commands on one line!
+	- Redirects and pipes! (one at a time...)
+  - cd and home directory '~' supported!
+
+Attempted:
+  - append with ">>" did not work
+
+Bugs:
+  - pipe actually makes "tempfile", really primitive
+  - seg fault if no function before redirect symbol
+
+Files & Function Headers:
+shell.c
+  Main shell interface:
+    - Displays cwd.
+    - Handles command input to be parsed and executed.
+    - Exits, if called.
+  /*======== int main() ==========
+  Returns: 1
+
+  - infinite loop unless "exit":
+    - shell interface includes cwd and "> "
+    - upon input into fgets, passed onto "parse" to be returned into char** commands
+    - commands in list are run one by one
+      - if the command is exit, program ends
+      - otherwise call "execute" on the command
+  ====================*/
+
+execute.c
+  Runs one command:
+    - handles arguments
+    - handles special case "cd"
+    - handles forking + execvp
+    - handles redirects if necessary
+
+  /*======== int execute(char* input) ==========
+  Inputs: string of function call
+
+  - strsep input with " " to separate into args and args2:
+    - args contains function and arguments that are not redirect
+    - args2 contains everything after redirect: e.g. args2 = [">","out.txt"]
+  - if args[0] is "cd" handle using chdir:
+    - if directory given is "~" replace with getenv("HOME")
+    - test for chdir successfully run
+  - otherwise fork process:
+    - if function does not contain redirect: run execvp using args
+    - otherwise:
+      - determine redirect type and pass args2 to redirect.h commands
+  ====================*/
+
+
+parse.c
+  Multiple command parser:
+    - Removes leading space
+    - Separate commands by ";"
+
+  /*======== char *removespace(char *str) ==========
+  Inputs: one function call, separated using "char** parse"
+  Returns: the function call with leading spaces removed
+  ====================*/
+
+  /*======== char ** parse(char * input) ==========
+  Inputs: input from fgets that may include ";"
+  Returns: list of separate functions to run
+
+  - calloc list of 5 strings
+  - use strsep with loop to split each function from input
+  - returns this list
+  ====================*/
+
+
+redirect.c
+  Handles redirects:
+  - redir_out
+  - redir_in
+  - redir_pipe
+
+  /*======== int redir_out(char** args, char * dest) ==========
+  Inputs: args (function and any non-redirect arguments), destination
+
+  - open destination file to write
+  - use dup2 to change stdout
+  - execvp
+  ====================*/
+
+  /*======== int redir_in(char** args, char * src) ==========
+  Inputs: args (function and any non-redirect arguments), source
+
+  - open source file to read
+  - use dup2 to change stdin
+  - execvp
+  ====================*/
+
+  /*======== int redir_pipe(char** args, char ** args2) ==========
+  Inputs: args (function and any non-redirect arguments), args2 (redirect arguments)
+
+  - fork to handle two execvps
+  - redir_out for first function to tempfile
+  - redir_in to second function from tempfile
+  ====================*/

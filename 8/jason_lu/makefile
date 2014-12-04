@@ -1,2 +1,2 @@
-all: shell.c shell.h
-	gcc -o Shell shell.c shell.h
+all: shell.c redirect.c
+	gcc -o Shell shell.c redirect.c

@@ -7,8 +7,15 @@
 #include <sys/stat.h>
 #include <signal.h>
 
-void printprompt();
-void execute();
-char** execute_all();
+
 char* trim(char *);
+
+void printprompt();
+
+int execute();
+
 void cd(char *);
+
+char** parser();
+
+char* get_id();

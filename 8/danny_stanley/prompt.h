@@ -5,9 +5,9 @@
 #define PATH_SIZE 1024
 #define TIME_SIZE 14
 
+extern int cmd_status;
+extern int valid_input;
+
 char * get_path(char *, int);
 char * get_time(char *, int);
 char * create_prompt(char *, int);
-
-extern int cmd_status;
-extern int valid_input;

@@ -1,0 +1,86 @@
+HOLLAFORADOLLA
+by Emma Lou
+
+Features:
+	Forks and executes commands.
+	Redirects using >, <
+	I think it can pipe.
+	Can cd into folders, but can't go backwards in the path.
+Attempted:
+	The following did not end up working, but have been left
+	in the code, commented out.
+	Looked at replacing ~/ with home directory, but couldn't find 		the directory and kept returning "No such directory"
+	Still iffy about the whole piping situation.
+	Apparently I don't know how to get rid of white space.
+Bugs:
+	HUGE BUG:
+	My functions work separately on their own, but not in the 		shell. For example, if I put ls -l in the shell, it will not 		work. But if in my main function I put executing("ls -l") it 		works perfectly fine. Not sure what the issue is...
+	
+Files & Function Headers:
+shell_test_3.c
+	Where all my functions are
+	/*======== char * no_spaces() ==========
+	Inputs:  char * s (the original command)
+
+	Returns: (suppose to return)The original command with no 				spaces.
+
+	Looks for trailing and leading white spaces and copies to 		another string with no white spaces off. 
+	====================*/
+
+	/*======== char ** general_parse() ==========
+	Inputs:  char * s, char * c
+	Returns: Array of strings where each entry is a command parsed 		by a character c.
+
+	General parsing that handles any type of character.
+	====================*/
+
+	/*======== char ** parsing_semi() ==========
+	Inputs:  char * s 
+	Returns: Array of strings where each entry is parsed by a 		semicolon.
+
+	Takes a string and parses it by the semicolon. 
+	====================*/
+
+	/*======== void executing() ==========
+	Inputs:  char * s
+	Returns: Nothing
+
+	Takes the parsed semicolon array and parses it by a space. 		Forks, and executes the command while the parent waits.
+	====================*/
+
+	/*======== void stdouting() ==========
+	Inputs:  char * s
+	Returns: Nothing
+
+	Takes the parsed semicolon array and parses it by a >. 		Forks, creates a file, and executes the command, which keeps 		the info in the file, then exits. Parent waits patiently.
+	====================*/
+
+	/*======== void stdining() ==========
+	Inputs:  char * s
+	Returns: Nothing
+
+	Takes the parsed semicolon array and parses it by a <. 		Forks, opens the file, and redirects that into the command, 		then exits. Parent waits patiently. 
+	====================*/
+
+	/*======== void piping() ==========
+	Inputs:  char * s
+	Returns: Nothing
+
+	Takes the parsed semicolon array and parses it by a |. 		Forks, replaces STDIN with STDOUT, and runs first command. 		Otherwise it runs the second command.
+	====================*/
+
+	/*======== void cd() ==========
+	Inputs:  char * s
+	Returns: Nothing
+
+	Takes the given path and gets rid of spaces or newlines. Uses 		that path and chdirs into it. Tried to get ~/ to redirect to 		the HOME directory, but it couldn't find the path.
+	====================*/
+
+	/*======== void exec_all() ==========
+	Inputs:  char * s
+	Returns: Nothing
+
+	Basically puts everything together. Sees if a command has >, 		<, |, cd, exit and does what is appropriate. If none are 		there, executes normally.
+	====================*/
+
+

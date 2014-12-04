@@ -1,7 +1,7 @@
 all:
-	gcc shell.c
-	./a.out
+	gcc -o cshell shell.c
+	./cshell
 
 clean:
+	rm ./cshell
 	rm *~
-	rm ./a.out
