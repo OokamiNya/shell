@@ -1,1 +1,0 @@
-char *create_prompt();

@@ -1,8 +1,0 @@
-#emacs backups
-*~
-
-#compiled C files
-*.o
-
-#the executable file
-mess
